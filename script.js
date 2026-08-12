@@ -100,14 +100,14 @@ const SAMPLE_PRODUCTS = [
         nama: 'Air Mineral Botol 600ml', 
         harga: 4000, 
         stok: 80, 
-        gambar: 'https://images.unsplash.com/photo-1548839140-29a749e1bc4e?w=150&auto=format&fit=crop' 
+        gambar: 'https://images.unsplash.com/photo-1523362628745-0c100150b504?w=150&auto=format&fit=crop' 
     },
     { 
         kode: 'BRG013', 
         nama: 'Sabun Mandi Batang', 
         harga: 4500, 
         stok: 60, 
-        gambar: 'https://images.unsplash.com/photo-1607006482188-ae9a45675538?w=150&auto=format&fit=crop' 
+        gambar: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=150&auto=format&fit=crop' 
     },
     { 
         kode: 'BRG014', 
@@ -146,9 +146,12 @@ function initData() {
     } else {
         try {
             products = JSON.parse(storedProducts);
-            // Pastikan setiap item memiliki properti gambar
+            // Migrasi: isi gambar dari sampel bila kode cocok, selain itu pakai default
             products.forEach(p => {
-                if (!p.gambar) p.gambar = DEFAULT_IMAGE;
+                if (!p.gambar) {
+                    const sample = SAMPLE_PRODUCTS.find(s => s.kode === p.kode);
+                    p.gambar = sample ? sample.gambar : DEFAULT_IMAGE;
+                }
             });
             if (products.length < 5) {
                 products = [...SAMPLE_PRODUCTS];
@@ -206,6 +209,9 @@ function initFirebaseSync() {
                 db.collection('products').doc(p.kode).set(p);
             });
         } else {
+            // Migrasi & perbaiki data lama yang belum memiliki gambar
+            migrateFirestoreProducts(snapshot);
+
             const remoteProducts = [];
             snapshot.forEach(doc => {
                 const data = doc.data();
@@ -242,6 +248,32 @@ function initFirebaseSync() {
     }, error => {
         console.warn("Realtime listener transactions error:", error);
     });
+}
+
+// Migrasi data Firestore: isi gambar yang hilang & lengkapi produk sampel yang belum ada
+function migrateFirestoreProducts(snapshot) {
+    try {
+        // 1. Tambahkan produk sampel yang belum ada di Firestore (khusus data lama)
+        const existingKodes = new Set();
+        snapshot.forEach(doc => existingKodes.add(doc.id));
+        SAMPLE_PRODUCTS.forEach(sample => {
+            if (!existingKodes.has(sample.kode)) {
+                db.collection('products').doc(sample.kode).set(sample);
+            }
+        });
+
+        // 2. Perbaiki produk yang belum memiliki field gambar
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            if (!data.gambar) {
+                const sample = SAMPLE_PRODUCTS.find(s => s.kode === doc.id);
+                const gambar = sample ? sample.gambar : DEFAULT_IMAGE;
+                db.collection('products').doc(doc.id).set({ gambar: gambar }, { merge: true });
+            }
+        });
+    } catch (err) {
+        console.warn("Migrasi Firestore gagal:", err);
+    }
 }
 
 /* ==========================================================================
