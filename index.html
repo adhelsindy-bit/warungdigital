@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delsi Shop - Kasir Warung Digital</title>
+    <!-- Font Awesome Icons for clean UI icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Header Utama -->
+    <header class="app-header">
+        <div class="header-container">
+            <div class="brand">
+                <i class="fa-solid fa-store brand-icon"></i>
+                <h1>Delsi Shop</h1>
+                <span id="firebase-status-badge" class="firebase-badge offline"><i class="fa-solid fa-cloud"></i> Local Storage</span>
+            </div>
+            <p class="tagline">Sistem Kasir & Manajemen Warung Digital</p>
+        </div>
+    </header>
+
+    <!-- Navigasi Utama -->
+    <nav class="app-nav">
+        <div class="nav-container">
+            <button class="nav-btn active" onclick="switchTab('barang')">
+                <i class="fa-solid fa-boxes-stacked"></i> Manajemen Barang
+            </button>
+            <button class="nav-btn" onclick="switchTab('transaksi')">
+                <i class="fa-solid fa-cash-register"></i> Transaksi Kasir
+            </button>
+            <button class="nav-btn" onclick="switchTab('laporan')">
+                <i class="fa-solid fa-chart-line"></i> Laporan Transaksi
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <main class="main-container">
+
+        <!-- SECTION 1: MANAJEMEN BARANG -->
+        <section id="section-barang" class="tab-content active">
+            <div class="grid-2col">
+                <!-- Form Tambah / Edit Barang -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 id="form-barang-title"><i class="fa-solid fa-plus-circle"></i> Tambah Barang</h2>
+                    </div>
+                    <form id="form-barang" onsubmit="handleSaveProduct(event)">
+                        <input type="hidden" id="edit-index" value="-1">
+                        
+                        <div class="form-group">
+                            <label for="kode-barang">Kode Barang</label>
+                            <input type="text" id="kode-barang" placeholder="Contoh: BRG001" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="nama-barang">Nama Barang</label>
+                            <input type="text" id="nama-barang" placeholder="Contoh: Beras 5kg" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="harga-barang">Harga (Rp)</label>
+                            <input type="number" id="harga-barang" min="0" placeholder="Contoh: 65000" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="stok-barang">Stok</label>
+                            <input type="number" id="stok-barang" min="0" placeholder="Contoh: 20" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="gambar-barang">URL Foto Produk (Opsional)</label>
+                            <input type="url" id="gambar-barang" placeholder="https://example.com/foto.jpg">
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary" id="btn-simpan-barang">
+                                <i class="fa-solid fa-floppy-disk"></i> Simpan Barang
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="btn-batal-edit" style="display: none;" onclick="resetProductForm()">
+                                <i class="fa-solid fa-xmark"></i> Batal
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Tabel Daftar Barang -->
+                <div class="card">
+                    <div class="card-header flex-between">
+                        <h2><i class="fa-solid fa-list-check"></i> Daftar Barang</h2>
+                        <div class="header-actions" style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+                            <button class="btn btn-primary btn-sm" onclick="loadBatchSampleProducts()" title="Tambahkan 25 produk warung otomatis sekaligus">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> Auto Insert 25 Produk
+                            </button>
+                            <button class="btn btn-secondary btn-sm" onclick="openImportModal()" title="Import produk dari file CSV / JSON">
+                                <i class="fa-solid fa-file-import"></i> Import CSV/JSON
+                            </button>
+                            <div class="search-box">
+                                <input type="text" id="search-barang" placeholder="Cari barang..." oninput="renderProducts()">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Foto</th>
+                                    <th>Kode</th>
+                                    <th>Nama</th>
+                                    <th>Harga</th>
+                                    <th>Stok</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-barang">
+                                <!-- Rendered dynamically by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: TRANSAKSI KASIR -->
+        <section id="section-transaksi" class="tab-content">
+            <div class="grid-layout-transaksi">
+                <!-- Panel Input Transaksi -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-cart-plus"></i> Input Transaksi</h2>
+                    </div>
+                    <form id="form-transaksi" onsubmit="addToCart(event)">
+                        <div class="form-group">
+                            <label for="select-barang">Pilih Barang</label>
+                            <select id="select-barang" required onchange="updateMaxQtyLabel()">
+                                <option value="">-- Pilih Barang --</option>
+                                <!-- Populated dynamically by JS -->
+                            </select>
+                            <small id="info-stok-pilihan" class="form-info">Pilih barang untuk melihat stok</small>
+                        </div>
+
+                        <!-- Preview Foto Produk Dipilih -->
+                        <div id="preview-produk-container" class="product-preview-box">
+                            <img id="preview-produk-img" src="" alt="Foto Produk">
+                            <div class="preview-info">
+                                <h4 id="preview-nama">Nama Produk</h4>
+                                <p id="preview-harga">Rp 0</p>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="input-jumlah">Jumlah Beli</label>
+                            <input type="number" id="input-jumlah" min="1" value="1" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <i class="fa-solid fa-cart-plus"></i> Tambah ke Keranjang
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Panel Keranjang & Pembayaran -->
+                <div class="card">
+                    <div class="card-header flex-between">
+                        <h2><i class="fa-solid fa-basket-shopping"></i> Keranjang Belanja</h2>
+                        <span class="badge" id="cart-item-count">0 Item</span>
+                    </div>
+
+                    <div class="table-responsive cart-table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Foto</th>
+                                    <th>Nama Barang</th>
+                                    <th>Harga</th>
+                                    <th>Jumlah</th>
+                                    <th>Subtotal</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-keranjang">
+                                <!-- Rendered dynamically by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="payment-summary">
+                        <div class="summary-row total-row">
+                            <span>Total Belanja:</span>
+                            <span id="text-total-belanja" class="highlight-total">Rp 0</span>
+                        </div>
+
+                        <div class="form-group payment-input-group">
+                            <label for="input-bayar">Uang Bayar (Rp)</label>
+                            <input type="number" id="input-bayar" min="0" placeholder="Masukkan jumlah uang" oninput="calculateChange()">
+                        </div>
+
+                        <div class="summary-row change-row">
+                            <span>Kembalian:</span>
+                            <span id="text-kembalian" class="highlight-change">Rp 0</span>
+                        </div>
+
+                        <div class="transaction-actions">
+                            <button type="button" class="btn btn-success" onclick="processSaveTransaction()">
+                                <i class="fa-solid fa-floppy-disk"></i> Simpan Transaksi
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="printReceipt()">
+                                <i class="fa-solid fa-print"></i> Cetak Struk
+                            </button>
+                            <button type="button" class="btn btn-outline-danger" onclick="resetCart()">
+                                <i class="fa-solid fa-rotate-left"></i> Reset Transaksi
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: LAPORAN TRANSAKSI -->
+        <section id="section-laporan" class="tab-content">
+            <!-- Stat Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon bg-red">
+                        <i class="fa-solid fa-wallet"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Total Omzet Keseluruhan</h3>
+                        <p id="stat-total-omzet">Rp 0</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon bg-blue">
+                        <i class="fa-solid fa-receipt"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Jumlah Transaksi</h3>
+                        <p id="stat-jumlah-transaksi">0 Transaksi</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabel Laporan -->
+            <div class="card">
+                <div class="card-header flex-between">
+                    <h2><i class="fa-solid fa-file-invoice-dollar"></i> Riwayat Transaksi</h2>
+                    <button class="btn btn-danger" onclick="clearAllReports()">
+                        <i class="fa-solid fa-trash-can"></i> Hapus Semua Laporan
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>No. Transaksi</th>
+                                <th>Tanggal & Jam</th>
+                                <th>Jumlah Item</th>
+                                <th>Total Transaksi</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-laporan">
+                            <!-- Rendered dynamically by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL / CONTAINER CETAK STRUK -->
+    <div id="receipt-modal-overlay" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header no-print">
+                <h3>Pratinjau Struk</h3>
+                <button class="close-btn" onclick="closeReceiptModal()">&times;</button>
+            </div>
+            
+            <!-- Area yang akan dicetak -->
+            <div id="printable-receipt" class="printable-receipt">
+                <div class="receipt-header">
+                    <h2>Warung Digital</h2>
+                    <h3>Delsi Shop</h3>
+                    <p class="receipt-address">Jl. Raya Warung Digital No. 88</p>
+                    <p id="receipt-date-time" class="receipt-datetime">01/01/2026 10:00:00</p>
+                    <p id="receipt-id" class="receipt-id">No: TRX-000000</p>
+                </div>
+                
+                <div class="receipt-divider">--------------------------------</div>
+
+                <table class="receipt-items-table">
+                    <tbody id="receipt-items-body">
+                        <!-- Items rendered dynamically -->
+                    </tbody>
+                </table>
+
+                <div class="receipt-divider">--------------------------------</div>
+
+                <div class="receipt-summary">
+                    <div class="receipt-row">
+                        <span>Total:</span>
+                        <span id="receipt-total-val">Rp 0</span>
+                    </div>
+                    <div class="receipt-row">
+                        <span>Bayar:</span>
+                        <span id="receipt-pay-val">Rp 0</span>
+                    </div>
+                    <div class="receipt-row">
+                        <span>Kembali:</span>
+                        <span id="receipt-change-val">Rp 0</span>
+                    </div>
+                </div>
+
+                <div class="receipt-divider">--------------------------------</div>
+
+                <div class="receipt-footer">
+                    <p>Terima kasih telah berbelanja</p>
+                    <p>di Delsi Shop!</p>
+                </div>
+            </div>
+
+            <div class="modal-actions no-print">
+                <button class="btn btn-primary" onclick="window.print()">
+                    <i class="fa-solid fa-print"></i> Cetak Sekarang
+                </button>
+                <button class="btn btn-secondary" onclick="closeReceiptModal()">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Firebase SDK Compat -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script>
+        // Config Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCK8yOtH74y_L_hy2v8OErFTif0xI7NZeY",
+            authDomain: "warung-delsi.firebaseapp.com",
+            projectId: "warung-delsi",
+            storageBucket: "warung-delsi.firebasestorage.app",
+            messagingSenderId: "576920496516",
+            appId: "1:576920496516:web:07eb66cf77758cc9f8d5d1"
+        };
+        
+        // Inisialisasi Firebase & Firestore
+        let db = null;
+        try {
+            if (typeof firebase !== 'undefined') {
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+                console.log("Firebase initialized successfully");
+            }
+        } catch (e) {
+            console.warn("Firebase initialization error, fallback to localStorage:", e);
+        }
+    </script>
+    <script src="script.js"></script>
+</body>
+</html>
