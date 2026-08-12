@@ -567,6 +567,7 @@ function renderCart() {
         tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--text-secondary); padding: 1.5rem;">Keranjang belanja masih kosong.</td></tr>`;
         itemCountBadge.textContent = '0 Item';
         document.getElementById('text-total-belanja').textContent = formatRupiah(0);
+        onMetodeBayarChange();
         calculateChange();
         return;
     }
@@ -603,6 +604,7 @@ function renderCart() {
 
     itemCountBadge.textContent = `${totalItemsCount} Item`;
     document.getElementById('text-total-belanja').textContent = formatRupiah(grandTotal);
+    onMetodeBayarChange();
     calculateChange();
 }
 
@@ -636,14 +638,53 @@ function removeFromCart(index) {
     showToast('Item dihapus dari keranjang.', 'info');
 }
 
+// Dapatkan metode pembayaran yang sedang dipilih
+function getMetodeBayar() {
+    const select = document.getElementById('select-metode-bayar');
+    return select ? select.value : 'Tunai';
+}
+
+// Handler perubahan metode pembayaran
+function onMetodeBayarChange() {
+    const metode = getMetodeBayar();
+    const inputBayar = document.getElementById('input-bayar');
+    const labelBayar = document.getElementById('label-input-bayar');
+    const labelKembalian = document.getElementById('label-kembalian');
+
+    if (metode === 'Tunai') {
+        // Tunai: user input uang, hitung kembalian
+        inputBayar.disabled = false;
+        inputBayar.placeholder = 'Masukkan jumlah uang';
+        labelBayar.textContent = 'Uang Bayar (Rp)';
+        labelKembalian.textContent = 'Kembalian:';
+        if (inputBayar.value) {
+            inputBayar.value = '';
+        }
+    } else {
+        // Non-tunai (QRIS/Transfer/E-Wallet): bayar pas sesuai total, tidak ada kembalian
+        const grandTotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
+        inputBayar.disabled = true;
+        inputBayar.value = grandTotal > 0 ? grandTotal : '';
+        inputBayar.placeholder = 'Otomatis sesuai total';
+        labelBayar.textContent = 'Jumlah Dibayar (Otomatis)';
+        labelKembalian.textContent = 'Tidak ada kembalian:';
+    }
+
+    calculateChange();
+}
+
 function calculateChange() {
     const grandTotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
     const inputBayar = parseFloat(document.getElementById('input-bayar').value) || 0;
     const textKembalian = document.getElementById('text-kembalian');
+    const metode = getMetodeBayar();
 
     const kembalian = inputBayar - grandTotal;
 
-    if (inputBayar === 0 && grandTotal === 0) {
+    if (metode !== 'Tunai') {
+        textKembalian.textContent = formatRupiah(0);
+        textKembalian.style.color = 'var(--text-primary)';
+    } else if (inputBayar === 0 && grandTotal === 0) {
         textKembalian.textContent = formatRupiah(0);
         textKembalian.style.color = 'var(--text-primary)';
     } else if (kembalian < 0) {
@@ -662,9 +703,14 @@ function resetCart() {
         return;
     }
     cart = [];
-    document.getElementById('input-bayar').value = '';
+    const inputBayar = document.getElementById('input-bayar');
+    inputBayar.value = '';
+    inputBayar.disabled = false;
+    const selectMetode = document.getElementById('select-metode-bayar');
+    if (selectMetode) selectMetode.value = 'Tunai';
     renderCart();
     updateMaxQtyLabel();
+    onMetodeBayarChange();
     showToast('Transaksi telah di-reset.', 'info');
 }
 
@@ -676,13 +722,14 @@ function processSaveTransaction() {
 
     const grandTotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
     const inputBayar = parseFloat(document.getElementById('input-bayar').value) || 0;
+    const metodePembayaran = getMetodeBayar();
 
     if (inputBayar < grandTotal) {
         showToast('Uang pembayaran masih kurang!', 'warning');
         return;
     }
 
-    const kembalian = inputBayar - grandTotal;
+    const kembalian = metodePembayaran === 'Tunai' ? inputBayar - grandTotal : 0;
 
     cart.forEach(cartItem => {
         const product = products.find(p => p.kode === cartItem.kode);
@@ -711,7 +758,8 @@ function processSaveTransaction() {
         totalItem: cart.reduce((sum, i) => sum + i.jumlah, 0),
         total: grandTotal,
         bayar: inputBayar,
-        kembalian: kembalian
+        kembalian: kembalian,
+        metodePembayaran: metodePembayaran
     };
 
     transactions.unshift(transactionData);
@@ -728,11 +776,16 @@ function processSaveTransaction() {
     openReceiptModal(transactionData);
 
     cart = [];
-    document.getElementById('input-bayar').value = '';
+    const inputBayarField = document.getElementById('input-bayar');
+    inputBayarField.value = '';
+    inputBayarField.disabled = false;
+    const selectMetode = document.getElementById('select-metode-bayar');
+    if (selectMetode) selectMetode.value = 'Tunai';
     renderCart();
     renderProducts();
     populateProductDropdown();
     renderReports();
+    onMetodeBayarChange();
 
     showToast('Transaksi berhasil disimpan & diproses!', 'success');
 }
@@ -767,6 +820,7 @@ function openReceiptModal(trx) {
     document.getElementById('receipt-total-val').textContent = formatRupiah(trx.total);
     document.getElementById('receipt-pay-val').textContent = formatRupiah(trx.bayar);
     document.getElementById('receipt-change-val').textContent = formatRupiah(trx.kembalian);
+    document.getElementById('receipt-metode-val').textContent = trx.metodePembayaran || 'Tunai';
 
     const modal = document.getElementById('receipt-modal-overlay');
     modal.classList.add('active');
@@ -811,15 +865,17 @@ function renderReports() {
     statCount.textContent = `${totalTrxCount} Transaksi`;
 
     if (transactions.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--text-secondary); padding: 1.5rem;">Belum ada riwayat transaksi.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--text-secondary); padding: 1.5rem;">Belum ada riwayat transaksi.</td></tr>`;
         return;
     }
 
     transactions.forEach((trx, index) => {
+        const metodeIcon = getMetodeIcon(trx.metodePembayaran || 'Tunai');
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td><strong>${trx.id}</strong></td>
             <td>${trx.timestamp}</td>
+            <td><span class="metode-badge">${metodeIcon} ${escapeHtml(trx.metodePembayaran || 'Tunai')}</span></td>
             <td>${trx.totalItem} Item</td>
             <td><strong>${formatRupiah(trx.total)}</strong></td>
             <td>
@@ -835,6 +891,16 @@ function renderReports() {
         `;
         tbody.appendChild(tr);
     });
+}
+
+// Ikon untuk setiap metode pembayaran di laporan
+function getMetodeIcon(metode) {
+    switch (metode) {
+        case 'QRIS': return '<i class="fa-solid fa-qrcode"></i>';
+        case 'Transfer Bank': return '<i class="fa-solid fa-building-columns"></i>';
+        case 'E-Wallet': return '<i class="fa-solid fa-mobile-screen-button"></i>';
+        default: return '<i class="fa-solid fa-money-bill-wave"></i>';
+    }
 }
 
 function showReceiptFromReport(index) {

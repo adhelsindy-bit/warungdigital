@@ -193,13 +193,24 @@
                             <span id="text-total-belanja" class="highlight-total">Rp 0</span>
                         </div>
 
+                        <!-- Pilihan Metode Pembayaran -->
+                        <div class="form-group">
+                            <label for="select-metode-bayar">Metode Pembayaran</label>
+                            <select id="select-metode-bayar" onchange="onMetodeBayarChange()">
+                                <option value="Tunai">Tunai / Cash</option>
+                                <option value="QRIS">QRIS</option>
+                                <option value="Transfer Bank">Transfer Bank</option>
+                                <option value="E-Wallet">E-Wallet (DANA/OVO/GoPay/ShopeePay)</option>
+                            </select>
+                        </div>
+
                         <div class="form-group payment-input-group">
-                            <label for="input-bayar">Uang Bayar (Rp)</label>
+                            <label for="input-bayar" id="label-input-bayar">Uang Bayar (Rp)</label>
                             <input type="number" id="input-bayar" min="0" placeholder="Masukkan jumlah uang" oninput="calculateChange()">
                         </div>
 
                         <div class="summary-row change-row">
-                            <span>Kembalian:</span>
+                            <span id="label-kembalian">Kembalian:</span>
                             <span id="text-kembalian" class="highlight-change">Rp 0</span>
                         </div>
 
@@ -258,6 +269,7 @@
                             <tr>
                                 <th>No. Transaksi</th>
                                 <th>Tanggal & Jam</th>
+                                <th>Metode</th>
                                 <th>Jumlah Item</th>
                                 <th>Total Transaksi</th>
                                 <th>Aksi</th>
@@ -302,6 +314,10 @@
                 <div class="receipt-divider">--------------------------------</div>
 
                 <div class="receipt-summary">
+                    <div class="receipt-row">
+                        <span>Metode:</span>
+                        <span id="receipt-metode-val">Tunai</span>
+                    </div>
                     <div class="receipt-row">
                         <span>Total:</span>
                         <span id="receipt-total-val">Rp 0</span>
