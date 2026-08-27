@@ -25,7 +25,10 @@
     <!-- Navigasi Utama -->
     <nav class="app-nav">
         <div class="nav-container">
-            <button class="nav-btn active" onclick="switchTab('barang')">
+            <button class="nav-btn active" onclick="switchTab('dashboard')">
+                <i class="fa-solid fa-gauge-high"></i> Dashboard
+            </button>
+            <button class="nav-btn" onclick="switchTab('barang')">
                 <i class="fa-solid fa-boxes-stacked"></i> Manajemen Barang
             </button>
             <button class="nav-btn" onclick="switchTab('transaksi')">
@@ -40,8 +43,84 @@
     <!-- Main Container -->
     <main class="main-container">
 
+        <!-- SECTION DASHBOARD -->
+        <section id="section-dashboard" class="tab-content active">
+            <!-- Ringkasan Stok Menipis & Alat Data -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon bg-red">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Produk Stok Menipis (&le; 5)</h3>
+                        <p id="dash-stok-menipis">0 Produk</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon bg-blue">
+                        <i class="fa-solid fa-chart-simple"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Omzet 7 Hari Terakhir</h3>
+                        <p id="dash-omzet-7hari">Rp 0</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grafik Penjualan -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fa-solid fa-chart-line"></i> Grafik Omzet 7 Hari Terakhir</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="chart-omzet"></canvas>
+                </div>
+            </div>
+
+            <!-- Daftar Produk Stok Menipis -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fa-solid fa-bell"></i> Daftar Produk Stok Menipis</h2>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Foto</th>
+                                <th>Kode</th>
+                                <th>Nama</th>
+                                <th>Stok Tersisa</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-stok-menipis">
+                            <!-- Rendered dynamically by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Backup & Restore Data -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fa-solid fa-database"></i> Backup & Restore Data</h2>
+                </div>
+                <div class="backup-actions">
+                    <button type="button" class="btn btn-primary" onclick="backupData()">
+                        <i class="fa-solid fa-download"></i> Backup Data (JSON)
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('file-restore').click()">
+                        <i class="fa-solid fa-upload"></i> Restore Data
+                    </button>
+                    <input type="file" id="file-restore" accept=".json,application/json" style="display:none;" onchange="restoreData(event)">
+                </div>
+                <small class="form-info">Backup mengunduh seluruh data barang & transaksi. Restore mengembalikan seluruh data dari file JSON backup.</small>
+            </div>
+        </section>
+
         <!-- SECTION 1: MANAJEMEN BARANG -->
-        <section id="section-barang" class="tab-content active">
+        <section id="section-barang" class="tab-content">
             <div class="grid-2col">
                 <!-- Form Tambah / Edit Barang -->
                 <div class="card">
@@ -62,8 +141,14 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="harga-barang">Harga (Rp)</label>
+                            <label for="harga-barang">Harga Jual (Rp)</label>
                             <input type="number" id="harga-barang" min="0" placeholder="Contoh: 65000" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="modal-barang">Harga Modal (Rp)</label>
+                            <input type="number" id="modal-barang" min="0" placeholder="Contoh: 55000" oninput="updateLabaPreview()">
+                            <small id="info-laba-item" class="form-info">Laba per item: Rp 0</small>
                         </div>
 
                         <div class="form-group">
@@ -72,8 +157,27 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="gambar-barang">URL Foto Produk (Opsional)</label>
-                            <input type="url" id="gambar-barang" placeholder="https://example.com/foto.jpg">
+                            <label>Foto Produk (Opsional)</label>
+                            
+                            <!-- Drop Zone Upload -->
+                            <div id="drop-zone" class="drop-zone" onclick="document.getElementById('file-gambar').click()" ondragover="event.preventDefault(); this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="handleFileDrop(event)">
+                                <div id="drop-zone-content">
+                                    <i class="fa-solid fa-cloud-arrow-up drop-zone-icon"></i>
+                                    <p class="drop-zone-text">Seret & lepas foto ke sini</p>
+                                    <p class="drop-zone-hint">atau klik untuk memilih file</p>
+                                    <p class="drop-zone-formats">JPG, PNG, WebP (maks. 2MB)</p>
+                                </div>
+                                <div id="drop-zone-preview" style="display:none;">
+                                    <img id="drop-zone-img" src="" alt="Preview">
+                                    <button type="button" class="btn btn-danger btn-sm" onclick="event.stopPropagation(); removeUploadedPhoto()" title="Hapus Foto">
+                                        <i class="fa-solid fa-trash-can"></i> Hapus Foto
+                                    </button>
+                                </div>
+                            </div>
+                            <input type="file" id="file-gambar" accept="image/jpeg,image/png,image/webp" style="display:none;" onchange="handleFileSelect(event)">
+                            <input type="hidden" id="gambar-barang" value="">
+                            <small class="form-info">Atau masukkan URL manual:</small>
+                            <input type="url" id="gambar-url-input" placeholder="https://example.com/foto.jpg" oninput="handleUrlInput(this.value)" style="margin-top:0.3rem;">
                         </div>
 
                         <div class="form-actions">
@@ -110,7 +214,9 @@
                                     <th>Foto</th>
                                     <th>Kode</th>
                                     <th>Nama</th>
-                                    <th>Harga</th>
+                                    <th>Harga Jual</th>
+                                    <th>Modal</th>
+                                    <th>Laba</th>
                                     <th>Stok</th>
                                     <th>Aksi</th>
                                 </tr>
@@ -193,6 +299,12 @@
                             <span id="text-total-belanja" class="highlight-total">Rp 0</span>
                         </div>
 
+                        <!-- Nama Kasir -->
+                        <div class="form-group">
+                            <label for="input-kasir">Nama Kasir</label>
+                            <input type="text" id="input-kasir" placeholder="Contoh: Delsi" value="Kasir">
+                        </div>
+
                         <!-- Pilihan Metode Pembayaran -->
                         <div class="form-group">
                             <label for="select-metode-bayar">Metode Pembayaran</label>
@@ -230,6 +342,17 @@
             </div>
         </section>
 
+        <!-- Sticky Checkout Bar (Mobile) -->
+        <div id="mobile-checkout-bar" class="mobile-checkout-bar">
+            <div class="mobile-checkout-total">
+                <small>Total Belanja</small>
+                <span id="mobile-total-belanja">Rp 0</span>
+            </div>
+            <button type="button" class="btn btn-success mobile-save-btn" onclick="processSaveTransaction()">
+                <i class="fa-solid fa-floppy-disk"></i> Simpan
+            </button>
+        </div>
+
         <!-- SECTION 3: LAPORAN TRANSAKSI -->
         <section id="section-laporan" class="tab-content">
             <!-- Stat Cards -->
@@ -239,7 +362,7 @@
                         <i class="fa-solid fa-wallet"></i>
                     </div>
                     <div class="stat-info">
-                        <h3>Total Omzet Keseluruhan</h3>
+                        <h3>Total Omzet (Terfilter)</h3>
                         <p id="stat-total-omzet">Rp 0</p>
                     </div>
                 </div>
@@ -253,16 +376,62 @@
                         <p id="stat-jumlah-transaksi">0 Transaksi</p>
                     </div>
                 </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon bg-orange">
+                        <i class="fa-solid fa-cart-flatbed"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Total Modal</h3>
+                        <p id="stat-total-modal">Rp 0</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon bg-green">
+                        <i class="fa-solid fa-circle-dollar-to-slot"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Total Laba Bersih</h3>
+                        <p id="stat-total-laba">Rp 0</p>
+                    </div>
+                </div>
             </div>
 
             <!-- Tabel Laporan -->
             <div class="card">
                 <div class="card-header flex-between">
                     <h2><i class="fa-solid fa-file-invoice-dollar"></i> Riwayat Transaksi</h2>
-                    <button class="btn btn-danger" onclick="clearAllReports()">
-                        <i class="fa-solid fa-trash-can"></i> Hapus Semua Laporan
-                    </button>
+                    <div class="header-actions" style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+                        <button class="btn btn-secondary btn-sm" onclick="exportCsv()" title="Unduh laporan dalam format CSV">
+                            <i class="fa-solid fa-file-csv"></i> Export CSV
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="printReport()" title="Cetak laporan transaksi">
+                            <i class="fa-solid fa-print"></i> Print Laporan
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="clearAllReports()">
+                            <i class="fa-solid fa-trash-can"></i> Hapus Semua
+                        </button>
+                    </div>
                 </div>
+
+                <!-- Filter Laporan -->
+                <div class="report-filter-bar">
+                    <div class="filter-group">
+                        <button class="filter-btn active" data-filter="all" onclick="setReportFilter('all')">Semua</button>
+                        <button class="filter-btn" data-filter="today" onclick="setReportFilter('today')">Hari Ini</button>
+                        <button class="filter-btn" data-filter="week" onclick="setReportFilter('week')">Minggu Ini</button>
+                        <button class="filter-btn" data-filter="month" onclick="setReportFilter('month')">Bulan Ini</button>
+                    </div>
+                    <div class="filter-group">
+                        <label for="filter-date" class="filter-label">Pilih Tanggal:</label>
+                        <input type="date" id="filter-date" onchange="setReportFilter('date')">
+                    </div>
+                    <div class="search-box">
+                        <input type="text" id="search-laporan" placeholder="Cari no. transaksi..." oninput="renderReports()">
+                    </div>
+                </div>
+
                 <div class="table-responsive">
                     <table class="data-table">
                         <thead>
@@ -270,8 +439,11 @@
                                 <th>No. Transaksi</th>
                                 <th>Tanggal & Jam</th>
                                 <th>Metode</th>
+                                <th>Kasir</th>
                                 <th>Jumlah Item</th>
-                                <th>Total Transaksi</th>
+                                <th>Total</th>
+                                <th>Modal</th>
+                                <th>Laba</th>
                                 <th>Aksi</th>
                             </tr>
                         </thead>
@@ -299,8 +471,10 @@
                     <h2>Warung Digital</h2>
                     <h3>Delsi Shop</h3>
                     <p class="receipt-address">Jl. Raya Warung Digital No. 88</p>
-                    <p id="receipt-date-time" class="receipt-datetime">01/01/2026 10:00:00</p>
+                    <p class="receipt-address">Telp: 0812-3456-7890</p>
+                    <p id="receipt-date-time" class="receipt-datetime">Senin, 12 Agustus 2026 - 10:00:00</p>
                     <p id="receipt-id" class="receipt-id">No: TRX-000000</p>
+                    <p id="receipt-kasir-val" class="receipt-kasir">Kasir: Kasir</p>
                 </div>
                 
                 <div class="receipt-divider">--------------------------------</div>
@@ -334,6 +508,12 @@
 
                 <div class="receipt-divider">--------------------------------</div>
 
+                <!-- QR Code Transaksi -->
+                <div class="receipt-qr">
+                    <div id="receipt-qr-code"></div>
+                    <p class="receipt-qr-text">Pindai untuk verifikasi transaksi</p>
+                </div>
+
                 <div class="receipt-footer">
                     <p>Terima kasih telah berbelanja</p>
                     <p>di Delsi Shop!</p>
@@ -351,12 +531,47 @@
         </div>
     </div>
 
+    <!-- PRINATABLE AREA: LAPORAN -->
+    <div id="printable-report" class="printable-report">
+        <div class="report-print-header">
+            <h2>Warung Digital - Delsi Shop</h2>
+            <p>Jl. Raya Warung Digital No. 88 - Telp: 0812-3456-7890</p>
+            <p id="report-print-date"></p>
+        </div>
+        <table id="report-print-table" class="report-print-table">
+            <thead>
+                <tr>
+                    <th>No. Transaksi</th>
+                    <th>Tanggal & Jam</th>
+                    <th>Metode</th>
+                    <th>Kasir</th>
+                    <th>Total</th>
+                    <th>Modal</th>
+                    <th>Laba</th>
+                </tr>
+            </thead>
+            <tbody id="report-print-body"></tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="4" style="text-align: right;"><strong>Total Keseluruhan</strong></td>
+                    <td id="report-print-total"></td>
+                    <td id="report-print-modal"></td>
+                    <td id="report-print-laba"></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
     <!-- Toast Notification -->
     <div id="toast-container" class="toast-container"></div>
 
     <!-- Firebase SDK Compat -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <!-- Chart.js untuk grafik penjualan -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <!-- qrcodejs untuk QR Code struk -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
         // Config Firebase
         const firebaseConfig = {
