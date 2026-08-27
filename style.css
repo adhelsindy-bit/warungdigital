@@ -1520,6 +1520,47 @@ body {
     100% { transform: scale(1); }
 }
 
+/* Status Bar (otomatis scan) */
+.scan-status-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    padding: 0.75rem 1rem;
+    text-align: center;
+    animation: slideUpFade 0.3s ease;
+}
+
+.scan-status-bar.scan-status-success {
+    background: linear-gradient(135deg, rgba(46, 125, 50, 0.95), rgba(27, 94, 32, 0.95));
+    color: #ffffff;
+}
+
+.scan-status-bar.scan-status-warning {
+    background: linear-gradient(135deg, rgba(245, 124, 0, 0.95), rgba(230, 81, 0, 0.95));
+    color: #ffffff;
+}
+
+.scan-status-bar.scan-status-danger {
+    background: linear-gradient(135deg, rgba(198, 40, 40, 0.95), rgba(183, 28, 28, 0.95));
+    color: #ffffff;
+}
+
+.scan-status-inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+@keyframes slideUpFade {
+    from { transform: translateY(100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
 /* Not Found */
 .scan-notfound {
     text-align: center;

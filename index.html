@@ -628,55 +628,11 @@
                     <p class="scanner-hint"><i class="fa-solid fa-camera"></i> Arahkan kamera ke barcode / QR Code</p>
                 </div>
 
-                <!-- Hasil Scan -->
-                <div id="scan-result-container" class="scan-result-container" style="display:none;">
-                    <div class="scan-result-header">
-                        <i class="fa-solid fa-circle-check scan-success-icon"></i>
-                        <h4>Barcode Terdeteksi!</h4>
-                    </div>
-                    <div class="scan-code-display">
-                        <small>Kode:</small>
-                        <span id="scan-code-value" class="scan-code-value"></span>
-                    </div>
-
-                    <!-- Info Produk Ditemukan -->
-                    <div id="scan-product-found" class="scan-product-info" style="display:none;">
-                        <div class="scan-product-card">
-                            <img id="scan-product-img" src="" alt="Foto Produk">
-                            <div class="scan-product-details">
-                                <h4 id="scan-product-name"></h4>
-                                <p class="scan-product-price" id="scan-product-price">Rp 0</p>
-                                <p class="scan-product-stock" id="scan-product-stock">Stok: 0</p>
-                            </div>
-                        </div>
-                        <div class="scan-qty-row">
-                            <label>Jumlah:</label>
-                            <div class="qty-control">
-                                <button type="button" class="qty-btn" onclick="scanChangeQty(-1)">-</button>
-                                <input type="number" id="scan-qty-input" value="1" min="1" max="99">
-                                <button type="button" class="qty-btn" onclick="scanChangeQty(1)">+</button>
-                            </div>
-                        </div>
-                        <button class="btn btn-success btn-block scan-add-btn" onclick="scanAddToCart()">
-                            <i class="fa-solid fa-cart-plus"></i> Tambah ke Keranjang
-                        </button>
-                    </div>
-
-                    <!-- Barang Tidak Ditemukan -->
-                    <div id="scan-product-notfound" class="scan-notfound" style="display:none;">
-                        <i class="fa-solid fa-triangle-exclamation"></i>
-                        <p>Barang belum terdaftar</p>
-                        <small>Kode ini belum ada di database. Silakan tambah barang terlebih dahulu.</small>
-                    </div>
-
-                    <!-- Tombol Aksi -->
-                    <div class="scan-actions">
-                        <button class="btn btn-primary" onclick="resumeScan()">
-                            <i class="fa-solid fa-camera"></i> Scan Lagi
-                        </button>
-                        <button class="btn btn-secondary" onclick="closeScanner()">
-                            <i class="fa-solid fa-xmark"></i> Tutup
-                        </button>
+                <!-- Status Scanner (toast-like overlay) -->
+                <div id="scan-status-bar" class="scan-status-bar" style="display:none;">
+                    <div class="scan-status-inner">
+                        <i id="scan-status-icon" class="fa-solid fa-circle-check"></i>
+                        <span id="scan-status-text"></span>
                     </div>
                 </div>
             </div>

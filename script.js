@@ -1756,16 +1756,59 @@ function startScanner() {
 }
 
 /**
- * Callback saat scan berhasil
+ * Callback saat scan berhasil - otomatis tambah ke keranjang
  */
 function onScanSuccess(decodedText, decodedResult) {
-    // Hentikan scanner
-    if (html5QrCode && html5QrCode.isScanning) {
-        html5QrCode.pause(true);
+    // Cari produk berdasarkan kode
+    const code = decodedText;
+    const found = products.find(p => p.kode === code);
+
+    if (found) {
+        // Cek stok
+        if (found.stok <= 0) {
+            showToast(found.nama + ' stok habis!', 'danger');
+            return;
+        }
+
+        // Cek apakah sudah ada di keranjang
+        const existingIndex = cart.findIndex(item => item.kode === found.kode);
+
+        if (existingIndex >= 0) {
+            if (cart[existingIndex].jumlah >= found.stok) {
+                showToast(found.nama + ' sudah mencapai stok maksimum!', 'warning');
+                return;
+            }
+            cart[existingIndex].jumlah += 1;
+            cart[existingIndex].subtotal = cart[existingIndex].jumlah * found.harga;
+        } else {
+            cart.push({
+                kode: found.kode,
+                nama: found.nama,
+                harga: found.harga,
+                modal: found.modal || 0,
+                gambar: found.gambar || DEFAULT_IMAGE,
+                jumlah: 1,
+                subtotal: found.harga
+            });
+        }
+
+        // Update tampilan keranjang
+        renderCart();
+        updateTotalBelanja();
+
+        // Status bar di atas scanner
+        showScanStatus('✅ ' + found.nama + ' - ' + formatRupiah(found.harga), 'success');
+    } else {
+        // Barang tidak ditemukan
+        showScanStatus('⚠️ Kode "' + code + '" belum terdaftar', 'warning');
     }
 
-    // Tampilkan hasil
-    displayScanResult(decodedText);
+    // Jeda sebentar lalu lanjut scan
+    setTimeout(() => {
+        if (html5QrCode && html5QrCode.isScanning) {
+            html5QrCode.resume();
+        }
+    }, 800);
 }
 
 /**
@@ -1776,139 +1819,26 @@ function onScanFailure(error) {
 }
 
 /**
- * Menampilkan hasil scan
+ * Menampilkan status bar di atas scanner
  */
-function displayScanResult(code) {
-    const cameraContainer = document.getElementById('scanner-camera-container');
-    const resultContainer = document.getElementById('scan-result-container');
-    const codeValue = document.getElementById('scan-code-value');
-    const productFound = document.getElementById('scan-product-found');
-    const productNotFound = document.getElementById('scan-product-notfound');
-    const scanProductImg = document.getElementById('scan-product-img');
-    const scanProductName = document.getElementById('scan-product-name');
-    const scanProductPrice = document.getElementById('scan-product-price');
-    const scanProductStock = document.getElementById('scan-product-stock');
-    const scanQtyInput = document.getElementById('scan-qty-input');
+function showScanStatus(text, type) {
+    const statusBar = document.getElementById('scan-status-bar');
+    const statusIcon = document.getElementById('scan-status-icon');
+    const statusText = document.getElementById('scan-status-text');
 
-    // Sembunyikan kamera, tampilkan hasil
-    cameraContainer.style.display = 'none';
-    resultContainer.style.display = 'block';
+    if (!statusBar) return;
 
-    // Tampilkan kode
-    codeValue.textContent = code;
+    statusText.textContent = text;
+    statusBar.style.display = 'block';
 
-    // Cari produk berdasarkan kode
-    const found = products.find(p => p.kode === code);
+    // Reset class
+    statusBar.className = 'scan-status-bar scan-status-' + type;
 
-    if (found) {
-        scanCurrentProduct = found;
-        productFound.style.display = 'block';
-        productNotFound.style.display = 'none';
-
-        // Isi data produk
-        scanProductImg.src = found.gambar || DEFAULT_IMAGE;
-        scanProductImg.onerror = function() { this.src = DEFAULT_IMAGE; };
-        scanProductName.textContent = found.nama;
-        scanProductPrice.textContent = formatRupiah(found.harga);
-        scanProductStock.textContent = 'Stok: ' + found.stok;
-        scanQtyInput.value = 1;
-        scanQtyInput.max = found.stok;
-    } else {
-        scanCurrentProduct = null;
-        productFound.style.display = 'none';
-        productNotFound.style.display = 'block';
-    }
-
-    // Animasi sukses
-    resultContainer.classList.add('scan-success-flash');
-    setTimeout(() => resultContainer.classList.remove('scan-success-flash'), 600);
-}
-
-/**
- * Mengubah jumlah item saat scan
- */
-function scanChangeQty(delta) {
-    const input = document.getElementById('scan-qty-input');
-    let val = parseInt(input.value) || 1;
-    val += delta;
-    if (val < 1) val = 1;
-    if (scanCurrentProduct && val > scanCurrentProduct.stok) {
-        val = scanCurrentProduct.stok;
-        showToast('Melebihi stok yang tersedia!', 'warning');
-    }
-    if (val > 99) val = 99;
-    input.value = val;
-}
-
-/**
- * Menambahkan produk scan ke keranjang
- */
-function scanAddToCart() {
-    if (!scanCurrentProduct) return;
-
-    const qtyInput = document.getElementById('scan-qty-input');
-    const qty = parseInt(qtyInput.value) || 1;
-    const product = scanCurrentProduct;
-
-    // Cek stok
-    if (product.stok < qty) {
-        showToast('Stok tidak cukup! Stok tersisa: ' + product.stok, 'danger');
-        return;
-    }
-
-    // Cek apakah produk sudah ada di keranjang
-    const existingIndex = cart.findIndex(item => item.kode === product.kode);
-
-    if (existingIndex >= 0) {
-        const newQty = cart[existingIndex].jumlah + qty;
-        if (newQty > product.stok) {
-            showToast('Jumlah total di keranjang melebihi stok! Stok: ' + product.stok, 'danger');
-            return;
-        }
-        cart[existingIndex].jumlah = newQty;
-        cart[existingIndex].subtotal = newQty * product.harga;
-    } else {
-        cart.push({
-            kode: product.kode,
-            nama: product.nama,
-            harga: product.harga,
-            modal: product.modal || 0,
-            gambar: product.gambar || DEFAULT_IMAGE,
-            jumlah: qty,
-            subtotal: qty * product.harga
-        });
-    }
-
-    // Update tampilan
-    renderCart();
-    updateTotalBelanja();
-
-    // Reset qty scan
-    qtyInput.value = 1;
-
-    showToast(product.nama + ' x' + qty + ' ditambahkan ke keranjang!', 'success');
-
-    // Lanjut scan lagi
-    resumeScan();
-}
-
-/**
- * Melanjutkan scanning setelah menambah ke keranjang
- */
-function resumeScan() {
-    const cameraContainer = document.getElementById('scanner-camera-container');
-    const resultContainer = document.getElementById('scan-result-container');
-
-    resultContainer.style.display = 'none';
-    cameraContainer.style.display = 'block';
-    scanCurrentProduct = null;
-
-    // Resume scanner
-    if (html5QrCode && html5QrCode.isScanning) {
-        html5QrCode.resume();
-    } else {
-        startScanner();
-    }
+    // Sembunyikan setelah 1.5 detik
+    clearTimeout(showScanStatus._timer);
+    showScanStatus._timer = setTimeout(() => {
+        statusBar.style.display = 'none';
+    }, 1500);
 }
 
 /**
