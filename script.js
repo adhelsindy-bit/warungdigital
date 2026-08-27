@@ -385,29 +385,37 @@ function renderProducts() {
     });
 }
 
+function generateProductCode() {
+    const existingCodes = products.map(p => {
+        const match = p.kode.match(/^BRG(\d+)$/);
+        return match ? parseInt(match[1]) : 0;
+    });
+    const maxNum = existingCodes.length > 0 ? Math.max(...existingCodes) : 0;
+    const nextNum = maxNum + 1;
+    return 'BRG' + String(nextNum).padStart(3, '0');
+}
+
 function handleSaveProduct(e) {
     e.preventDefault();
 
     const editIndex = parseInt(document.getElementById('edit-index').value);
-    const kodeInput = document.getElementById('kode-barang').value.trim().toUpperCase();
     const namaInput = document.getElementById('nama-barang').value.trim();
     const hargaInput = parseInt(document.getElementById('harga-barang').value);
     const stokInput = parseInt(document.getElementById('stok-barang').value);
     const gambarInput = document.getElementById('gambar-barang').value.trim();
 
-    if (!kodeInput || !namaInput || isNaN(hargaInput) || isNaN(stokInput)) {
+    if (!namaInput || isNaN(hargaInput) || isNaN(stokInput)) {
         showToast('Mohon isi semua field dengan benar.', 'warning');
         return;
     }
 
-    const duplicateIndex = products.findIndex(p => p.kode === kodeInput);
-    if (editIndex === -1 && duplicateIndex !== -1) {
-        showToast(`Kode barang '${kodeInput}' sudah digunakan!`, 'warning');
-        return;
-    }
-    if (editIndex !== -1 && duplicateIndex !== -1 && duplicateIndex !== editIndex) {
-        showToast(`Kode barang '${kodeInput}' sudah digunakan oleh produk lain!`, 'warning');
-        return;
+    let kodeInput;
+    if (editIndex === -1) {
+        // Produk baru: auto-generate kode
+        kodeInput = generateProductCode();
+    } else {
+        // Edit produk: pertahankan kode lama
+        kodeInput = products[editIndex].kode;
     }
 
     const modalInput = parseInt(document.getElementById('modal-barang').value) || 0;
