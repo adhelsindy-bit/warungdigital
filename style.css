@@ -1086,6 +1086,490 @@ body {
         border-radius: 10px;
         min-width: 130px;
     }
+
+    /* Scanner Mobile Adjustments */
+    .scanner-modal {
+        max-width: 100%;
+        max-height: 95vh;
+        border-radius: 12px;
+    }
+
+    .scanner-crosshair {
+        width: 180px;
+        height: 180px;
+    }
+
+    .btn-scan {
+        padding: 1rem;
+        font-size: 1.1rem;
+    }
+}
+
+/* ==========================================================================
+   SCANNER BARCODE & QR CODE
+   ========================================================================== */
+
+/* Tombol Scan Barang */
+.btn-scan {
+    background: linear-gradient(135deg, #0288d1, #01579b);
+    color: #ffffff;
+    font-size: 1.05rem;
+    font-weight: 700;
+    padding: 0.85rem 1.25rem;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: var(--transition);
+    box-shadow: 0 4px 12px rgba(2, 136, 209, 0.3);
+}
+
+.btn-scan:hover {
+    background: linear-gradient(135deg, #01579b, #002f6c);
+    box-shadow: 0 6px 16px rgba(2, 136, 209, 0.4);
+    transform: translateY(-2px);
+}
+
+.scan-divider {
+    text-align: center;
+    margin: 0.75rem 0;
+    position: relative;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.scan-divider::before,
+.scan-divider::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 35%;
+    height: 1px;
+    background-color: var(--border-color);
+}
+
+.scan-divider::before { left: 0; }
+.scan-divider::after { right: 0; }
+
+/* Scanner Modal Overlay */
+.scanner-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+    padding: 1rem;
+}
+
+.scanner-modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Scanner Modal Card */
+.scanner-modal {
+    background-color: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.25);
+    width: 100%;
+    max-width: 480px;
+    max-height: 92vh;
+    overflow-y: auto;
+    transform: scale(0.9) translateY(20px);
+    transition: transform 0.35s ease;
+}
+
+.scanner-modal-overlay.active .scanner-modal {
+    transform: scale(1) translateY(0);
+}
+
+.scanner-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    border-bottom: 2px solid var(--border-color);
+    background: linear-gradient(135deg, #0288d1, #01579b);
+    color: #ffffff;
+    border-radius: 16px 16px 0 0;
+}
+
+.scanner-modal-header h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.scanner-modal-header .close-btn {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    font-size: 1.3rem;
+    cursor: pointer;
+    color: #ffffff;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.scanner-modal-header .close-btn:hover {
+    background: rgba(255,255,255,0.35);
+}
+
+.scanner-modal-body {
+    padding: 1.25rem;
+}
+
+/* Kamera Scanner */
+.scanner-camera-container {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    background-color: #000;
+    margin-bottom: 1rem;
+}
+
+#scanner-reader {
+    width: 100%;
+}
+
+/* Sembunyikan elemen default html5-qrcode */
+#scanner-reader img[alt="Info icon"] { display: none; }
+#scanner-reader__dashboard_section, 
+#scanner-reader__dashboard_section_csr,
+#scanner-reader__dashboard_section_fsr { display: none !important; }
+#scanner-reader__scan_region > br { display: none; }
+#scanner-reader video {
+    border-radius: 12px;
+    width: 100% !important;
+    object-fit: cover;
+}
+
+/* Scanner Overlay - Crosshair */
+.scanner-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.scanner-crosshair {
+    width: 220px;
+    height: 220px;
+    position: relative;
+}
+
+.corner {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border-color: #00e5ff;
+    border-style: solid;
+    border-width: 0;
+}
+
+.corner.top-left {
+    top: 0; left: 0;
+    border-top-width: 4px;
+    border-left-width: 4px;
+    border-radius: 4px 0 0 0;
+}
+
+.corner.top-right {
+    top: 0; right: 0;
+    border-top-width: 4px;
+    border-right-width: 4px;
+    border-radius: 0 4px 0 0;
+}
+
+.corner.bottom-left {
+    bottom: 0; left: 0;
+    border-bottom-width: 4px;
+    border-left-width: 4px;
+    border-radius: 0 0 0 4px;
+}
+
+.corner.bottom-right {
+    bottom: 0; right: 0;
+    border-bottom-width: 4px;
+    border-right-width: 4px;
+    border-radius: 0 0 4px 0;
+}
+
+/* Animasi Garis Scan */
+.scan-line {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #00e5ff, transparent);
+    border-radius: 2px;
+    animation: scanLineMove 2s ease-in-out infinite;
+    box-shadow: 0 0 12px rgba(0, 229, 255, 0.6);
+}
+
+@keyframes scanLineMove {
+    0%, 100% { top: 10px; }
+    50% { top: calc(100% - 13px); }
+}
+
+.scanner-hint {
+    text-align: center;
+    padding: 0.6rem;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    background-color: rgba(0,0,0,0.04);
+    margin: 0;
+}
+
+.scanner-hint i {
+    color: #0288d1;
+    margin-right: 0.3rem;
+}
+
+/* Scan Result Container */
+.scan-result-container {
+    animation: fadeInUp 0.4s ease;
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.scan-result-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background-color: #e8f5e9;
+    border-radius: 10px;
+    border: 1px solid #c8e6c9;
+}
+
+.scan-success-icon {
+    font-size: 2rem;
+    color: var(--success-color);
+    animation: popIn 0.4s ease;
+}
+
+@keyframes popIn {
+    0% { transform: scale(0); }
+    70% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+.scan-result-header h4 {
+    font-size: 1rem;
+    color: var(--success-color);
+    font-weight: 700;
+}
+
+.scan-code-display {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 0.8rem;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    font-size: 0.88rem;
+}
+
+.scan-code-value {
+    font-family: 'Courier New', monospace;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--primary-color);
+    letter-spacing: 1px;
+}
+
+/* Product Info Card */
+.scan-product-card {
+    display: flex;
+    gap: 1rem;
+    padding: 0.85rem;
+    background-color: #fafafa;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    margin-bottom: 0.75rem;
+    transition: var(--transition);
+}
+
+.scan-product-card:hover {
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.scan-product-card img {
+    width: 70px;
+    height: 70px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.scan-product-details h4 {
+    font-size: 1rem;
+    color: var(--text-primary);
+    margin-bottom: 0.2rem;
+}
+
+.scan-product-price {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--primary-color);
+    margin-bottom: 0.1rem;
+}
+
+.scan-product-stock {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+}
+
+/* Quantity Control */
+.scan-qty-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.85rem;
+}
+
+.scan-qty-row label {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.qty-control {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.qty-btn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background-color: var(--primary-color);
+    color: #ffffff;
+    font-size: 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.qty-btn:hover {
+    background-color: var(--primary-dark);
+}
+
+.qty-control input {
+    width: 55px;
+    height: 40px;
+    border: none;
+    text-align: center;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    border-left: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+}
+
+.qty-control input:focus {
+    outline: none;
+}
+
+/* Scan Add to Cart Button */
+.scan-add-btn {
+    animation: pulseBtn 0.6s ease;
+}
+
+@keyframes pulseBtn {
+    0% { transform: scale(0.95); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+}
+
+/* Not Found */
+.scan-notfound {
+    text-align: center;
+    padding: 1.5rem 1rem;
+    margin-bottom: 1rem;
+    background-color: #fff3e0;
+    border: 1px solid #ffe0b2;
+    border-radius: 10px;
+    animation: fadeInUp 0.4s ease;
+}
+
+.scan-notfound i {
+    font-size: 2.5rem;
+    color: var(--warning-color);
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.scan-notfound p {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--warning-color);
+    margin-bottom: 0.25rem;
+}
+
+.scan-notfound small {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+}
+
+/* Scan Actions */
+.scan-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.scan-actions .btn {
+    flex: 1;
+}
+
+/* Animasi Sukses Scan */
+@keyframes scanSuccessFlash {
+    0% { box-shadow: 0 0 0 0 rgba(46, 125, 50, 0.4); }
+    70% { box-shadow: 0 0 0 15px rgba(46, 125, 50, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(46, 125, 50, 0); }
+}
+
+.scan-success-flash {
+    animation: scanSuccessFlash 0.6s ease;
 }
 
 /* --- PRINT STYLES --- */
