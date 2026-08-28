@@ -16,112 +16,112 @@ const STORAGE_TRANSACTIONS_KEY = 'warung_transactions_delsi';
 // Placeholder Gambar Default jika gambar produk tidak diisi / gagal dimuat
 const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1588964895597-cfccd6e2dbf9?w=150&auto=format&fit=crop';
 
-// Data Sampel Awal Lengkap dengan Foto Produk
+// Data Sampel Awal Lengkap dengan Foto Produk (sesuai nama produk)
 const SAMPLE_PRODUCTS = [
-    { 
-        kode: 'BRG001', 
-        nama: 'Beras Premium 5kg', 
+    {
+        kode: 'BRG001',
+        nama: 'Beras Premium 5kg',
         harga: 65000, modal: 55000,
-        stok: 20, 
-        gambar: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=150&auto=format&fit=crop' 
+        stok: 20,
+        gambar: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=300&auto=format&fit=crop'
     },
-    { 
-        kode: 'BRG002', 
-        nama: 'Minyak Goreng 1L', 
+    {
+        kode: 'BRG002',
+        nama: 'Minyak Goreng 1L',
         harga: 18000, modal: 15000,
-        stok: 35, 
-        gambar: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=150&auto=format&fit=crop' 
+        stok: 35,
+        gambar: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=300&auto=format&fit=crop'
     },
-    { 
-        kode: 'BRG003', 
-        nama: 'Gula Pasir 1kg', 
+    {
+        kode: 'BRG003',
+        nama: 'Gula Pasir 1kg',
         harga: 15000, modal: 12000,
-        stok: 25, 
-        gambar: 'https://images.unsplash.com/photo-1581441363689-1f3c3c414635?w=150&auto=format&fit=crop' 
+        stok: 25,
+        gambar: 'https://images.unsplash.com/photo-1581441363689-1f3c3c414635?w=300&auto=format&fit=crop'
     },
-    { 
-        kode: 'BRG004', 
-        nama: 'Mie Instan Goreng', 
+    {
+        kode: 'BRG004',
+        nama: 'Mie Instan Goreng',
         harga: 3000, modal: 2200,
-        stok: 120, 
-        gambar: 'https://images.unsplash.com/photo-1612927601601-6638404737ce?w=150&auto=format&fit=crop' 
+        stok: 120,
+        gambar: 'https://images.unsplash.com/photo-1612927601601-6638404737ce?w=300&auto=format&fit=crop'
     },
-    { 
-        kode: 'BRG005', 
-        nama: 'Kopi Kapal Api 165g', 
+    {
+        kode: 'BRG005',
+        nama: 'Kopi Kapal Api 165g',
         harga: 14000, modal: 11000,
-        stok: 50, 
-        gambar: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=150&auto=format&fit=crop' 
+        stok: 50,
+        gambar: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=300&auto=format&fit=crop'
     },
-    { 
-        kode: 'BRG006', 
-        nama: 'Telur Ayam 1kg', 
+    {
+        kode: 'BRG006',
+        nama: 'Telur Ayam 1kg',
         harga: 28000, modal: 24000,
-        stok: 30, 
-        gambar: 'https://images.unsplash.com/photo-1516448620398-c5f44bf9f441?w=150&auto=format&fit=crop' 
+        stok: 30,
+        gambar: 'https://images.unsplash.com/photo-1516448620398-c5f44bf9f441?w=300&auto=format&fit=crop'
     },
-    { 
-        kode: 'BRG007', 
-        nama: 'Susu Kental Manis 370g', 
+    {
+        kode: 'BRG007',
+        nama: 'Susu Kental Manis 370g',
         harga: 12000, modal: 9500,
-        stok: 40, 
-        gambar: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=150&auto=format&fit=crop' 
+        stok: 40,
+        gambar: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=300&auto=format&fit=crop'
     },
-    { 
-        kode: 'BRG008', 
-        nama: 'Tepung Terigu 1kg', 
+    {
+        kode: 'BRG008',
+        nama: 'Tepung Terigu 1kg',
         harga: 11000, modal: 9000,
-        stok: 30, 
-        gambar: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=150&auto=format&fit=crop' 
+        stok: 30,
+        gambar: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=300&auto=format&fit=crop'
     },
-    { 
-        kode: 'BRG009', 
-        nama: 'Kecap Manis 520ml', 
+    {
+        kode: 'BRG009',
+        nama: 'Kecap Manis 520ml',
         harga: 19000, modal: 15000,
-        stok: 20, 
-        gambar: 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?w=150&auto=format&fit=crop' 
+        stok: 20,
+        gambar: 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?w=300&auto=format&fit=crop'
     },
-    { 
-        kode: 'BRG010', 
-        nama: 'Saus Sambal 335ml', 
+    {
+        kode: 'BRG010',
+        nama: 'Saus Sambal 335ml',
         harga: 13000, modal: 10000,
-        stok: 25, 
-        gambar: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=150&auto=format&fit=crop' 
+        stok: 25,
+        gambar: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=300&auto=format&fit=crop'
     },
-    { 
-        kode: 'BRG011', 
-        nama: 'Teh Celup Isi 25', 
+    {
+        kode: 'BRG011',
+        nama: 'Teh Celup Isi 25',
         harga: 8000, modal: 6000,
-        stok: 45, 
-        gambar: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=150&auto=format&fit=crop' 
+        stok: 45,
+        gambar: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=300&auto=format&fit=crop'
     },
-    { 
-        kode: 'BRG012', 
-        nama: 'Air Mineral Botol 600ml', 
+    {
+        kode: 'BRG012',
+        nama: 'Air Mineral Botol 600ml',
         harga: 4000, modal: 2800,
-        stok: 80, 
-        gambar: 'https://images.unsplash.com/photo-1523362628745-0c100150b504?w=150&auto=format&fit=crop' 
+        stok: 80,
+        gambar: 'https://images.unsplash.com/photo-1523362628745-0c100150b504?w=300&auto=format&fit=crop'
     },
-    { 
-        kode: 'BRG013', 
-        nama: 'Sabun Mandi Batang', 
+    {
+        kode: 'BRG013',
+        nama: 'Sabun Mandi Batang',
         harga: 4500, modal: 3200,
-        stok: 60, 
-        gambar: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=150&auto=format&fit=crop' 
+        stok: 60,
+        gambar: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=300&auto=format&fit=crop'
     },
-    { 
-        kode: 'BRG014', 
-        nama: 'Deterjen Bubuk 800g', 
+    {
+        kode: 'BRG014',
+        nama: 'Deterjen Bubuk 800g',
         harga: 18000, modal: 14000,
-        stok: 25, 
-        gambar: 'https://images.unsplash.com/photo-1585842378054-ee2e52f94ba2?w=150&auto=format&fit=crop' 
+        stok: 25,
+        gambar: 'https://images.unsplash.com/photo-1585842378054-ee2e52f94ba2?w=300&auto=format&fit=crop'
     },
-    { 
-        kode: 'BRG015', 
-        nama: 'Gas LPG 3kg (Isi Ulang)', 
+    {
+        kode: 'BRG015',
+        nama: 'Gas LPG 3kg (Isi Ulang)',
         harga: 21000, modal: 18500,
-        stok: 15, 
-        gambar: 'https://images.unsplash.com/photo-1517646287270-a5a9ca602e5c?w=150&auto=format&fit=crop' 
+        stok: 15,
+        gambar: 'https://images.unsplash.com/photo-1517646287270-a5a9ca602e5c?w=300&auto=format&fit=crop'
     }
 ];
 
@@ -1107,107 +1107,107 @@ const BATCH_PRODUCTS = [
     // ===== Makanan & Minuman =====
     {
         kode: 'BRG016', nama: 'Mie Indomie Goreng', harga: 3500, modal: 2500, stok: 100,
-        gambar: 'https://images.unsplash.com/photo-1612927601601-6638404737ce?w=150&auto=format&fit=crop'
+        gambar: 'https://images.unsplash.com/photo-1612927601601-6638404737ce?w=300&auto=format&fit=crop'
     },
     {
         kode: 'BRG017', nama: 'Mie Indomie Kuah Soto', harga: 3500, modal: 2500, stok: 80,
-        gambar: 'https://images.unsplash.com/photo-1612927601601-6638404737ce?w=150&auto=format&fit=crop'
+        gambar: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=300&auto=format&fit=crop'
     },
     {
         kode: 'BRG018', nama: 'Mie Sedaap Goreng', harga: 3000, modal: 2200, stok: 90,
-        gambar: 'https://images.unsplash.com/photo-1612927601601-6638404737ce?w=150&auto=format&fit=crop'
+        gambar: 'https://images.unsplash.com/photo-1555126634-323283e090fa?w=300&auto=format&fit=crop'
     },
     {
         kode: 'BRG019', nama: 'Kopi ABC Sachet', harga: 2000, modal: 1400, stok: 150,
-        gambar: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=150&auto=format&fit=crop'
+        gambar: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=300&auto=format&fit=crop'
     },
     {
         kode: 'BRG020', nama: 'Kopi White Koffie', harga: 3000, modal: 2000, stok: 60,
-        gambar: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=150&auto=format&fit=crop'
+        gambar: 'https://images.unsplash.com/photo-1497515114583-f21e2f1f577a?w=300&auto=format&fit=crop'
     },
     {
         kode: 'BRG021', nama: 'Teh Sariwangi Celup', harga: 6500, modal: 5000, stok: 40,
-        gambar: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=150&auto=format&fit=crop'
+        gambar: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=300&auto=format&fit=crop'
     },
     {
         kode: 'BRG022', nama: 'Teh Pucuk Harum 350ml', harga: 4000, modal: 2800, stok: 70,
-        gambar: 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=150&auto=format&fit=crop'
+        gambar: 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=300&auto=format&fit=crop'
     },
     {
         kode: 'BRG023', nama: 'Air Mineral Aqua 1500ml', harga: 6500, modal: 4500, stok: 50,
-        gambar: 'https://images.unsplash.com/photo-1523362628745-0c100150b504?w=150&auto=format&fit=crop'
+        gambar: 'https://images.unsplash.com/photo-1523362628745-0c100150b504?w=300&auto=format&fit=crop'
     },
     {
         kode: 'BRG024', nama: 'Susu UHT Ultra Milk 1L', harga: 16000, modal: 13000, stok: 30,
-        gambar: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=150&auto=format&fit=crop'
+        gambar: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=300&auto=format&fit=crop'
     },
     {
         kode: 'BRG025', nama: 'Susu Bendera Kental Manis', harga: 10000, modal: 8000, stok: 35,
-        gambar: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=150&auto=format&fit=crop'
+        gambar: 'https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=300&auto=format&fit=crop'
     },
     // ===== Snack & Cemilan =====
     {
         kode: 'BRG026', nama: 'Chitato Sapi Panggang 68g', harga: 10500, modal: 8500, stok: 25,
-        gambar: 'https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=150&auto=format&fit=crop'
+        gambar: 'https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=300&auto=format&fit=crop'
     },
     {
         kode: 'BRG027', nama: 'Qtela Singkong Balado 60g', harga: 8000, modal: 6000, stok: 30,
-        gambar: 'https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=150&auto=format&fit=crop'
+        gambar: 'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=300&auto=format&fit=crop'
     },
     {
         kode: 'BRG028', nama: 'Taro Net Seaweed 40g', harga: 5500, modal: 4000, stok: 40,
-        gambar: 'https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=150&auto=format&fit=crop'
+        gambar: 'https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=300&auto=format&fit=crop'
     },
     {
         kode: 'BRG029', nama: 'Permen Kopiko 78', harga: 1500, modal: 1000, stok: 200,
-        gambar: 'https://images.unsplash.com/photo-1582176604856-e8d411e9b95f?w=150&auto=format&fit=crop'
+        gambar: 'https://images.unsplash.com/photo-1582176604856-e8d411e9b95f?w=300&auto=format&fit=crop'
     },
     {
         kode: 'BRG030', nama: 'Permen Relaxa', harga: 1500, modal: 1000, stok: 150,
-        gambar: 'https://images.unsplash.com/photo-1582176604856-e8d411e9b95f?w=150&auto=format&fit=crop'
+        gambar: 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=300&auto=format&fit=crop'
     },
     // ===== Bumbu Dapur =====
     {
         kode: 'BRG031', nama: 'Garam Dapur Refina 500g', harga: 5000, modal: 3500, stok: 50,
-        gambar: 'https://images.unsplash.com/photo-1581441363689-1f3c3c414635?w=150&auto=format&fit=crop'
+        gambar: 'https://images.unsplash.com/photo-1518110925495-5ae33f44aa2d?w=300&auto=format&fit=crop'
     },
     {
         kode: 'BRG032', nama: 'Kaldu Masako Ayam 100g', harga: 6000, modal: 4500, stok: 45,
-        gambar: 'https://images.unsplash.com/photo-1581441363689-1f3c3c414635?w=150&auto=format&fit=crop'
+        gambar: 'https://images.unsplash.com/photo-1606923829579-0cb981a83e2e?w=300&auto=format&fit=crop'
     },
     {
         kode: 'BRG033', nama: 'Lada Bubuk Koepoe 50g', harga: 8000, modal: 6000, stok: 30,
-        gambar: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=150&auto=format&fit=crop'
+        gambar: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=300&auto=format&fit=crop'
     },
     {
         kode: 'BRG034', nama: 'Saus Sambal ABC 275ml', harga: 10000, modal: 7500, stok: 35,
-        gambar: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=150&auto=format&fit=crop'
+        gambar: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=300&auto=format&fit=crop'
     },
     {
         kode: 'BRG035', nama: 'Kecap Manis ABC 275ml', harga: 12000, modal: 9000, stok: 40,
-        gambar: 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?w=150&auto=format&fit=crop'
+        gambar: 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?w=300&auto=format&fit=crop'
     },
     // ===== Kebutuhan Pokok =====
     {
         kode: 'BRG036', nama: 'Margarin Blue Band 200g', harga: 9500, modal: 7500, stok: 30,
-        gambar: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=150&auto=format&fit=crop'
+        gambar: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=300&auto=format&fit=crop'
     },
     {
         kode: 'BRG037', nama: 'Roti Tawar Sari Roti', harga: 11000, modal: 8500, stok: 20,
-        gambar: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=150&auto=format&fit=crop'
+        gambar: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=300&auto=format&fit=crop'
     },
     {
         kode: 'BRG038', nama: 'Telur Ayam Butir', harga: 2500, modal: 2100, stok: 100,
-        gambar: 'https://images.unsplash.com/photo-1516448620398-c5f44bf9f441?w=150&auto=format&fit=crop'
+        gambar: 'https://images.unsplash.com/photo-1516448620398-c5f44bf9f441?w=300&auto=format&fit=crop'
     },
     {
         kode: 'BRG039', nama: 'Sarden ABC Tomat 155g', harga: 11000, modal: 8500, stok: 25,
-        gambar: 'https://images.unsplash.com/photo-1534604973900-c43d4c4d8a46?w=150&auto=format&fit=crop'
+        gambar: 'https://images.unsplash.com/photo-1534604973900-c43d4c4d8a46?w=300&auto=format&fit=crop'
     },
     // ===== Kebutuhan Rumah Tangga =====
     {
         kode: 'BRG040', nama: 'Shampo Pantene Sachet', harga: 1000, modal: 650, stok: 200,
-        gambar: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=150&auto=format&fit=crop'
+        gambar: 'https://images.unsplash.com/photo-1585751119414-ef2636f8aede?w=300&auto=format&fit=crop'
     },
 ];
 
