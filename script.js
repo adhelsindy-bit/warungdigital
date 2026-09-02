@@ -1796,11 +1796,11 @@ function onScanSuccess(decodedText, decodedResult) {
         renderCart();
         updateTotalBelanja();
 
-        // Status bar di atas scanner
-        showScanStatus('✅ ' + found.nama + ' - ' + formatRupiah(found.harga), 'success');
+        // Tampilkan panel produk
+        showScanProductPanel(found);
     } else {
         // Barang tidak ditemukan
-        showScanStatus('⚠️ Kode "' + code + '" belum terdaftar', 'warning');
+        showScanNotFound(code);
     }
 
     // Jeda sebentar lalu lanjut scan
@@ -1839,6 +1839,71 @@ function showScanStatus(text, type) {
     showScanStatus._timer = setTimeout(() => {
         statusBar.style.display = 'none';
     }, 1500);
+}
+
+/**
+ * Menampilkan panel produk saat scan berhasil
+ */
+function showScanProductPanel(product) {
+    const panel = document.getElementById('scan-product-panel');
+    const img = document.getElementById('scan-panel-img');
+    const name = document.getElementById('scan-panel-name');
+    const price = document.getElementById('scan-panel-price');
+    const stock = document.getElementById('scan-panel-stock');
+    const qty = document.getElementById('scan-panel-qty');
+    const notfound = document.getElementById('scan-notfound-panel');
+
+    if (!panel) return;
+
+    // Sembunyikan panel not found
+    if (notfound) notfound.style.display = 'none';
+
+    // Isi data produk
+    img.src = product.gambar || DEFAULT_IMAGE;
+    name.textContent = product.nama;
+    price.textContent = 'Rp ' + Number(product.harga).toLocaleString('id-ID');
+    stock.textContent = 'Stok: ' + product.stok;
+    qty.textContent = '+1 ke keranjang';
+
+    // Tampilkan panel
+    panel.style.display = 'block';
+    panel.style.animation = 'none';
+    panel.offsetHeight; // reflow
+    panel.style.animation = 'slideUpFade 0.35s ease';
+
+    // Sembunyikan setelah 2 detik
+    clearTimeout(showScanProductPanel._timer);
+    showScanProductPanel._timer = setTimeout(() => {
+        panel.style.display = 'none';
+    }, 2000);
+}
+
+/**
+ * Menampilkan panel "Barang tidak ditemukan" saat scan gagal
+ */
+function showScanNotFound(code) {
+    const panel = document.getElementById('scan-notfound-panel');
+    const productPanel = document.getElementById('scan-product-panel');
+
+    if (!panel) return;
+
+    // Sembunyikan panel produk
+    if (productPanel) productPanel.style.display = 'none';
+
+    // Tampilkan panel not found
+    panel.style.display = 'block';
+    panel.style.animation = 'none';
+    panel.offsetHeight; // reflow
+    panel.style.animation = 'slideUpFade 0.35s ease';
+
+    // Tampilkan status bar warning juga
+    showScanStatus('Kode "' + code + '" tidak dikenal!', 'warning');
+
+    // Sembunyikan setelah 2 detik
+    clearTimeout(showScanNotFound._timer);
+    showScanNotFound._timer = setTimeout(() => {
+        panel.style.display = 'none';
+    }, 2000);
 }
 
 /**

@@ -1561,6 +1561,100 @@ body {
     to { transform: translateY(0); opacity: 1; }
 }
 
+/* Panel Produk Scan */
+.scan-product-panel {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 25;
+    padding: 1rem;
+    background: linear-gradient(135deg, rgba(46, 125, 50, 0.97), rgba(27, 94, 32, 0.97));
+    animation: slideUpFade 0.35s ease;
+}
+
+.scan-panel-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    padding: 0.85rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.scan-panel-card img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 2px solid var(--success-color);
+    flex-shrink: 0;
+}
+
+.scan-panel-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.scan-panel-info h4 {
+    font-size: 1rem;
+    color: var(--text-primary);
+    margin-bottom: 0.15rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.scan-panel-price {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--success-color);
+    margin-bottom: 0.1rem;
+}
+
+.scan-panel-stock {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.1rem;
+}
+
+.scan-panel-qty {
+    font-size: 0.8rem;
+    color: #ffffff;
+    background: var(--success-color);
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 10px;
+    font-weight: 600;
+    margin-top: 0.2rem;
+}
+
+/* Panel Tidak Ditemukan */
+.scan-notfound-panel {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 25;
+    padding: 1rem;
+    background: linear-gradient(135deg, rgba(245, 124, 0, 0.97), rgba(230, 81, 0, 0.97));
+    animation: slideUpFade 0.35s ease;
+    text-align: center;
+    color: #ffffff;
+}
+
+.scan-notfound-panel i {
+    font-size: 2rem;
+    margin-bottom: 0.3rem;
+    display: block;
+}
+
+.scan-notfound-panel p {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
 /* Not Found */
 .scan-notfound {
     text-align: center;

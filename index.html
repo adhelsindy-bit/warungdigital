@@ -635,6 +635,25 @@
                         <span id="scan-status-text"></span>
                     </div>
                 </div>
+
+                <!-- Panel Produk Scan (muncul saat barcode terdeteksi) -->
+                <div id="scan-product-panel" class="scan-product-panel" style="display:none;">
+                    <div id="scan-panel-card" class="scan-panel-card">
+                        <img id="scan-panel-img" src="" alt="Foto Produk">
+                        <div class="scan-panel-info">
+                            <h4 id="scan-panel-name"></h4>
+                            <p class="scan-panel-price" id="scan-panel-price">Rp 0</p>
+                            <p class="scan-panel-stock" id="scan-panel-stock">Stok: 0</p>
+                            <p class="scan-panel-qty" id="scan-panel-qty">+1 ke keranjang</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel Tidak Ditemukan -->
+                <div id="scan-notfound-panel" class="scan-notfound-panel" style="display:none;">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <p>Barang belum terdaftar</p>
+                </div>
             </div>
         </div>
     </div>
