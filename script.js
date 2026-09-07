@@ -372,6 +372,9 @@ function renderProducts() {
             <td>${stockBadge}</td>
             <td>
                 <div class="action-btns">
+                    <button class="btn btn-primary btn-sm" onclick="showProductBarcode(${realIndex})" title="Lihat Barcode">
+                        <i class="fa-solid fa-barcode"></i> Barcode
+                    </button>
                     <button class="btn btn-secondary btn-sm" onclick="editProduct(${realIndex})" title="Edit Barang">
                         <i class="fa-solid fa-pen-to-square"></i> Edit
                     </button>
@@ -1939,5 +1942,136 @@ document.addEventListener('keydown', function(e) {
         if (overlay && overlay.classList.contains('active')) {
             closeScanner();
         }
+        // Tutup barcode modal juga
+        const bcOverlay = document.getElementById('barcode-modal-overlay');
+        if (bcOverlay && bcOverlay.style.display !== 'none') {
+            closeBarcodeModal();
+        }
     }
 });
+
+/**
+ * Menampilkan barcode produk di modal
+ */
+function showProductBarcode(index) {
+    const product = products[index];
+    if (!product) return;
+
+    const overlay = document.getElementById('barcode-modal-overlay');
+    const nameEl = document.getElementById('barcode-product-name');
+    const codeEl = document.getElementById('barcode-code-text');
+    const priceEl = document.getElementById('barcode-price');
+    const svgEl = document.getElementById('barcode-svg');
+
+    if (!overlay) return;
+
+    // Isi data
+    nameEl.textContent = product.nama;
+    codeEl.textContent = product.kode;
+    priceEl.textContent = 'Rp ' + Number(product.harga).toLocaleString('id-ID');
+
+    // Generate barcode SVG
+    try {
+        JsBarcode(svgEl, product.kode, {
+            format: 'CODE128',
+            width: 2,
+            height: 60,
+            displayValue: false,
+            margin: 5,
+            lineColor: '#000000',
+            background: '#ffffff'
+        });
+    } catch (e) {
+        console.warn('Gagal generate barcode:', e);
+        svgEl.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#999" font-size="14">Gagal generate barcode</text>';
+    }
+
+    // Tampilkan modal
+    overlay.style.display = 'flex';
+    overlay.style.animation = 'fadeIn 0.2s ease';
+}
+
+/**
+ * Menutup barcode modal
+ */
+function closeBarcodeModal(e) {
+    if (e && e.target !== e.currentTarget) return;
+    const overlay = document.getElementById('barcode-modal-overlay');
+    if (overlay) {
+        overlay.style.animation = 'fadeOut 0.2s ease';
+        setTimeout(() => {
+            overlay.style.display = 'none';
+        }, 200);
+    }
+}
+
+/**
+ * Mencetak barcode produk
+ */
+function printProductBarcode() {
+    const card = document.getElementById('barcode-card');
+    if (!card) return;
+
+    const printWindow = window.open('', '_blank', 'width=400,height=300');
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Cetak Barcode</title>
+            <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
+            <style>
+                body {
+                    margin: 0;
+                    padding: 20px;
+                    font-family: Arial, sans-serif;
+                    text-align: center;
+                }
+                .barcode-card {
+                    border: 1px solid #ddd;
+                    border-radius: 8px;
+                    padding: 15px;
+                    display: inline-block;
+                }
+                .shop-name {
+                    font-size: 14px;
+                    font-weight: bold;
+                    margin-bottom: 2px;
+                }
+                .product-name {
+                    font-size: 11px;
+                    color: #555;
+                    margin-bottom: 8px;
+                }
+                .price {
+                    font-size: 13px;
+                    font-weight: bold;
+                    margin-top: 5px;
+                }
+                @media print {
+                    body { padding: 5px; }
+                    .barcode-card { border: 1px solid #ccc; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="barcode-card">
+                <p class="shop-name">Delsi Shop</p>
+                <p class="product-name">${escapeHtml(document.getElementById('barcode-product-name').textContent)}</p>
+                <svg id="print-barcode"></svg>
+                <p class="price">${document.getElementById('barcode-price').textContent}</p>
+            </div>
+            <script>
+                JsBarcode('#print-barcode', '${document.getElementById('barcode-code-text').textContent}', {
+                    format: 'CODE128',
+                    width: 2,
+                    height: 50,
+                    displayValue: true,
+                    margin: 5
+                });
+                setTimeout(() => { window.print(); window.close(); }, 500);
+            <\/script>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+}

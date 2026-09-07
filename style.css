@@ -1707,6 +1707,150 @@ body {
     animation: scanSuccessFlash 0.6s ease;
 }
 
+/* --- BARCODE MODAL --- */
+.barcode-modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+}
+
+.barcode-modal {
+    background: #ffffff;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 420px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: modalSlideIn 0.3s ease;
+    overflow: hidden;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+.barcode-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border-color);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: #ffffff;
+}
+
+.barcode-modal-header h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0;
+    color: #ffffff;
+}
+
+.barcode-modal-header .btn-close-modal {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: #ffffff;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.barcode-modal-header .btn-close-modal:hover {
+    background: rgba(255, 255, 255, 0.35);
+}
+
+.barcode-modal-body {
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.barcode-card {
+    background: #ffffff;
+    border: 2px dashed var(--border-color);
+    border-radius: 12px;
+    padding: 1.25rem;
+    text-align: center;
+    width: 100%;
+    max-width: 320px;
+}
+
+.barcode-shop-name {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 0.15rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.barcode-product-name {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.barcode-card svg {
+    width: 100%;
+    max-width: 280px;
+    height: auto;
+}
+
+.barcode-code-text {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-top: 0.25rem;
+    letter-spacing: 2px;
+    font-family: monospace;
+}
+
+.barcode-price {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--primary-color);
+    margin-top: 0.2rem;
+}
+
+.barcode-actions {
+    display: flex;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.barcode-actions .btn {
+    flex: 1;
+    padding: 0.7rem 1rem;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
 /* --- PRINT STYLES --- */
 @media print {
     body * {
