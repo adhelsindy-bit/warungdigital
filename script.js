@@ -187,6 +187,7 @@ function saveTransactionsToStorage() {
     localStorage.setItem(STORAGE_TRANSACTIONS_KEY, JSON.stringify(transactions));
 }
 
+// Inisialisasi Sinkronisasi Firebase (hanya saat halaman di-refresh)
 function initFirebaseSync() {
     const badge = document.getElementById('firebase-status-badge');
 
@@ -201,97 +202,62 @@ function initFirebaseSync() {
 
     if (badge) {
         badge.className = 'firebase-badge online';
-        badge.innerHTML = `<i class="fa-solid fa-cloud"></i> Firebase Sync`;
+        badge.innerHTML = `<i class="fa-solid fa-cloud"></i> Sync saat Refresh`;
     }
 
-    // Listener Realtime 'products'
-    db.collection('products').onSnapshot(snapshot => {
-        if (snapshot.empty) {
-            console.log("Koleksi Firestore 'products' kosong. Mengunggah data sampel dengan foto...");
-            SAMPLE_PRODUCTS.forEach(p => {
-                db.collection('products').doc(p.kode).set(p);
-            });
-        } else {
-            // Migrasi & perbaiki data lama yang belum memiliki gambar
-            migrateFirestoreProducts(snapshot);
-
-            const remoteProducts = [];
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                if (!data.gambar) data.gambar = DEFAULT_IMAGE;
-                remoteProducts.push(data);
-            });
-            remoteProducts.sort((a, b) => a.kode.localeCompare(b.kode));
-            products = remoteProducts;
-            migrateProductModal();
-            saveProductsToStorage();
-            renderProducts();
-            populateProductDropdown();
-            updateMaxQtyLabel();
-            renderDashboardStokMenipis();
-            renderDashboardOmzet();
-        }
-    }, error => {
-        console.warn("Realtime listener products error:", error);
-        if (badge) {
-            badge.className = 'firebase-badge offline';
-            badge.innerHTML = `<i class="fa-solid fa-hard-drive"></i> Offline Mode`;
-        }
-    });
-
-    // Listener Realtime 'transactions'
-    db.collection('transactions').onSnapshot(snapshot => {
-        if (!snapshot.empty) {
-            const remoteTransactions = [];
-            snapshot.forEach(doc => {
-                remoteTransactions.push(doc.data());
-            });
-            remoteTransactions.sort((a, b) => new Date(b.rawDate || 0) - new Date(a.rawDate || 0));
-            transactions = remoteTransactions;
-            saveTransactionsToStorage();
-            renderReports();
-        }
-    }, error => {
-        console.warn("Realtime listener transactions error:", error);
-    });
+    // Unggah seluruh data lokal ke Firebase (dilakukan sekali saat halaman dimuat/refresh)
+    pushLocalToFirestore();
 }
 
-// Migrasi data Firestore: isi gambar & modal yang hilang, lengkapi produk sampel yang belum ada
-function migrateFirestoreProducts(snapshot) {
-    try {
-        // 1. Tambahkan produk sampel yang belum ada di Firestore
-        const existingKodes = new Set();
-        snapshot.forEach(doc => existingKodes.add(doc.id));
-        SAMPLE_PRODUCTS.forEach(sample => {
-            if (!existingKodes.has(sample.kode)) {
-                db.collection('products').doc(sample.kode).set(sample);
-            }
-        });
-        BATCH_PRODUCTS.forEach(sample => {
-            if (!existingKodes.has(sample.kode)) {
-                db.collection('products').doc(sample.kode).set(sample);
-            }
-        });
+// Upload seluruh data localStorage ke Cloud Firestore (data lokal menimpa versi cloud)
+function pushLocalToFirestore() {
+    if (typeof db === 'undefined' || !db) return;
 
-        // 2. Perbaiki produk yang belum memiliki field gambar atau modal
-        snapshot.forEach(doc => {
-            const data = doc.data();
-            const updates = {};
-            if (!data.gambar) {
-                const sample = SAMPLE_PRODUCTS.find(s => s.kode === doc.id) || BATCH_PRODUCTS.find(s => s.kode === doc.id);
-                updates.gambar = sample ? sample.gambar : DEFAULT_IMAGE;
-            }
-            if (typeof data.modal === 'undefined') {
-                const sample = SAMPLE_PRODUCTS.find(s => s.kode === doc.id) || BATCH_PRODUCTS.find(s => s.kode === doc.id);
-                updates.modal = sample ? sample.modal : 0;
-            }
-            if (Object.keys(updates).length > 0) {
-                db.collection('products').doc(doc.id).set(updates, { merge: true });
-            }
+    const writeOps = [];
+
+    // Produk: dokumen dengan ID = kode produk
+    products.forEach(p => {
+        writeOps.push({
+            ref: db.collection('products').doc(p.kode),
+            data: p
         });
-    } catch (err) {
-        console.warn("Migrasi Firestore gagal:", err);
+    });
+
+    // Transaksi: dokumen dengan ID = nomor transaksi
+    transactions.forEach(t => {
+        writeOps.push({
+            ref: db.collection('transactions').doc(t.id),
+            data: t
+        });
+    });
+
+    if (writeOps.length === 0) {
+        console.log("Tidak ada data lokal untuk disinkronkan.");
+        return;
     }
+
+    // Batch commit (Firestore membatasi 500 operasi per batch, jadi dipecah)
+    const BATCH_LIMIT = 400;
+    const batchPromises = [];
+
+    for (let i = 0; i < writeOps.length; i += BATCH_LIMIT) {
+        const chunk = writeOps.slice(i, i + BATCH_LIMIT);
+        const batch = db.batch();
+        chunk.forEach(op => {
+            batch.set(op.ref, op.data);
+        });
+        batchPromises.push(batch.commit());
+    }
+
+    Promise.all(batchPromises)
+        .then(() => {
+            console.log(`Berhasil sinkron ${writeOps.length} data ke Firebase.`);
+            showToast(`Data lokal disinkronkan ke Firebase (${writeOps.length} item).`, 'success');
+        })
+        .catch(err => {
+            console.error("Gagal sinkronisasi ke Firestore:", err);
+            showToast('Gagal sinkronisasi ke Firebase. Cek koneksi.', 'danger');
+        });
 }
 
 /* ==========================================================================
@@ -441,11 +407,6 @@ function handleSaveProduct(e) {
     }
 
     saveProductsToStorage();
-    if (typeof db !== 'undefined' && db) {
-        db.collection('products').doc(productData.kode).set(productData).catch(err => {
-            console.error("Gagal menyimpan ke Firestore:", err);
-        });
-    }
 
     resetProductForm();
     renderProducts();
@@ -511,12 +472,6 @@ function deleteProduct(index) {
         const deletedKode = product.kode;
         products.splice(index, 1);
         saveProductsToStorage();
-
-        if (typeof db !== 'undefined' && db) {
-            db.collection('products').doc(deletedKode).delete().catch(err => {
-                console.error("Gagal menghapus dari Firestore:", err);
-            });
-        }
 
         renderProducts();
         populateProductDropdown();
@@ -829,12 +784,6 @@ function processSaveTransaction() {
         if (product) {
             product.stok -= cartItem.jumlah;
             if (product.stok < 0) product.stok = 0;
-
-            if (typeof db !== 'undefined' && db) {
-                db.collection('products').doc(product.kode).update({ stok: product.stok }).catch(err => {
-                    console.error("Gagal update stok di Firestore:", err);
-                });
-            }
         }
     });
     saveProductsToStorage();
@@ -859,12 +808,6 @@ function processSaveTransaction() {
 
     transactions.unshift(transactionData);
     saveTransactionsToStorage();
-
-    if (typeof db !== 'undefined' && db) {
-        db.collection('transactions').doc(transactionData.id).set(transactionData).catch(err => {
-            console.error("Gagal menyimpan transaksi ke Firestore:", err);
-        });
-    }
 
     currentLastTransaction = transactionData;
 
@@ -1065,15 +1008,8 @@ function deleteSingleReport(index) {
     if (!trx) return;
 
     if (confirm(`Apakah Anda yakin ingin menghapus catatan transaksi ${trx.id}?`)) {
-        const deletedId = trx.id;
         transactions.splice(index, 1);
         saveTransactionsToStorage();
-
-        if (typeof db !== 'undefined' && db) {
-            db.collection('transactions').doc(deletedId).delete().catch(err => {
-                console.error("Gagal menghapus transaksi dari Firestore:", err);
-            });
-        }
 
         renderReports();
         showToast('Transaksi berhasil dihapus dari laporan.', 'info');
@@ -1087,15 +1023,8 @@ function clearAllReports() {
     }
 
     if (confirm('APAKAH ANDA YAKIN? Seluruh riwayat laporan transaksi akan dihapus secara permanen!')) {
-        const idsToDelete = transactions.map(t => t.id);
         transactions = [];
         saveTransactionsToStorage();
-
-        if (typeof db !== 'undefined' && db) {
-            idsToDelete.forEach(id => {
-                db.collection('transactions').doc(id).delete();
-            });
-        }
 
         renderReports();
         showToast('Seluruh laporan transaksi telah dibersihkan.', 'danger');
@@ -1223,10 +1152,6 @@ function loadBatchSampleProducts() {
         if (!exists) {
             products.push({ ...sample });
             addedCount++;
-            // Simpan ke Firestore juga
-            if (typeof db !== 'undefined' && db) {
-                db.collection('products').doc(sample.kode).set(sample).catch(() => {});
-            }
         } else {
             skippedCount++;
         }
@@ -1394,16 +1319,6 @@ Lanjutkan?`)) {
             migrateProductModal();
             saveProductsToStorage();
             saveTransactionsToStorage();
-
-            // Sync ke Firestore
-            if (typeof db !== 'undefined' && db) {
-                products.forEach(p => {
-                    db.collection('products').doc(p.kode).set(p).catch(() => {});
-                });
-                transactions.forEach(t => {
-                    db.collection('transactions').doc(t.id).set(t).catch(() => {});
-                });
-            }
 
             renderProducts();
             populateProductDropdown();

@@ -1,0 +1,16 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Koleksi data barang & transaksi untuk Delsi Shop
+    match /products/{document} {
+      allow read, write: if true;
+    }
+    match /transactions/{document} {
+      allow read, write: if true;
+    }
+    // Tolak akses ke koleksi lain
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
