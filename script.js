@@ -210,14 +210,18 @@ function initFirebaseSync() {
 }
 
 // Upload seluruh data localStorage ke Cloud Firestore (data lokal menimpa versi cloud)
+// Data yang dihapus di aplikasi juga ikut dihapus dari Firebase (sinkron total)
 function pushLocalToFirestore() {
     if (typeof db === 'undefined' || !db) return;
 
-    const writeOps = [];
+    const localProductCodes = new Set(products.map(p => p.kode));
+    const localTransactionIds = new Set(transactions.map(t => t.id));
+
+    const upserts = [];
 
     // Produk: dokumen dengan ID = kode produk
     products.forEach(p => {
-        writeOps.push({
+        upserts.push({
             ref: db.collection('products').doc(p.kode),
             data: p
         });
@@ -225,34 +229,65 @@ function pushLocalToFirestore() {
 
     // Transaksi: dokumen dengan ID = nomor transaksi
     transactions.forEach(t => {
-        writeOps.push({
+        upserts.push({
             ref: db.collection('transactions').doc(t.id),
             data: t
         });
     });
 
-    if (writeOps.length === 0) {
-        console.log("Tidak ada data lokal untuk disinkronkan.");
-        return;
-    }
+    // Ambil seluruh ID dokumen yang ada di Firebase untuk dibandingkan
+    const getRemoteIds = (collectionName) =>
+        db.collection(collectionName).get()
+            .then(snapshot => snapshot.docs.map(doc => doc.id))
+            .catch(() => []);
 
-    // Batch commit (Firestore membatasi 500 operasi per batch, jadi dipecah)
-    const BATCH_LIMIT = 400;
-    const batchPromises = [];
+    let deleteCount = 0;
 
-    for (let i = 0; i < writeOps.length; i += BATCH_LIMIT) {
-        const chunk = writeOps.slice(i, i + BATCH_LIMIT);
-        const batch = db.batch();
-        chunk.forEach(op => {
-            batch.set(op.ref, op.data);
-        });
-        batchPromises.push(batch.commit());
-    }
+    Promise.all([getRemoteIds('products'), getRemoteIds('transactions')])
+        .then(([remoteProductIds, remoteTransactionIds]) => {
+            const deletes = [];
 
-    Promise.all(batchPromises)
+            remoteProductIds.forEach(id => {
+                if (!localProductCodes.has(id)) {
+                    deletes.push({ ref: db.collection('products').doc(id) });
+                }
+            });
+            remoteTransactionIds.forEach(id => {
+                if (!localTransactionIds.has(id)) {
+                    deletes.push({ ref: db.collection('transactions').doc(id) });
+                }
+            });
+
+            deleteCount = deletes.length;
+
+            const ops = [...upserts, ...deletes];
+            if (ops.length === 0) {
+                console.log("Tidak ada data lokal untuk disinkronkan.");
+                return;
+            }
+
+            // Batch commit (Firestore membatasi 500 operasi per batch, jadi dipecah)
+            const BATCH_LIMIT = 400;
+            const batchPromises = [];
+
+            for (let i = 0; i < ops.length; i += BATCH_LIMIT) {
+                const chunk = ops.slice(i, i + BATCH_LIMIT);
+                const batch = db.batch();
+                chunk.forEach(op => {
+                    if (op.data) {
+                        batch.set(op.ref, op.data);
+                    } else {
+                        batch.delete(op.ref);
+                    }
+                });
+                batchPromises.push(batch.commit());
+            }
+
+            return Promise.all(batchPromises);
+        })
         .then(() => {
-            console.log(`Berhasil sinkron ${writeOps.length} data ke Firebase.`);
-            showToast(`Data lokal disinkronkan ke Firebase (${writeOps.length} item).`, 'success');
+            console.log(`Sinkron Firebase selesai: ${upserts.length} diperbarui, ${deleteCount} dihapus.`);
+            showToast(`Sinkron Firebase: ${upserts.length} diperbarui, ${deleteCount} dihapus.`, 'success');
         })
         .catch(err => {
             console.error("Gagal sinkronisasi ke Firestore:", err);
