@@ -128,6 +128,7 @@ const SAMPLE_PRODUCTS = [
 
 // --- Inisialisasi Aplikasi Saat DOM Loaded ---
 document.addEventListener('DOMContentLoaded', () => {
+    initAuth();
     initData();
     migrateProductModal();
     renderProducts();
@@ -138,6 +139,160 @@ document.addEventListener('DOMContentLoaded', () => {
     renderDashboardOmzet();
     initFirebaseSync();
 });
+
+/* ==========================================================================
+   0. AUTENTIKASI (LOGIN / LOGOUT)
+   ========================================================================== */
+const STORAGE_SESSION_KEY = 'warung_session_delsi';
+const STORAGE_USERS_KEY = 'warung_users_delsi';
+
+// Hash sederhana (bukan kriptografi kuat) - cukup agar password tidak tersimpan plaintext
+function simpleHash(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        const chr = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + chr;
+        hash |= 0;
+    }
+    return 'h' + Math.abs(hash).toString(16);
+}
+
+function getUsers() {
+    let users = [];
+    try {
+        users = JSON.parse(localStorage.getItem(STORAGE_USERS_KEY)) || [];
+    } catch (e) {
+        users = [];
+    }
+    // Buat akun default admin/admin123 bila belum ada user sama sekali
+    if (users.length === 0) {
+        users = [{ username: 'admin', password: simpleHash('admin123'), role: 'Administrator' }];
+        try {
+            localStorage.setItem(STORAGE_USERS_KEY, JSON.stringify(users));
+        } catch (e) {
+            console.warn('Gagal menyimpan user default:', e);
+        }
+    }
+    return users;
+}
+
+function getSession() {
+    try {
+        return JSON.parse(localStorage.getItem(STORAGE_SESSION_KEY));
+    } catch (e) {
+        return null;
+    }
+}
+
+// Cek sesi saat halaman dibuka: tampilkan app bila sudah login
+function initAuth() {
+    const session = getSession();
+    if (session && session.username) {
+        document.body.classList.remove('logged-out');
+        const userEl = document.getElementById('logged-user');
+        if (userEl) userEl.textContent = session.username;
+    } else {
+        document.body.classList.add('logged-out');
+    }
+}
+
+function showLoginError(msg) {
+    const errorEl = document.getElementById('login-error');
+    if (errorEl) {
+        errorEl.textContent = msg;
+        errorEl.style.display = 'block';
+    }
+    // Animasi goyang pada kartu login
+    const card = document.querySelector('.login-card');
+    if (card) {
+        card.classList.remove('shake');
+        void card.offsetWidth; // restart animasi
+        card.classList.add('shake');
+    }
+}
+
+function handleLogin(e) {
+    e.preventDefault();
+
+    const username = document.getElementById('login-username').value.trim();
+    const password = document.getElementById('login-password').value;
+    const errorEl = document.getElementById('login-error');
+    if (errorEl) errorEl.style.display = 'none';
+
+    if (!username || !password) {
+        showLoginError('Username dan password wajib diisi.');
+        return;
+    }
+
+    const users = getUsers();
+    const inputHash = simpleHash(password);
+    const user = users.find(u =>
+        u.username.toLowerCase() === username.toLowerCase() && u.password === inputHash
+    );
+
+    if (!user) {
+        showLoginError('Username atau password salah. Silakan coba lagi.');
+        return;
+    }
+
+    // Simpan sesi (tetap login sampai tombol Keluar ditekan)
+    try {
+        localStorage.setItem(STORAGE_SESSION_KEY, JSON.stringify({
+            username: user.username,
+            loginAt: new Date().toISOString()
+        }));
+    } catch (err) {
+        showLoginError('Gagal menyimpan sesi: ' + err.message);
+        return;
+    }
+
+    // Bersihkan form & tampilkan aplikasi
+    document.getElementById('login-form').reset();
+    document.body.classList.remove('logged-out');
+    const userEl = document.getElementById('logged-user');
+    if (userEl) userEl.textContent = user.username;
+
+    showToast(`Selamat datang, ${user.username}!`, 'success');
+}
+
+function handleLogout() {
+    if (!confirm('Keluar dari akun ini?')) return;
+
+    try {
+        localStorage.removeItem(STORAGE_SESSION_KEY);
+    } catch (e) {
+        console.warn('Gagal menghapus sesi:', e);
+    }
+
+    document.body.classList.add('logged-out');
+
+    // Reset form login
+    const form = document.getElementById('login-form');
+    if (form) form.reset();
+    const errorEl = document.getElementById('login-error');
+    if (errorEl) errorEl.style.display = 'none';
+    const passInput = document.getElementById('login-password');
+    if (passInput) passInput.type = 'password';
+    const passIcon = document.getElementById('toggle-pass-icon');
+    if (passIcon) passIcon.className = 'fa-solid fa-eye';
+
+    // Pindah ke tab dashboard agar bersih saat login berikutnya
+    switchTab('dashboard');
+}
+
+function togglePassword() {
+    const input = document.getElementById('login-password');
+    const icon = document.getElementById('toggle-pass-icon');
+    if (!input || !icon) return;
+
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'fa-solid fa-eye-slash';
+    } else {
+        input.type = 'password';
+        icon.className = 'fa-solid fa-eye';
+    }
+}
 
 /* ==========================================================================
    1. INISIALISASI DATA, LOCALSTORAGE & FIREBASE FIRESTORE
