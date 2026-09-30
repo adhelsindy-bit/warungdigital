@@ -179,14 +179,42 @@ function initData() {
     } else {
         transactions = [];
     }
+
+    // Migrasi: buang foto base64 dari item transaksi lama (hemat kuota localStorage)
+    let cleaned = false;
+    transactions.forEach(t => {
+        if (Array.isArray(t.items)) {
+            t.items.forEach(item => {
+                if (item && typeof item.gambar === 'string' && item.gambar.length > 500) {
+                    delete item.gambar;
+                    cleaned = true;
+                }
+            });
+        }
+    });
+    if (cleaned) saveTransactionsToStorage();
 }
 
 function saveProductsToStorage() {
-    localStorage.setItem(STORAGE_PRODUCTS_KEY, JSON.stringify(products));
+    try {
+        localStorage.setItem(STORAGE_PRODUCTS_KEY, JSON.stringify(products));
+        return true;
+    } catch (err) {
+        console.error('Gagal menyimpan produk ke localStorage:', err);
+        showToast('Penyimpanan browser PENUH! Data tidak tersimpan permanen. Hapus foto produk besar atau segera backup (JSON).', 'danger');
+        return false;
+    }
 }
 
 function saveTransactionsToStorage() {
-    localStorage.setItem(STORAGE_TRANSACTIONS_KEY, JSON.stringify(transactions));
+    try {
+        localStorage.setItem(STORAGE_TRANSACTIONS_KEY, JSON.stringify(transactions));
+        return true;
+    } catch (err) {
+        console.error('Gagal menyimpan transaksi ke localStorage:', err);
+        showToast('Penyimpanan browser PENUH! Transaksi tidak tersimpan permanen. Segera backup data (JSON).', 'danger');
+        return false;
+    }
 }
 
 // Inisialisasi Sinkronisasi Firebase (hanya saat halaman di-refresh)
@@ -249,8 +277,19 @@ function pullFromFirestore() {
             });
             remoteTransactions.sort((a, b) => new Date(b.rawDate || 0) - new Date(a.rawDate || 0));
 
-            products = remoteProducts;
-            transactions = remoteTransactions;
+            // Jangan timpa data lokal yang sudah ada - gabung (merge), data lokal menang
+            const localTrxIds = new Set(transactions.map(t => t.id));
+            const missingRemoteTrx = remoteTransactions.filter(t => t && t.id && !localTrxIds.has(t.id));
+            const mergedTransactions = [...transactions, ...missingRemoteTrx]
+                .sort((a, b) => new Date(b.rawDate || 0) - new Date(a.rawDate || 0));
+
+            const localKodeSet = new Set(products.map(p => p.kode));
+            const missingRemoteProducts = remoteProducts.filter(p => p && p.kode && !localKodeSet.has(p.kode));
+            const mergedProducts = [...products, ...missingRemoteProducts]
+                .sort((a, b) => a.kode.localeCompare(b.kode));
+
+            products = mergedProducts;
+            transactions = mergedTransactions;
             migrateProductModal();
             saveProductsToStorage();
             saveTransactionsToStorage();
@@ -265,7 +304,7 @@ function pullFromFirestore() {
                 badge.className = 'firebase-badge online';
                 badge.innerHTML = `<i class="fa-solid fa-cloud"></i> Data dimuat dari Firebase`;
             }
-            console.log(`Memuat ${remoteProducts.length} produk & ${remoteTransactions.length} transaksi dari Firebase.`);
+            console.log(`Memuat Firebase: total ${mergedProducts.length} produk & ${mergedTransactions.length} transaksi (lokal + remote digabung).`);
         }
 
         return hasRemoteData;
@@ -320,11 +359,15 @@ function pushLocalToFirestore(allowDeletes) {
                         deletes.push({ ref: db.collection('products').doc(id) });
                     }
                 });
-                remoteTransactionIds.forEach(id => {
-                    if (!localTransactionIds.has(id)) {
-                        deletes.push({ ref: db.collection('transactions').doc(id) });
-                    }
-                });
+                // Hanya hapus transaksi remote bila lokal juga punya data transaksi.
+                // Mencegah transaksi cloud terhapus semua saat localStorage kosong/rusak.
+                if (localTransactions.length > 0) {
+                    remoteTransactionIds.forEach(id => {
+                        if (!localTransactionIds.has(id)) {
+                            deletes.push({ ref: db.collection('transactions').doc(id) });
+                        }
+                    });
+                }
                 deleteCount = deletes.length;
                 return deletes;
             });
@@ -912,7 +955,15 @@ function processSaveTransaction() {
         id: transactionId,
         timestamp: formattedDate,
         rawDate: now.toISOString(),
-        items: [...cart],
+        // Simpan item tanpa foto (gambar bisa base64 ratusan KB - bikin localStorage penuh)
+        items: cart.map(item => ({
+            kode: item.kode,
+            nama: item.nama,
+            harga: item.harga,
+            modal: item.modal || 0,
+            jumlah: item.jumlah,
+            subtotal: item.subtotal
+        })),
         totalItem: cart.reduce((sum, i) => sum + i.jumlah, 0),
         total: grandTotal,
         bayar: inputBayar,
@@ -922,7 +973,25 @@ function processSaveTransaction() {
     };
 
     transactions.unshift(transactionData);
-    saveTransactionsToStorage();
+    const savedOk = saveTransactionsToStorage();
+
+    // Backup langsung ke Firestore (jangan tunggu refresh) - data aman walau localStorage penuh
+    if (typeof db !== 'undefined' && db) {
+        db.collection('transactions').doc(transactionData.id).set(transactionData)
+            .catch(err => console.warn('Gagal backup transaksi ke Firestore:', err));
+        // Sync juga stok produk yang berubah
+        cart.forEach(cartItem => {
+            const product = products.find(p => p.kode === cartItem.kode);
+            if (product) {
+                db.collection('products').doc(product.kode).set(product)
+                    .catch(err => console.warn('Gagal sync stok ke Firestore:', err));
+            }
+        });
+    }
+
+    if (!savedOk) {
+        showToast('Transaksi TIDAK tersimpan di perangkat (penyimpanan penuh)! Data tetap aman di Firebase.', 'danger');
+    }
 
     currentLastTransaction = transactionData;
 
