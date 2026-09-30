@@ -287,6 +287,11 @@ function pushLocalToFirestore() {
         })
         .then(() => {
             console.log(`Sinkron Firebase selesai: ${upserts.length} diperbarui, ${deleteCount} dihapus.`);
+            const badge = document.getElementById('firebase-status-badge');
+            if (badge) {
+                badge.className = 'firebase-badge online';
+                badge.innerHTML = `<i class="fa-solid fa-cloud"></i> Sync OK (${upserts.length} item)`;
+            }
             showToast(`Sinkron Firebase: ${upserts.length} diperbarui, ${deleteCount} dihapus.`, 'success');
         })
         .catch(err => {
