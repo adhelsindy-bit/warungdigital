@@ -330,13 +330,18 @@ function openUserModal() {
     const addSection = document.getElementById('add-user-section');
     if (addSection) addSection.style.display = isAdmin() ? 'block' : 'none';
 
+    // Class .active dibutuhkan CSS (.modal-overlay tanpa .active = opacity 0 + pointer-events none)
     overlay.style.display = 'flex';
+    requestAnimationFrame(() => overlay.classList.add('active'));
 }
 
 function closeUserModal(e) {
     if (e && e.target !== e.currentTarget) return;
     const overlay = document.getElementById('user-modal-overlay');
-    if (overlay) overlay.style.display = 'none';
+    if (overlay) {
+        overlay.classList.remove('active');
+        overlay.style.display = 'none';
+    }
 
     // Reset form-form di dalam modal
     const addForm = document.getElementById('form-add-user');
