@@ -210,14 +210,17 @@ function initFirebaseSync() {
     // Jika localStorage kosong (perangkat/URL baru, atau data sampel hasil seed),
     // tarik data dari Firebase dulu agar data asli tidak hilang / tidak menimpa cloud.
     if (firstRunSeeded) {
+        firstRunSeeded = false;
         pullFromFirestore().then(hasRemoteData => {
             if (!hasRemoteData) {
-                pushLocalToFirestore();
+                // Firebase kosong: unggah data lokal (tanpa penghapusan)
+                pushLocalToFirestore(false);
             }
         });
     } else {
-        // Unggah seluruh data lokal ke Firebase (dilakukan sekali saat halaman dimuat/refresh)
-        pushLocalToFirestore();
+        // Unggah seluruh data lokal ke Firebase saat halaman dimuat/refresh.
+        // Penghapusan data hanya untuk perangkat yang memang sudah punya data lokal.
+        pushLocalToFirestore(true);
     }
 }
 
@@ -273,17 +276,17 @@ function pullFromFirestore() {
 }
 
 // Upload seluruh data localStorage ke Cloud Firestore (data lokal menimpa versi cloud)
-// Data yang dihapus di aplikasi juga ikut dihapus dari Firebase (sinkron total)
-function pushLocalToFirestore() {
+// allowDeletes = true hanya untuk perangkat yang sudah punya data lokal (aman untuk sinkron penuh)
+function pushLocalToFirestore(allowDeletes) {
     if (typeof db === 'undefined' || !db) return;
 
-    const localProductCodes = new Set(products.map(p => p.kode));
-    const localTransactionIds = new Set(transactions.map(t => t.id));
+    const localProducts = products.filter(p => p && p.kode);
+    const localTransactions = transactions.filter(t => t && t.id);
 
     const upserts = [];
 
     // Produk: dokumen dengan ID = kode produk
-    products.forEach(p => {
+    localProducts.forEach(p => {
         upserts.push({
             ref: db.collection('products').doc(p.kode),
             data: p
@@ -291,63 +294,72 @@ function pushLocalToFirestore() {
     });
 
     // Transaksi: dokumen dengan ID = nomor transaksi
-    transactions.forEach(t => {
+    localTransactions.forEach(t => {
         upserts.push({
             ref: db.collection('transactions').doc(t.id),
             data: t
         });
     });
 
-    // Ambil seluruh ID dokumen yang ada di Firebase untuk dibandingkan
-    const getRemoteIds = (collectionName) =>
-        db.collection(collectionName).get()
-            .then(snapshot => snapshot.docs.map(doc => doc.id))
-            .catch(() => []);
-
     let deleteCount = 0;
 
-    Promise.all([getRemoteIds('products'), getRemoteIds('transactions')])
-        .then(([remoteProductIds, remoteTransactionIds]) => {
-            const deletes = [];
+    // Hapus data remote yang tidak ada di lokal (hanya jika diizinkan)
+    const buildDeletes = () => {
+        const localProductCodes = new Set(localProducts.map(p => p.kode));
+        const localTransactionIds = new Set(localTransactions.map(t => t.id));
+        const getRemoteIds = (collectionName) =>
+            db.collection(collectionName).get()
+                .then(snapshot => snapshot.docs.map(doc => doc.id))
+                .catch(() => []);
 
-            remoteProductIds.forEach(id => {
-                if (!localProductCodes.has(id)) {
-                    deletes.push({ ref: db.collection('products').doc(id) });
-                }
-            });
-            remoteTransactionIds.forEach(id => {
-                if (!localTransactionIds.has(id)) {
-                    deletes.push({ ref: db.collection('transactions').doc(id) });
-                }
-            });
-
-            deleteCount = deletes.length;
-
-            const ops = [...upserts, ...deletes];
-            if (ops.length === 0) {
-                console.log("Tidak ada data lokal untuk disinkronkan.");
-                return;
-            }
-
-            // Batch commit (Firestore membatasi 500 operasi per batch, jadi dipecah)
-            const BATCH_LIMIT = 400;
-            const batchPromises = [];
-
-            for (let i = 0; i < ops.length; i += BATCH_LIMIT) {
-                const chunk = ops.slice(i, i + BATCH_LIMIT);
-                const batch = db.batch();
-                chunk.forEach(op => {
-                    if (op.data) {
-                        batch.set(op.ref, op.data);
-                    } else {
-                        batch.delete(op.ref);
+        return Promise.all([getRemoteIds('products'), getRemoteIds('transactions')])
+            .then(([remoteProductIds, remoteTransactionIds]) => {
+                const deletes = [];
+                remoteProductIds.forEach(id => {
+                    if (!localProductCodes.has(id)) {
+                        deletes.push({ ref: db.collection('products').doc(id) });
                     }
                 });
-                batchPromises.push(batch.commit());
-            }
+                remoteTransactionIds.forEach(id => {
+                    if (!localTransactionIds.has(id)) {
+                        deletes.push({ ref: db.collection('transactions').doc(id) });
+                    }
+                });
+                deleteCount = deletes.length;
+                return deletes;
+            });
+    };
 
-            return Promise.all(batchPromises);
-        })
+    const commitOps = (deletes) => {
+        const ops = [...upserts, ...deletes];
+        if (ops.length === 0) {
+            console.log("Tidak ada data lokal untuk disinkronkan.");
+            return Promise.resolve();
+        }
+
+        // Batch commit (Firestore membatasi 500 operasi per batch, jadi dipecah)
+        const BATCH_LIMIT = 400;
+        const batchPromises = [];
+
+        for (let i = 0; i < ops.length; i += BATCH_LIMIT) {
+            const chunk = ops.slice(i, i + BATCH_LIMIT);
+            const batch = db.batch();
+            chunk.forEach(op => {
+                if (op.data) {
+                    batch.set(op.ref, op.data);
+                } else {
+                    batch.delete(op.ref);
+                }
+            });
+            batchPromises.push(batch.commit());
+        }
+        return Promise.all(batchPromises);
+    };
+
+    const run = allowDeletes ? buildDeletes() : Promise.resolve([]);
+
+    run
+        .then(commitOps)
         .then(() => {
             console.log(`Sinkron Firebase selesai: ${upserts.length} diperbarui, ${deleteCount} dihapus.`);
             const badge = document.getElementById('firebase-status-badge');
