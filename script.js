@@ -8,6 +8,7 @@ let products = [];
 let transactions = [];
 let cart = [];
 let currentLastTransaction = null;
+let firstRunSeeded = false;
 
 // LocalStorage Keys
 const STORAGE_PRODUCTS_KEY = 'warung_products_delsi';
@@ -145,6 +146,7 @@ function initData() {
     const storedProducts = localStorage.getItem(STORAGE_PRODUCTS_KEY);
     if (!storedProducts) {
         products = [...SAMPLE_PRODUCTS];
+        firstRunSeeded = true;
         saveProductsToStorage();
     } else {
         try {
@@ -205,8 +207,69 @@ function initFirebaseSync() {
         badge.innerHTML = `<i class="fa-solid fa-cloud"></i> Sync saat Refresh`;
     }
 
-    // Unggah seluruh data lokal ke Firebase (dilakukan sekali saat halaman dimuat/refresh)
-    pushLocalToFirestore();
+    // Jika localStorage kosong (perangkat/URL baru, atau data sampel hasil seed),
+    // tarik data dari Firebase dulu agar data asli tidak hilang / tidak menimpa cloud.
+    if (firstRunSeeded) {
+        pullFromFirestore().then(hasRemoteData => {
+            if (!hasRemoteData) {
+                pushLocalToFirestore();
+            }
+        });
+    } else {
+        // Unggah seluruh data lokal ke Firebase (dilakukan sekali saat halaman dimuat/refresh)
+        pushLocalToFirestore();
+    }
+}
+
+// Menarik data dari Cloud Firestore bila localStorage masih kosong
+function pullFromFirestore() {
+    const badge = document.getElementById('firebase-status-badge');
+
+    return Promise.all([
+        db.collection('products').get(),
+        db.collection('transactions').get()
+    ]).then(([productSnapshot, transactionSnapshot]) => {
+        const hasRemoteData = !productSnapshot.empty || !transactionSnapshot.empty;
+
+        if (hasRemoteData) {
+            const remoteProducts = [];
+            productSnapshot.forEach(doc => {
+                const data = doc.data();
+                if (!data.gambar) data.gambar = DEFAULT_IMAGE;
+                remoteProducts.push(data);
+            });
+            remoteProducts.sort((a, b) => a.kode.localeCompare(b.kode));
+
+            const remoteTransactions = [];
+            transactionSnapshot.forEach(doc => {
+                remoteTransactions.push(doc.data());
+            });
+            remoteTransactions.sort((a, b) => new Date(b.rawDate || 0) - new Date(a.rawDate || 0));
+
+            products = remoteProducts;
+            transactions = remoteTransactions;
+            migrateProductModal();
+            saveProductsToStorage();
+            saveTransactionsToStorage();
+            renderProducts();
+            populateProductDropdown();
+            renderCart();
+            renderReports();
+            renderDashboardStokMenipis();
+            renderDashboardOmzet();
+
+            if (badge) {
+                badge.className = 'firebase-badge online';
+                badge.innerHTML = `<i class="fa-solid fa-cloud"></i> Data dimuat dari Firebase`;
+            }
+            console.log(`Memuat ${remoteProducts.length} produk & ${remoteTransactions.length} transaksi dari Firebase.`);
+        }
+
+        return hasRemoteData;
+    }).catch(err => {
+        console.warn("Gagal memuat data dari Firebase:", err);
+        return false;
+    });
 }
 
 // Upload seluruh data localStorage ke Cloud Firestore (data lokal menimpa versi cloud)
