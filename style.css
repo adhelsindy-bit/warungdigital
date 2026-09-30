@@ -260,6 +260,174 @@ body:not(.logged-out) .login-screen {
     background: rgba(255, 255, 255, 0.3);
 }
 
+/* --- Modal Kelola User --- */
+.user-modal-card {
+    max-width: 520px;
+}
+
+.user-section-title {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.user-section-title i {
+    color: var(--primary-color);
+}
+
+.user-list-section,
+.user-form-section {
+    margin-bottom: 1.25rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.user-form-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.user-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.user-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.6rem 0.75rem;
+    transition: var(--transition);
+}
+
+.user-item:hover {
+    border-color: var(--primary-color);
+}
+
+.user-item-info {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-width: 0;
+}
+
+.user-item-info .user-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--primary-light);
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.user-item-name {
+    font-weight: 700;
+    font-size: 0.92rem;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.user-item-meta {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.role-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    flex-shrink: 0;
+}
+
+.role-badge.admin {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+}
+
+.role-badge.kasir {
+    background: #e3f2fd;
+    color: var(--info-color);
+}
+
+.user-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+
+.btn-user-delete {
+    background: none;
+    border: 1px solid var(--border-color);
+    color: var(--danger-color);
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.btn-user-delete:hover {
+    background: var(--danger-color);
+    border-color: var(--danger-color);
+    color: #ffffff;
+}
+
+.btn-user-delete:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.btn-user-delete:disabled:hover {
+    background: none;
+    border-color: var(--border-color);
+    color: var(--danger-color);
+}
+
+.you-badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--success-color);
+    background: #e8f5e9;
+    padding: 0.15rem 0.5rem;
+    border-radius: 20px;
+}
+
+.header-role {
+    font-style: normal;
+    font-size: 0.72rem;
+    opacity: 0.85;
+    font-weight: 500;
+}
+
+.header-role:empty {
+    display: none;
+}
+
 /* --- Header Section --- */
 .app-header {
     background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));

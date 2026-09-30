@@ -189,11 +189,23 @@ function initAuth() {
     const session = getSession();
     if (session && session.username) {
         document.body.classList.remove('logged-out');
-        const userEl = document.getElementById('logged-user');
-        if (userEl) userEl.textContent = session.username;
+        applySessionToHeader(session);
     } else {
         document.body.classList.add('logged-out');
     }
+}
+
+// Tampilkan nama user, role, dan tombol Kelola User (admin saja) di header
+function applySessionToHeader(session) {
+    const userEl = document.getElementById('logged-user');
+    if (userEl) userEl.textContent = session.username;
+
+    const roleEl = document.getElementById('logged-role');
+    const role = session.role || 'Kasir';
+    if (roleEl) roleEl.textContent = '(' + role + ')';
+
+    const btnKelola = document.getElementById('btn-kelola-user');
+    if (btnKelola) btnKelola.style.display = (role === 'Administrator') ? 'inline-flex' : 'none';
 }
 
 function showLoginError(msg) {
@@ -236,11 +248,13 @@ function handleLogin(e) {
     }
 
     // Simpan sesi (tetap login sampai tombol Keluar ditekan)
+    const session = {
+        username: user.username,
+        role: user.role || 'Kasir',
+        loginAt: new Date().toISOString()
+    };
     try {
-        localStorage.setItem(STORAGE_SESSION_KEY, JSON.stringify({
-            username: user.username,
-            loginAt: new Date().toISOString()
-        }));
+        localStorage.setItem(STORAGE_SESSION_KEY, JSON.stringify(session));
     } catch (err) {
         showLoginError('Gagal menyimpan sesi: ' + err.message);
         return;
@@ -249,10 +263,9 @@ function handleLogin(e) {
     // Bersihkan form & tampilkan aplikasi
     document.getElementById('login-form').reset();
     document.body.classList.remove('logged-out');
-    const userEl = document.getElementById('logged-user');
-    if (userEl) userEl.textContent = user.username;
+    applySessionToHeader(session);
 
-    showToast(`Selamat datang, ${user.username}!`, 'success');
+    showToast(`Selamat datang, ${user.username}! (${session.role})`, 'success');
 }
 
 function handleLogout() {
@@ -291,6 +304,227 @@ function togglePassword() {
     } else {
         input.type = 'password';
         icon.className = 'fa-solid fa-eye';
+    }
+}
+
+/* ==========================================================================
+   0b. KELOLA USER (TAMBAH / HAPUS / GANTI PASSWORD)
+   ========================================================================== */
+
+function isAdmin() {
+    const session = getSession();
+    return !!(session && (session.role || 'Kasir') === 'Administrator');
+}
+
+function openUserModal() {
+    if (!isAdmin()) {
+        showToast('Hanya Administrator yang bisa kelola user.', 'warning');
+        return;
+    }
+    const overlay = document.getElementById('user-modal-overlay');
+    if (!overlay) return;
+
+    renderUserList();
+
+    // Sembunyikan form tambah user bila bukan admin (pengaman ekstra)
+    const addSection = document.getElementById('add-user-section');
+    if (addSection) addSection.style.display = isAdmin() ? 'block' : 'none';
+
+    overlay.style.display = 'flex';
+}
+
+function closeUserModal(e) {
+    if (e && e.target !== e.currentTarget) return;
+    const overlay = document.getElementById('user-modal-overlay');
+    if (overlay) overlay.style.display = 'none';
+
+    // Reset form-form di dalam modal
+    const addForm = document.getElementById('form-add-user');
+    if (addForm) addForm.reset();
+    const chgForm = document.getElementById('form-change-pass');
+    if (chgForm) chgForm.reset();
+}
+
+function renderUserList() {
+    const listEl = document.getElementById('user-list');
+    if (!listEl) return;
+
+    const users = getUsers();
+    const session = getSession();
+    const currentName = session ? session.username : '';
+
+    if (users.length === 0) {
+        listEl.innerHTML = '<p class="form-info">Belum ada akun.</p>';
+        return;
+    }
+
+    listEl.innerHTML = users.map((u, idx) => {
+        const role = u.role || 'Kasir';
+        const roleClass = role === 'Administrator' ? 'admin' : 'kasir';
+        const isMe = u.username === currentName;
+        const isLastAdmin = role === 'Administrator' &&
+            users.filter(x => (x.role || 'Kasir') === 'Administrator').length <= 1;
+        const cannotDelete = isMe || isLastAdmin;
+
+        let reason = '';
+        if (isMe) reason = 'Tidak bisa menghapus akun sendiri';
+        else if (isLastAdmin) reason = 'Harus ada minimal 1 Administrator';
+
+        return `
+            <div class="user-item">
+                <div class="user-item-info">
+                    <span class="user-avatar">${escapeHtml(u.username.charAt(0).toUpperCase())}</span>
+                    <div>
+                        <div class="user-item-name">${escapeHtml(u.username)}</div>
+                        <div class="user-item-meta">${role}</div>
+                    </div>
+                </div>
+                <div class="user-item-actions">
+                    ${isMe ? '<span class="you-badge">Anda</span>' : ''}
+                    <span class="role-badge ${roleClass}">${role === 'Administrator' ? 'Admin' : 'Kasir'}</span>
+                    <button class="btn-user-delete" onclick="deleteUser(${idx})"
+                            ${cannotDelete ? 'disabled' : ''}
+                            title="${cannotDelete ? reason : 'Hapus akun ini'}">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+            </div>`;
+    }).join('');
+}
+
+function saveUsers(users) {
+    try {
+        localStorage.setItem(STORAGE_USERS_KEY, JSON.stringify(users));
+        return true;
+    } catch (err) {
+        console.error('Gagal menyimpan user:', err);
+        showToast('Gagal menyimpan: penyimpanan browser penuh!', 'danger');
+        return false;
+    }
+}
+
+function handleAddUser(e) {
+    e.preventDefault();
+
+    if (!isAdmin()) {
+        showToast('Hanya Administrator yang bisa menambah user.', 'warning');
+        return;
+    }
+
+    const username = document.getElementById('new-username').value.trim();
+    const password = document.getElementById('new-password').value;
+    const role = document.getElementById('new-role').value;
+
+    if (username.length < 3) {
+        showToast('Username minimal 3 karakter.', 'warning');
+        return;
+    }
+    if (password.length < 4) {
+        showToast('Password minimal 4 karakter.', 'warning');
+        return;
+    }
+    // Username tidak boleh mengandung koma (memicu error CSV import)
+    if (/[\\,\n\r]/.test(username)) {
+        showToast('Username tidak boleh mengandung koma atau baris baru.', 'warning');
+        return;
+    }
+
+    const users = getUsers();
+    const exists = users.find(u => u.username.toLowerCase() === username.toLowerCase());
+    if (exists) {
+        showToast(`Username '${username}' sudah dipakai.`, 'danger');
+        return;
+    }
+
+    users.push({
+        username: username,
+        password: simpleHash(password),
+        role: role,
+        createdAt: new Date().toISOString()
+    });
+
+    if (saveUsers(users)) {
+        document.getElementById('form-add-user').reset();
+        renderUserList();
+        showToast(`Akun '${username}' (${role}) berhasil ditambahkan!`, 'success');
+    }
+}
+
+function deleteUser(index) {
+    if (!isAdmin()) {
+        showToast('Hanya Administrator yang bisa menghapus user.', 'warning');
+        return;
+    }
+
+    const users = getUsers();
+    const target = users[index];
+    if (!target) return;
+
+    const session = getSession();
+    if (session && target.username === session.username) {
+        showToast('Tidak bisa menghapus akun sendiri.', 'warning');
+        return;
+    }
+
+    const role = target.role || 'Kasir';
+    const adminCount = users.filter(u => (u.role || 'Kasir') === 'Administrator').length;
+    if (role === 'Administrator' && adminCount <= 1) {
+        showToast('Harus ada minimal 1 Administrator.', 'warning');
+        return;
+    }
+
+    if (!confirm(`Hapus akun '${target.username}' (${role})?`)) return;
+
+    users.splice(index, 1);
+    if (saveUsers(users)) {
+        renderUserList();
+        showToast(`Akun '${target.username}' berhasil dihapus.`, 'info');
+    }
+}
+
+function handleChangePassword(e) {
+    e.preventDefault();
+
+    const session = getSession();
+    if (!session) {
+        showToast('Sesi tidak ditemukan. Silakan login ulang.', 'danger');
+        return;
+    }
+
+    const oldPass = document.getElementById('old-password').value;
+    const newPass = document.getElementById('chg-new-password').value;
+    const repeatPass = document.getElementById('repeat-password').value;
+
+    if (newPass.length < 4) {
+        showToast('Password baru minimal 4 karakter.', 'warning');
+        return;
+    }
+    if (newPass !== repeatPass) {
+        showToast('Password baru dan ulangannya tidak cocok.', 'danger');
+        return;
+    }
+    if (newPass === oldPass) {
+        showToast('Password baru berbeda dari password lama.', 'warning');
+        return;
+    }
+
+    const users = getUsers();
+    const idx = users.findIndex(u => u.username === session.username);
+    if (idx === -1) {
+        showToast('Akun tidak ditemukan.', 'danger');
+        return;
+    }
+    if (users[idx].password !== simpleHash(oldPass)) {
+        showToast('Password lama salah.', 'danger');
+        return;
+    }
+
+    users[idx].password = simpleHash(newPass);
+    users[idx].passwordChangedAt = new Date().toISOString();
+
+    if (saveUsers(users)) {
+        document.getElementById('form-change-pass').reset();
+        showToast('Password berhasil diganti!', 'success');
     }
 }
 
@@ -2200,6 +2434,11 @@ document.addEventListener('keydown', function(e) {
         const bcOverlay = document.getElementById('barcode-modal-overlay');
         if (bcOverlay && bcOverlay.style.display !== 'none') {
             closeBarcodeModal();
+        }
+        // Tutup modal kelola user juga
+        const userOverlay = document.getElementById('user-modal-overlay');
+        if (userOverlay && userOverlay.style.display !== 'none') {
+            closeUserModal();
         }
     }
 });
