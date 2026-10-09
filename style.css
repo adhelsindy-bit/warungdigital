@@ -842,7 +842,8 @@ body:not(.logged-out) .login-screen {
     gap: 0.75rem;
 }
 
-.drop-zone-preview img {
+.drop-zone-preview img,
+#drop-zone-preview img {
     width: 120px;
     height: 120px;
     object-fit: cover;

@@ -4,9 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Delsi Shop - Kasir Warung Digital</title>
+    <meta name="theme-color" content="#d32f2f">
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <!-- Font Awesome Icons for clean UI icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=8">
+    <link rel="stylesheet" href="style.css?v=9">
 </head>
 <body class="logged-out">
 
@@ -219,7 +222,7 @@
                                     <p class="drop-zone-hint">atau klik untuk memilih file</p>
                                     <p class="drop-zone-formats">JPG, PNG, WebP (maks. 2MB)</p>
                                 </div>
-                                <div id="drop-zone-preview" style="display:none;">
+                                <div id="drop-zone-preview" class="drop-zone-preview" style="display:none;">
                                     <img id="drop-zone-img" src="" alt="Preview">
                                     <button type="button" class="btn btn-danger btn-sm" onclick="event.stopPropagation(); removeUploadedPhoto()" title="Hapus Foto">
                                         <i class="fa-solid fa-trash-can"></i> Hapus Foto
@@ -658,7 +661,7 @@
             console.warn("Firebase initialization error, fallback to localStorage:", e);
         }
     </script>
-    <script src="script.js?v=8"></script>
+    <script src="script.js?v=9"></script>
 
     <!-- MODAL SCANNER BARCODE & QR CODE -->
     <div id="scanner-modal-overlay" class="scanner-modal-overlay">
