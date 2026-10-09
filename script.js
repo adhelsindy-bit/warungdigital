@@ -17,6 +17,18 @@ const STORAGE_TRANSACTIONS_KEY = 'warung_transactions_delsi';
 // Placeholder Gambar Default jika gambar produk tidak diisi / gagal dimuat
 const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1588964895597-cfccd6e2dbf9?w=150&auto=format&fit=crop';
 
+// Tampilkan error JavaScript yang tidak tertangani sebagai notifikasi,
+// supaya masalah tidak "diam-diam" tidak berfungsi (mis. tombol Update tidak bereaksi).
+window.addEventListener('error', function (event) {
+    console.error('Runtime error:', event.error || event.message);
+    if (typeof showToast === 'function') {
+        showToast('Terjadi error: ' + (event.message || 'tidak diketahui'), 'danger');
+    }
+});
+window.addEventListener('unhandledrejection', function (event) {
+    console.error('Unhandled promise rejection:', event.reason);
+});
+
 // Data Sampel Awal Lengkap dengan Foto Produk (sesuai nama produk)
 const SAMPLE_PRODUCTS = [
     {
@@ -611,7 +623,9 @@ function saveTransactionsToStorage() {
     }
 }
 
-// Inisialisasi Sinkronisasi Firebase (hanya saat halaman di-refresh)
+// Inisialisasi sinkronisasi Firebase secara REAL-TIME.
+// Firebase = sumber data utama (dipakai bersama semua perangkat),
+// localStorage hanya cadangan/offline.
 function initFirebaseSync() {
     const badge = document.getElementById('firebase-status-badge');
 
@@ -619,31 +633,76 @@ function initFirebaseSync() {
         console.warn("Firestore belum siap. Menggunakan LocalStorage.");
         if (badge) {
             badge.className = 'firebase-badge offline';
-            badge.innerHTML = `<i class="fa-solid fa-hard-drive"></i> LocalStorage`;
+            badge.innerHTML = `<i class="fa-solid fa-hard-drive"></i> Mode Offline (LocalStorage)`;
         }
         return;
     }
 
     if (badge) {
         badge.className = 'firebase-badge online';
-        badge.innerHTML = `<i class="fa-solid fa-cloud"></i> Sync saat Refresh`;
+        badge.innerHTML = `<i class="fa-solid fa-cloud"></i> Sinkron Real-time`;
     }
 
-    // Jika localStorage kosong (perangkat/URL baru, atau data sampel hasil seed),
-    // tarik data dari Firebase dulu agar data asli tidak hilang / tidak menimpa cloud.
-    if (firstRunSeeded) {
-        firstRunSeeded = false;
-        pullFromFirestore().then(hasRemoteData => {
-            if (!hasRemoteData) {
-                // Firebase kosong: unggah data lokal (tanpa penghapusan)
+    let firstProductsSnap = true;
+
+    // Dengarkan data produk dari Firestore secara real-time.
+    // Semua perangkat akan menampilkan data yang sama (cloud menang).
+    db.collection('products').onSnapshot(snapshot => {
+        if (snapshot.empty) {
+            // Cloud masih kosong (setup pertama) -> unggah data lokal sebagai data awal.
+            if (firstProductsSnap) {
+                firstProductsSnap = false;
                 pushLocalToFirestore(false);
             }
+            return;
+        }
+
+        const localByKode = new Map(
+            products.filter(p => p && p.kode).map(p => [p.kode, p])
+        );
+        const remoteProducts = [];
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            if (!data.gambar) data.gambar = DEFAULT_IMAGE;
+
+            // Perbaikan sekali saat pemuatan: kalau cloud tidak punya foto base64
+            // padahal perangkat ini memilikinya, pakai & kirim kembali foto lokal itu.
+            const local = localByKode.get(data.kode);
+            if (firstProductsSnap && local &&
+                typeof local.gambar === 'string' && local.gambar.startsWith('data:') &&
+                !(typeof data.gambar === 'string' && data.gambar.startsWith('data:'))) {
+                data.gambar = local.gambar;
+                db.collection('products').doc(data.kode).set(data)
+                    .catch(err => console.warn('Gagal perbaiki foto produk:', err));
+            }
+
+            remoteProducts.push(data);
         });
-    } else {
-        // Unggah seluruh data lokal ke Firebase saat halaman dimuat/refresh.
-        // Penghapusan data hanya untuk perangkat yang memang sudah punya data lokal.
-        pushLocalToFirestore(true);
-    }
+
+        firstProductsSnap = false;
+        remoteProducts.sort((a, b) => (a.kode || '').localeCompare(b.kode || ''));
+
+        products = remoteProducts;
+        saveProductsToStorage();
+        renderProducts();
+        populateProductDropdown();
+        renderDashboardStokMenipis();
+    }, err => console.warn("Gagal mendengar data produk dari Firebase:", err));
+
+    // Dengarkan data transaksi dari Firestore secara real-time.
+    db.collection('transactions').onSnapshot(snapshot => {
+        if (snapshot.empty) return;
+
+        const remoteTransactions = [];
+        snapshot.forEach(doc => remoteTransactions.push(doc.data()));
+        remoteTransactions.sort((a, b) => new Date(b.rawDate || 0) - new Date(a.rawDate || 0));
+
+        transactions = remoteTransactions;
+        saveTransactionsToStorage();
+        renderReports();
+        renderDashboardOmzet();
+    }, err => console.warn("Gagal mendengar data transaksi dari Firebase:", err));
 }
 
 // Menarik data dari Cloud Firestore bila localStorage masih kosong
@@ -671,19 +730,8 @@ function pullFromFirestore() {
             });
             remoteTransactions.sort((a, b) => new Date(b.rawDate || 0) - new Date(a.rawDate || 0));
 
-            // Jangan timpa data lokal yang sudah ada - gabung (merge), data lokal menang
-            const localTrxIds = new Set(transactions.map(t => t.id));
-            const missingRemoteTrx = remoteTransactions.filter(t => t && t.id && !localTrxIds.has(t.id));
-            const mergedTransactions = [...transactions, ...missingRemoteTrx]
-                .sort((a, b) => new Date(b.rawDate || 0) - new Date(a.rawDate || 0));
-
-            const localKodeSet = new Set(products.map(p => p.kode));
-            const missingRemoteProducts = remoteProducts.filter(p => p && p.kode && !localKodeSet.has(p.kode));
-            const mergedProducts = [...products, ...missingRemoteProducts]
-                .sort((a, b) => a.kode.localeCompare(b.kode));
-
-            products = mergedProducts;
-            transactions = mergedTransactions;
+            products = remoteProducts;
+            transactions = remoteTransactions;
             migrateProductModal();
             saveProductsToStorage();
             saveTransactionsToStorage();
@@ -698,7 +746,7 @@ function pullFromFirestore() {
                 badge.className = 'firebase-badge online';
                 badge.innerHTML = `<i class="fa-solid fa-cloud"></i> Data dimuat dari Firebase`;
             }
-            console.log(`Memuat Firebase: total ${mergedProducts.length} produk & ${mergedTransactions.length} transaksi (lokal + remote digabung).`);
+            console.log(`Memuat ${remoteProducts.length} produk & ${remoteTransactions.length} transaksi dari Firebase (data cloud dipakai).`);
         }
 
         return hasRemoteData;
@@ -919,51 +967,68 @@ function generateProductCode() {
 function handleSaveProduct(e) {
     e.preventDefault();
 
-    const editIndex = parseInt(document.getElementById('edit-index').value);
-    const namaInput = document.getElementById('nama-barang').value.trim();
-    const hargaInput = parseInt(document.getElementById('harga-barang').value);
-    const stokInput = parseInt(document.getElementById('stok-barang').value);
-    const gambarInput = document.getElementById('gambar-barang').value.trim();
+    try {
+        const editIndex = parseInt(document.getElementById('edit-index').value);
+        const namaInput = document.getElementById('nama-barang').value.trim();
+        const hargaInput = parseInt(document.getElementById('harga-barang').value);
+        const stokInput = parseInt(document.getElementById('stok-barang').value);
+        const gambarInput = document.getElementById('gambar-barang').value.trim();
 
-    if (!namaInput || isNaN(hargaInput) || isNaN(stokInput)) {
-        showToast('Mohon isi semua field dengan benar.', 'warning');
-        return;
+        if (!namaInput || isNaN(hargaInput) || isNaN(stokInput)) {
+            showToast('Mohon isi Nama Barang, Harga Jual, dan Stok dengan angka yang benar.', 'warning');
+            return;
+        }
+
+        let kodeInput;
+        if (editIndex === -1) {
+            // Produk baru: auto-generate kode
+            kodeInput = generateProductCode();
+        } else {
+            // Edit produk: pertahankan kode lama
+            if (!products[editIndex]) {
+                showToast('Data barang yang diedit tidak ditemukan. Silakan klik tombol Edit lagi.', 'danger');
+                resetProductForm();
+                return;
+            }
+            kodeInput = products[editIndex].kode;
+        }
+
+        const modalInput = parseInt(document.getElementById('modal-barang').value) || 0;
+
+        const productData = {
+            kode: kodeInput,
+            nama: namaInput,
+            harga: hargaInput,
+            modal: modalInput,
+            stok: stokInput,
+            gambar: gambarInput || DEFAULT_IMAGE
+        };
+
+        if (editIndex === -1) {
+            products.push(productData);
+            showToast('Barang berhasil ditambahkan!', 'success');
+        } else {
+            products[editIndex] = productData;
+            showToast('Data barang berhasil diperbarui!', 'success');
+        }
+
+        saveProductsToStorage();
+
+        // Simpan/backup langsung ke Firestore (jangan tunggu refresh)
+        // supaya perubahan tetap ada walau localStorage penuh atau halaman di-refresh.
+        if (typeof db !== 'undefined' && db) {
+            db.collection('products').doc(productData.kode).set(productData)
+                .catch(err => console.warn('Gagal simpan produk ke Firestore:', err));
+        }
+
+        resetProductForm();
+        renderProducts();
+        populateProductDropdown();
+        renderDashboardStokMenipis();
+    } catch (err) {
+        console.error('Gagal menyimpan barang:', err);
+        showToast('Gagal menyimpan barang: ' + err.message, 'danger');
     }
-
-    let kodeInput;
-    if (editIndex === -1) {
-        // Produk baru: auto-generate kode
-        kodeInput = generateProductCode();
-    } else {
-        // Edit produk: pertahankan kode lama
-        kodeInput = products[editIndex].kode;
-    }
-
-    const modalInput = parseInt(document.getElementById('modal-barang').value) || 0;
-
-    const productData = {
-        kode: kodeInput,
-        nama: namaInput,
-        harga: hargaInput,
-        modal: modalInput,
-        stok: stokInput,
-        gambar: gambarInput || DEFAULT_IMAGE
-    };
-
-    if (editIndex === -1) {
-        products.push(productData);
-        showToast('Barang berhasil ditambahkan!', 'success');
-    } else {
-        products[editIndex] = productData;
-        showToast('Data barang berhasil diperbarui!', 'success');
-    }
-
-    saveProductsToStorage();
-
-    resetProductForm();
-    renderProducts();
-    populateProductDropdown();
-    renderDashboardStokMenipis();
 }
 
 function editProduct(index) {
@@ -1024,6 +1089,12 @@ function deleteProduct(index) {
         const deletedKode = product.kode;
         products.splice(index, 1);
         saveProductsToStorage();
+
+        // Hapus juga di Firestore supaya tidak muncul kembali saat refresh
+        if (typeof db !== 'undefined' && db) {
+            db.collection('products').doc(deletedKode).delete()
+                .catch(err => console.warn('Gagal hapus produk di Firestore:', err));
+        }
 
         renderProducts();
         populateProductDropdown();
@@ -1790,22 +1861,58 @@ function processUploadedFile(file) {
 
     const reader = new FileReader();
     reader.onload = function(e) {
-        const base64 = e.target.result;
-        document.getElementById('gambar-barang').value = base64;
-        document.getElementById('gambar-url-input').value = '';
+        // Perkecil & kompres foto sebelum disimpan, supaya localStorage tidak cepat penuh.
+        compressImageDataUrl(e.target.result).then(function(base64) {
+            document.getElementById('gambar-barang').value = base64;
+            document.getElementById('gambar-url-input').value = '';
 
-        // Tampilkan preview
-        const dropContent = document.getElementById('drop-zone-content');
-        const dropPreview = document.getElementById('drop-zone-preview');
-        const dropImg = document.getElementById('drop-zone-img');
+            // Tampilkan preview
+            const dropContent = document.getElementById('drop-zone-content');
+            const dropPreview = document.getElementById('drop-zone-preview');
+            const dropImg = document.getElementById('drop-zone-img');
 
-        dropContent.style.display = 'none';
-        dropPreview.style.display = 'flex';
-        dropImg.src = base64;
+            dropContent.style.display = 'none';
+            dropPreview.style.display = 'flex';
+            dropImg.src = base64;
 
-        showToast('Foto produk berhasil dimuat!', 'success');
+            const kb = Math.round(base64.length / 1024);
+            showToast(`Foto produk berhasil dimuat (~${kb} KB).`, 'success');
+        });
     };
     reader.readAsDataURL(file);
+}
+
+// Kompres & perkecil foto (resize + JPEG) agar hemat penyimpanan browser/Firestore.
+// Mengembalikan Promise<string> berisi data URL hasil kompres (atau aslinya bila gagal).
+function compressImageDataUrl(dataUrl, maxDim = 640, quality = 0.72) {
+    return new Promise(function(resolve) {
+        const img = new Image();
+        img.onload = function() {
+            try {
+                let width = img.width;
+                let height = img.height;
+                if (width > height && width > maxDim) {
+                    height = Math.round(height * maxDim / width);
+                    width = maxDim;
+                } else if (height >= width && height > maxDim) {
+                    width = Math.round(width * maxDim / height);
+                    height = maxDim;
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                const out = canvas.toDataURL('image/jpeg', quality);
+                // Pakai hasil kompres hanya bila memang lebih kecil
+                resolve(out && out.length < dataUrl.length ? out : dataUrl);
+            } catch (err) {
+                resolve(dataUrl);
+            }
+        };
+        img.onerror = function() { resolve(dataUrl); };
+        img.src = dataUrl;
+    });
 }
 
 function removeUploadedPhoto() {
