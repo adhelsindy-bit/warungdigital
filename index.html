@@ -9,7 +9,7 @@
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <!-- Font Awesome Icons for clean UI icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=11">
+    <link rel="stylesheet" href="style.css?v=12">
 </head>
 <body class="logged-out">
 
@@ -67,6 +67,9 @@
                 <span class="header-user-info"><i class="fa-solid fa-circle-user"></i> <span id="logged-user">admin</span> <em id="logged-role" class="header-role"></em></span>
                 <button class="btn-logout" onclick="cleanBrowserStorage()" title="Bersihkan cache penyimpanan browser">
                     <i class="fa-solid fa-broom"></i> Bersihkan Cache
+                </button>
+                <button class="btn-logout" onclick="openPaymentSettingsModal()" id="btn-setting-pembayaran" title="Pengaturan QRIS & Rekening Toko">
+                    <i class="fa-solid fa-wallet"></i> Atur Pembayaran
                 </button>
                 <button class="btn-logout" onclick="openUserModal()" id="btn-kelola-user" title="Kelola akun user" style="display:none;">
                     <i class="fa-solid fa-users-gear"></i> Kelola User
@@ -374,23 +377,140 @@
 
                         <!-- Pilihan Metode Pembayaran -->
                         <div class="form-group">
-                            <label for="select-metode-bayar">Metode Pembayaran</label>
-                            <select id="select-metode-bayar" onchange="onMetodeBayarChange()">
-                                <option value="Tunai">Tunai / Cash</option>
+                            <label>Metode Pembayaran</label>
+                            <div class="payment-method-selector">
+                                <button type="button" class="payment-method-btn active" data-metode="Tunai" onclick="choosePaymentMethod('Tunai')">
+                                    <i class="fa-solid fa-money-bill-wave"></i> Tunai
+                                </button>
+                                <button type="button" class="payment-method-btn" data-metode="QRIS" onclick="choosePaymentMethod('QRIS')">
+                                    <i class="fa-solid fa-qrcode"></i> QRIS
+                                </button>
+                                <button type="button" class="payment-method-btn" data-metode="Transfer Bank" onclick="choosePaymentMethod('Transfer Bank')">
+                                    <i class="fa-solid fa-building-columns"></i> Transfer
+                                </button>
+                                <button type="button" class="payment-method-btn" data-metode="E-Wallet" onclick="choosePaymentMethod('E-Wallet')">
+                                    <i class="fa-solid fa-mobile-screen-button"></i> E-Wallet
+                                </button>
+                            </div>
+                            <select id="select-metode-bayar" style="display:none;" onchange="onMetodeBayarChange()">
+                                <option value="Tunai" selected>Tunai / Cash</option>
                                 <option value="QRIS">QRIS</option>
                                 <option value="Transfer Bank">Transfer Bank</option>
                                 <option value="E-Wallet">E-Wallet (DANA/OVO/GoPay/ShopeePay)</option>
                             </select>
                         </div>
 
-                        <div class="form-group payment-input-group">
-                            <label for="input-bayar" id="label-input-bayar">Uang Bayar (Rp)</label>
-                            <input type="number" id="input-bayar" min="0" placeholder="Masukkan jumlah uang" oninput="calculateChange()">
+                        <!-- PANEL METODE: TUNAI -->
+                        <div id="panel-bayar-tunai">
+                            <div class="form-group payment-input-group">
+                                <label for="input-bayar" id="label-input-bayar">Uang Bayar (Rp)</label>
+                                <input type="number" id="input-bayar" min="0" placeholder="Masukkan jumlah uang" oninput="calculateChange()">
+                            </div>
+
+                            <!-- Tombol Cepat Pecahan Uang Tunai -->
+                            <div class="quick-cash-container" id="quick-cash-container">
+                                <button type="button" class="btn-cash-pill" onclick="setExactCash()" title="Bayar uang pas sesuai total belanja">Uang Pas</button>
+                                <button type="button" class="btn-cash-pill" onclick="setCashAmount(10000)">10rb</button>
+                                <button type="button" class="btn-cash-pill" onclick="setCashAmount(20000)">20rb</button>
+                                <button type="button" class="btn-cash-pill" onclick="setCashAmount(50000)">50rb</button>
+                                <button type="button" class="btn-cash-pill" onclick="setCashAmount(100000)">100rb</button>
+                                <button type="button" class="btn-cash-pill btn-cash-clear" onclick="clearCashInput()" title="Hapus input uang"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+
+                            <div class="summary-row change-row">
+                                <span id="label-kembalian">Kembalian:</span>
+                                <span id="text-kembalian" class="highlight-change">Rp 0</span>
+                            </div>
                         </div>
 
-                        <div class="summary-row change-row">
-                            <span id="label-kembalian">Kembalian:</span>
-                            <span id="text-kembalian" class="highlight-change">Rp 0</span>
+                        <!-- PANEL METODE: QRIS -->
+                        <div id="panel-bayar-qris" class="payment-detail-card" style="display:none;">
+                            <div class="payment-card-header">
+                                <span class="qris-badge"><i class="fa-solid fa-qrcode"></i> QRIS Pembayaran</span>
+                                <button type="button" class="btn-setting-link" onclick="openPaymentSettingsModal()" title="Ubah data QRIS toko">
+                                    <i class="fa-solid fa-gear"></i> Atur
+                                </button>
+                            </div>
+                            <div class="payment-card-body">
+                                <p class="merchant-name-label">Merchant: <strong id="qris-card-merchant">Delsi Shop</strong></p>
+                                <div class="qris-card-amount">
+                                    <small>Total Tagihan:</small>
+                                    <strong id="qris-card-total">Rp 0</strong>
+                                </div>
+                                <button type="button" class="btn btn-primary btn-block btn-show-qris" onclick="openQrisModal()">
+                                    <i class="fa-solid fa-expand"></i> Tampilkan QRIS ke Pembeli
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- PANEL METODE: TRANSFER BANK -->
+                        <div id="panel-bayar-transfer" class="payment-detail-card" style="display:none;">
+                            <div class="payment-card-header">
+                                <span class="bank-badge"><i class="fa-solid fa-building-columns"></i> Transfer Bank</span>
+                                <button type="button" class="btn-setting-link" onclick="openPaymentSettingsModal()" title="Ubah rekening bank toko">
+                                    <i class="fa-solid fa-gear"></i> Atur
+                                </button>
+                            </div>
+                            <div class="payment-card-body">
+                                <div class="account-info-box">
+                                    <div class="account-row">
+                                        <span>Bank:</span>
+                                        <strong id="card-bank-name">BCA</strong>
+                                    </div>
+                                    <div class="account-row">
+                                        <span>No. Rekening:</span>
+                                        <div class="copyable-wrapper">
+                                            <strong id="card-bank-rekening">1234567890</strong>
+                                            <button type="button" class="btn-copy-account" onclick="copyText('card-bank-rekening')" title="Salin nomor rekening">
+                                                <i class="fa-solid fa-copy"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="account-row">
+                                        <span>Atas Nama:</span>
+                                        <span id="card-bank-owner">Delsi Shop</span>
+                                    </div>
+                                    <div class="account-row highlight-amount-row">
+                                        <span>Total Transfer Pas:</span>
+                                        <strong id="card-bank-total" style="color:var(--primary-color);">Rp 0</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- PANEL METODE: E-WALLET -->
+                        <div id="panel-bayar-ewallet" class="payment-detail-card" style="display:none;">
+                            <div class="payment-card-header">
+                                <span class="ewallet-badge"><i class="fa-solid fa-mobile-screen-button"></i> E-Wallet</span>
+                                <button type="button" class="btn-setting-link" onclick="openPaymentSettingsModal()" title="Ubah data e-wallet toko">
+                                    <i class="fa-solid fa-gear"></i> Atur
+                                </button>
+                            </div>
+                            <div class="payment-card-body">
+                                <div class="account-info-box">
+                                    <div class="account-row">
+                                        <span>E-Wallet:</span>
+                                        <strong id="card-ewallet-name">DANA / GoPay / OVO</strong>
+                                    </div>
+                                    <div class="account-row">
+                                        <span>Nomor HP:</span>
+                                        <div class="copyable-wrapper">
+                                            <strong id="card-ewallet-number">0812-3456-7890</strong>
+                                            <button type="button" class="btn-copy-account" onclick="copyText('card-ewallet-number')" title="Salin nomor HP">
+                                                <i class="fa-solid fa-copy"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="account-row">
+                                        <span>Atas Nama:</span>
+                                        <span id="card-ewallet-owner">Delsi</span>
+                                    </div>
+                                    <div class="account-row highlight-amount-row">
+                                        <span>Total Bayar Pas:</span>
+                                        <strong id="card-ewallet-total" style="color:var(--primary-color);">Rp 0</strong>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="transaction-actions">
@@ -463,6 +583,26 @@
                         <p id="stat-total-laba">Rp 0</p>
                     </div>
                 </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon bg-green">
+                        <i class="fa-solid fa-money-bill-wave"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Omzet Tunai (Kas Laci)</h3>
+                        <p id="stat-omzet-tunai">Rp 0</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon bg-blue">
+                        <i class="fa-solid fa-qrcode"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Omzet Non-Tunai (QRIS/Bank)</h3>
+                        <p id="stat-omzet-nontunai">Rp 0</p>
+                    </div>
+                </div>
             </div>
 
             <!-- Tabel Laporan -->
@@ -489,6 +629,14 @@
                         <button class="filter-btn" data-filter="today" onclick="setReportFilter('today')">Hari Ini</button>
                         <button class="filter-btn" data-filter="week" onclick="setReportFilter('week')">Minggu Ini</button>
                         <button class="filter-btn" data-filter="month" onclick="setReportFilter('month')">Bulan Ini</button>
+                    </div>
+                    <div class="filter-group payment-filter-bar">
+                        <span class="filter-label"><i class="fa-solid fa-wallet"></i> Metode:</span>
+                        <button class="filter-btn active" data-metode="all" onclick="setReportMetodeFilter('all')">Semua</button>
+                        <button class="filter-btn" data-metode="Tunai" onclick="setReportMetodeFilter('Tunai')"><i class="fa-solid fa-money-bill-wave"></i> Tunai</button>
+                        <button class="filter-btn" data-metode="QRIS" onclick="setReportMetodeFilter('QRIS')"><i class="fa-solid fa-qrcode"></i> QRIS</button>
+                        <button class="filter-btn" data-metode="Transfer Bank" onclick="setReportMetodeFilter('Transfer Bank')"><i class="fa-solid fa-building-columns"></i> Transfer</button>
+                        <button class="filter-btn" data-metode="E-Wallet" onclick="setReportMetodeFilter('E-Wallet')"><i class="fa-solid fa-mobile-screen-button"></i> E-Wallet</button>
                     </div>
                     <div class="filter-group">
                         <label for="filter-date" class="filter-label">Pilih Tanggal:</label>
@@ -667,7 +815,7 @@
             console.warn("Firebase initialization error, fallback to localStorage:", e);
         }
     </script>
-    <script src="script.js?v=12"></script>
+    <script src="script.js?v=13"></script>
 
     <!-- MODAL SCANNER BARCODE & QR CODE -->
     <div id="scanner-modal-overlay" class="scanner-modal-overlay">
@@ -819,6 +967,117 @@
                     </button>
                 </form>
             </div>
+        </div>
+    </div>
+
+    <!-- MODAL POPUP QRIS UNTUK PEMBELI -->
+    <div id="qris-modal-overlay" class="modal-overlay">
+        <div class="modal-card qris-modal-card">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-qrcode"></i> Pembayaran QRIS</h3>
+                <button class="close-btn" onclick="closeQrisModal()">&times;</button>
+            </div>
+            <div class="qris-modal-content">
+                <div class="qris-merchant-badge">
+                    <span class="qris-tag"><i class="fa-solid fa-bolt"></i> QRIS</span>
+                    <strong id="qris-modal-merchant">Delsi Shop</strong>
+                </div>
+                <div class="qris-amount-display">
+                    <small>Total Pembayaran</small>
+                    <h2 id="qris-modal-amount">Rp 0</h2>
+                </div>
+                <div class="qris-code-container" id="qris-code-container">
+                    <img id="qris-modal-custom-img" src="" alt="QRIS Warung" style="display:none; max-width:240px; max-height:240px; margin:0 auto; border-radius:8px;">
+                    <div id="qris-modal-qrcode" style="display:flex; justify-content:center;"></div>
+                </div>
+                <p class="qris-supported-apps">
+                    <i class="fa-solid fa-circle-check" style="color:var(--success-color);"></i>
+                    Scan dengan BCA, BRI, Mandiri, BNI, DANA, GoPay, OVO, ShopeePay, LinkAja
+                </p>
+                <div class="qris-modal-actions">
+                    <button type="button" class="btn btn-success btn-block" onclick="confirmQrisPayment()">
+                        <i class="fa-solid fa-check-circle"></i> Konfirmasi Pembayaran Diterima
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-block" onclick="closeQrisModal()">
+                        Batal / Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PENGATURAN PEMBAYARAN TOKO -->
+    <div id="payment-settings-modal-overlay" class="modal-overlay">
+        <div class="modal-card payment-settings-modal-card">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-wallet"></i> Pengaturan Metode Pembayaran</h3>
+                <button class="close-btn" onclick="closePaymentSettingsModal()">&times;</button>
+            </div>
+            <form id="form-payment-settings" onsubmit="handleSavePaymentSettings(event)">
+                <div class="payment-settings-section">
+                    <h4><i class="fa-solid fa-qrcode" style="color:var(--primary-color);"></i> QRIS Toko</h4>
+                    <div class="form-group">
+                        <label for="setting-qris-merchant">Nama Merchant / Toko</label>
+                        <input type="text" id="setting-qris-merchant" class="form-control" placeholder="Contoh: Delsi Shop">
+                    </div>
+                    <div class="form-group">
+                        <label>Foto Kode QRIS Toko (Opsional)</label>
+                        <div class="qris-upload-area" onclick="document.getElementById('input-qris-file').click()">
+                            <img id="preview-qris-img" src="" style="display:none; max-width:180px; max-height:180px; margin:0 auto; border-radius:8px;">
+                            <div id="placeholder-qris-upload">
+                                <i class="fa-solid fa-cloud-arrow-up" style="font-size:2rem; color:var(--text-secondary); margin-bottom:0.5rem;"></i>
+                                <p style="font-size:0.85rem; color:var(--text-secondary);">Klik untuk upload foto QRIS warung Anda (JPG/PNG)</p>
+                            </div>
+                        </div>
+                        <input type="file" id="input-qris-file" accept="image/*" style="display:none;" onchange="handleQrisImageUpload(event)">
+                        <input type="hidden" id="setting-qris-image-data">
+                        <button type="button" class="btn btn-outline-danger btn-sm" id="btn-remove-qris-img" style="display:none; margin-top:0.5rem;" onclick="removeQrisImage()">
+                            <i class="fa-solid fa-trash"></i> Hapus Foto (Gunakan Generator Otomatis)
+                        </button>
+                    </div>
+                </div>
+
+                <div class="payment-settings-section" style="margin-top:1.25rem;">
+                    <h4><i class="fa-solid fa-building-columns" style="color:#283593;"></i> Rekening Bank</h4>
+                    <div class="form-group">
+                        <label for="setting-bank-name">Nama Bank</label>
+                        <input type="text" id="setting-bank-name" class="form-control" placeholder="Contoh: BCA / BRI / Mandiri / BNI">
+                    </div>
+                    <div class="form-group">
+                        <label for="setting-bank-rekening">Nomor Rekening</label>
+                        <input type="text" id="setting-bank-rekening" class="form-control" placeholder="Contoh: 1234567890">
+                    </div>
+                    <div class="form-group">
+                        <label for="setting-bank-owner">Atas Nama (Pemilik Rekening)</label>
+                        <input type="text" id="setting-bank-owner" class="form-control" placeholder="Contoh: Delsi Shop">
+                    </div>
+                </div>
+
+                <div class="payment-settings-section" style="margin-top:1.25rem;">
+                    <h4><i class="fa-solid fa-mobile-screen-button" style="color:#00695c;"></i> Akun E-Wallet</h4>
+                    <div class="form-group">
+                        <label for="setting-ewallet-name">Nama E-Wallet</label>
+                        <input type="text" id="setting-ewallet-name" class="form-control" placeholder="Contoh: DANA / GoPay / OVO / ShopeePay">
+                    </div>
+                    <div class="form-group">
+                        <label for="setting-ewallet-number">Nomor HP E-Wallet</label>
+                        <input type="text" id="setting-ewallet-number" class="form-control" placeholder="Contoh: 0812-3456-7890">
+                    </div>
+                    <div class="form-group">
+                        <label for="setting-ewallet-owner">Atas Nama</label>
+                        <input type="text" id="setting-ewallet-owner" class="form-control" placeholder="Contoh: Delsi">
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:0.75rem; margin-top:1.5rem;">
+                    <button type="submit" class="btn btn-primary" style="flex:1;">
+                        <i class="fa-solid fa-floppy-disk"></i> Simpan Pengaturan
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="closePaymentSettingsModal()">
+                        Batal
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </body>

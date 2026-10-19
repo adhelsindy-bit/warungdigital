@@ -142,6 +142,7 @@ const SAMPLE_PRODUCTS = [
 document.addEventListener('DOMContentLoaded', () => {
     initAuth();
     initData();
+    initPaymentSettings();
     migrateProductModal();
     renderProducts();
     populateProductDropdown();
@@ -1523,6 +1524,88 @@ function removeFromCart(index) {
     showToast('Item dihapus dari keranjang.', 'info');
 }
 
+/* ==========================================================================
+   4. PENGATURAN & METODE PEMBAYARAN (TUNAI, QRIS, TRANSFER BANK, E-WALLET)
+   ========================================================================== */
+const STORAGE_PAYMENT_SETTINGS_KEY = 'warung_payment_settings_delsi';
+const DEFAULT_PAYMENT_SETTINGS = {
+    qrisMerchant: 'Delsi Shop',
+    qrisImage: '',
+    bankName: 'BCA',
+    bankRekening: '8830-1234-5678',
+    bankOwner: 'Delsi Shop',
+    ewalletName: 'DANA / GoPay / ShopeePay',
+    ewalletNumber: '0812-3456-7890',
+    ewalletOwner: 'Delsi Shop'
+};
+
+let paymentSettings = { ...DEFAULT_PAYMENT_SETTINGS };
+
+function initPaymentSettings() {
+    try {
+        const stored = localStorage.getItem(STORAGE_PAYMENT_SETTINGS_KEY);
+        if (stored) {
+            paymentSettings = Object.assign({}, DEFAULT_PAYMENT_SETTINGS, JSON.parse(stored));
+        }
+    } catch (e) {
+        console.warn('Gagal memuat pengaturan pembayaran dari localStorage:', e);
+    }
+    updatePaymentUIFromSettings();
+
+    // Sinkronisasi data pembayaran dari Firestore jika online
+    if (typeof db !== 'undefined' && db) {
+        db.collection('settings').doc('payment').get().then(doc => {
+            if (doc.exists) {
+                paymentSettings = Object.assign({}, DEFAULT_PAYMENT_SETTINGS, doc.data());
+                try {
+                    localStorage.setItem(STORAGE_PAYMENT_SETTINGS_KEY, JSON.stringify(paymentSettings));
+                } catch (e) {}
+                updatePaymentUIFromSettings();
+            }
+        }).catch(err => console.warn('Gagal sync settings payment dari Firebase:', err));
+    }
+}
+
+function getPaymentSettings() {
+    return paymentSettings;
+}
+
+function updatePaymentUIFromSettings() {
+    const s = paymentSettings;
+    const qrisMerchantEl = document.getElementById('qris-card-merchant');
+    if (qrisMerchantEl) qrisMerchantEl.textContent = s.qrisMerchant || 'Delsi Shop';
+
+    const bankNameEl = document.getElementById('card-bank-name');
+    if (bankNameEl) bankNameEl.textContent = s.bankName || 'BCA';
+
+    const bankRekEl = document.getElementById('card-bank-rekening');
+    if (bankRekEl) bankRekEl.textContent = s.bankRekening || '-';
+
+    const bankOwnerEl = document.getElementById('card-bank-owner');
+    if (bankOwnerEl) bankOwnerEl.textContent = s.bankOwner || 'Delsi Shop';
+
+    const ewalletNameEl = document.getElementById('card-ewallet-name');
+    if (ewalletNameEl) ewalletNameEl.textContent = s.ewalletName || 'DANA / GoPay';
+
+    const ewalletNumEl = document.getElementById('card-ewallet-number');
+    if (ewalletNumEl) ewalletNumEl.textContent = s.ewalletNumber || '-';
+
+    const ewalletOwnerEl = document.getElementById('card-ewallet-owner');
+    if (ewalletOwnerEl) ewalletOwnerEl.textContent = s.ewalletOwner || 'Delsi Shop';
+}
+
+// Memilih metode pembayaran lewat tombol tab
+function choosePaymentMethod(metode) {
+    const select = document.getElementById('select-metode-bayar');
+    if (select) {
+        select.value = metode;
+    }
+    document.querySelectorAll('.payment-method-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.metode === metode);
+    });
+    onMetodeBayarChange();
+}
+
 // Dapatkan metode pembayaran yang sedang dipilih
 function getMetodeBayar() {
     const select = document.getElementById('select-metode-bayar');
@@ -1532,27 +1615,51 @@ function getMetodeBayar() {
 // Handler perubahan metode pembayaran
 function onMetodeBayarChange() {
     const metode = getMetodeBayar();
+    const grandTotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
+
+    // Sinkronkan status active tab tombol
+    document.querySelectorAll('.payment-method-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.metode === metode);
+    });
+
+    const panelTunai = document.getElementById('panel-bayar-tunai');
+    const panelQris = document.getElementById('panel-bayar-qris');
+    const panelTransfer = document.getElementById('panel-bayar-transfer');
+    const panelEwallet = document.getElementById('panel-bayar-ewallet');
+
+    if (panelTunai) panelTunai.style.display = (metode === 'Tunai') ? 'block' : 'none';
+    if (panelQris) panelQris.style.display = (metode === 'QRIS') ? 'block' : 'none';
+    if (panelTransfer) panelTransfer.style.display = (metode === 'Transfer Bank') ? 'block' : 'none';
+    if (panelEwallet) panelEwallet.style.display = (metode === 'E-Wallet') ? 'block' : 'none';
+
+    // Update nominal pada kartu detail
+    const qrisTotalEl = document.getElementById('qris-card-total');
+    if (qrisTotalEl) qrisTotalEl.textContent = formatRupiah(grandTotal);
+
+    const bankTotalEl = document.getElementById('card-bank-total');
+    if (bankTotalEl) bankTotalEl.textContent = formatRupiah(grandTotal);
+
+    const ewalletTotalEl = document.getElementById('card-ewallet-total');
+    if (ewalletTotalEl) ewalletTotalEl.textContent = formatRupiah(grandTotal);
+
     const inputBayar = document.getElementById('input-bayar');
     const labelBayar = document.getElementById('label-input-bayar');
     const labelKembalian = document.getElementById('label-kembalian');
 
-    if (metode === 'Tunai') {
-        // Tunai: user input uang, hitung kembalian
-        inputBayar.disabled = false;
-        inputBayar.placeholder = 'Masukkan jumlah uang';
-        labelBayar.textContent = 'Uang Bayar (Rp)';
-        labelKembalian.textContent = 'Kembalian:';
-        if (inputBayar.value) {
-            inputBayar.value = '';
+    if (inputBayar) {
+        if (metode === 'Tunai') {
+            inputBayar.disabled = false;
+            inputBayar.placeholder = 'Masukkan jumlah uang';
+            if (labelBayar) labelBayar.textContent = 'Uang Bayar (Rp)';
+            if (labelKembalian) labelKembalian.textContent = 'Kembalian:';
+        } else {
+            // Non-tunai: bayar pas sesuai total
+            inputBayar.disabled = true;
+            inputBayar.value = grandTotal > 0 ? grandTotal : '';
+            inputBayar.placeholder = 'Otomatis sesuai total';
+            if (labelBayar) labelBayar.textContent = 'Jumlah Dibayar (Otomatis)';
+            if (labelKembalian) labelKembalian.textContent = 'Tidak ada kembalian:';
         }
-    } else {
-        // Non-tunai (QRIS/Transfer/E-Wallet): bayar pas sesuai total, tidak ada kembalian
-        const grandTotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
-        inputBayar.disabled = true;
-        inputBayar.value = grandTotal > 0 ? grandTotal : '';
-        inputBayar.placeholder = 'Otomatis sesuai total';
-        labelBayar.textContent = 'Jumlah Dibayar (Otomatis)';
-        labelKembalian.textContent = 'Tidak ada kembalian:';
     }
 
     calculateChange();
@@ -1583,16 +1690,252 @@ function calculateChange() {
     return kembalian;
 }
 
+// Tombol cepat uang pecahan (Quick Cash)
+function setExactCash() {
+    const grandTotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
+    const input = document.getElementById('input-bayar');
+    if (input) {
+        input.value = grandTotal > 0 ? grandTotal : 0;
+        calculateChange();
+    }
+}
+
+function setCashAmount(val) {
+    const input = document.getElementById('input-bayar');
+    if (input) {
+        input.value = val;
+        calculateChange();
+    }
+}
+
+function clearCashInput() {
+    const input = document.getElementById('input-bayar');
+    if (input) {
+        input.value = '';
+        calculateChange();
+    }
+}
+
+// Salin teks nomor rekening / nomor telepon ke clipboard
+function copyText(elementId) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    const text = el.textContent.trim();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+            showToast(`Berhasil disalin: ${text}`, 'success');
+        }).catch(() => fallbackCopyText(text));
+    } else {
+        fallbackCopyText(text);
+    }
+}
+
+function fallbackCopyText(text) {
+    const tempInput = document.createElement('input');
+    tempInput.value = text;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    try {
+        document.execCommand('copy');
+        showToast(`Berhasil disalin: ${text}`, 'success');
+    } catch (e) {
+        showToast('Gagal menyalin otomatis.', 'warning');
+    }
+    document.body.removeChild(tempInput);
+}
+
+// Modal Pop-Up QRIS untuk Pembeli
+function openQrisModal() {
+    const grandTotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
+    if (grandTotal <= 0) {
+        showToast('Keranjang belanja masih kosong!', 'warning');
+        return;
+    }
+
+    const s = getPaymentSettings();
+    const merchantEl = document.getElementById('qris-modal-merchant');
+    if (merchantEl) merchantEl.textContent = s.qrisMerchant || 'Delsi Shop';
+
+    const amountEl = document.getElementById('qris-modal-amount');
+    if (amountEl) amountEl.textContent = formatRupiah(grandTotal);
+
+    const customImg = document.getElementById('qris-modal-custom-img');
+    const qrDiv = document.getElementById('qris-modal-qrcode');
+
+    if (s.qrisImage) {
+        customImg.src = s.qrisImage;
+        customImg.style.display = 'block';
+        qrDiv.style.display = 'none';
+        qrDiv.innerHTML = '';
+    } else {
+        customImg.style.display = 'none';
+        qrDiv.style.display = 'flex';
+        qrDiv.innerHTML = '';
+        if (typeof QRCode !== 'undefined') {
+            try {
+                new QRCode(qrDiv, {
+                    text: `DELSI-QRIS|MERCHANT:${s.qrisMerchant || 'Delsi Shop'}|NOMINAL:${grandTotal}|TAG:${Date.now()}`,
+                    width: 220,
+                    height: 220,
+                    colorDark: '#000000',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+            } catch (e) {
+                console.warn('Gagal generate QR Code:', e);
+            }
+        }
+    }
+
+    const modal = document.getElementById('qris-modal-overlay');
+    if (modal) modal.classList.add('active');
+}
+
+function closeQrisModal() {
+    const modal = document.getElementById('qris-modal-overlay');
+    if (modal) modal.classList.remove('active');
+}
+
+function confirmQrisPayment() {
+    closeQrisModal();
+    processSaveTransaction();
+}
+
+// Modal Pengaturan Pembayaran Toko
+function openPaymentSettingsModal() {
+    const s = paymentSettings;
+    const qrisMerchantInput = document.getElementById('setting-qris-merchant');
+    if (qrisMerchantInput) qrisMerchantInput.value = s.qrisMerchant || '';
+
+    const bankNameInput = document.getElementById('setting-bank-name');
+    if (bankNameInput) bankNameInput.value = s.bankName || '';
+
+    const bankRekInput = document.getElementById('setting-bank-rekening');
+    if (bankRekInput) bankRekInput.value = s.bankRekening || '';
+
+    const bankOwnerInput = document.getElementById('setting-bank-owner');
+    if (bankOwnerInput) bankOwnerInput.value = s.bankOwner || '';
+
+    const ewalletNameInput = document.getElementById('setting-ewallet-name');
+    if (ewalletNameInput) ewalletNameInput.value = s.ewalletName || '';
+
+    const ewalletNumInput = document.getElementById('setting-ewallet-number');
+    if (ewalletNumInput) ewalletNumInput.value = s.ewalletNumber || '';
+
+    const ewalletOwnerInput = document.getElementById('setting-ewallet-owner');
+    if (ewalletOwnerInput) ewalletOwnerInput.value = s.ewalletOwner || '';
+
+    const preview = document.getElementById('preview-qris-img');
+    const placeholder = document.getElementById('placeholder-qris-upload');
+    const btnRemove = document.getElementById('btn-remove-qris-img');
+    const inputHidden = document.getElementById('setting-qris-image-data');
+
+    if (s.qrisImage) {
+        if (preview) { preview.src = s.qrisImage; preview.style.display = 'block'; }
+        if (placeholder) placeholder.style.display = 'none';
+        if (btnRemove) btnRemove.style.display = 'inline-block';
+        if (inputHidden) inputHidden.value = s.qrisImage;
+    } else {
+        if (preview) { preview.src = ''; preview.style.display = 'none'; }
+        if (placeholder) placeholder.style.display = 'block';
+        if (btnRemove) btnRemove.style.display = 'none';
+        if (inputHidden) inputHidden.value = '';
+    }
+
+    const modal = document.getElementById('payment-settings-modal-overlay');
+    if (modal) modal.classList.add('active');
+}
+
+function closePaymentSettingsModal() {
+    const modal = document.getElementById('payment-settings-modal-overlay');
+    if (modal) modal.classList.remove('active');
+}
+
+function handleQrisImageUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+        showToast('Foto QRIS terlalu besar! Maksimal 2MB.', 'warning');
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        compressImageDataUrl(e.target.result, 480, 0.70).then(base64 => {
+            const inputHidden = document.getElementById('setting-qris-image-data');
+            if (inputHidden) inputHidden.value = base64;
+            const preview = document.getElementById('preview-qris-img');
+            if (preview) {
+                preview.src = base64;
+                preview.style.display = 'block';
+            }
+            const placeholder = document.getElementById('placeholder-qris-upload');
+            if (placeholder) placeholder.style.display = 'none';
+            const btnRemove = document.getElementById('btn-remove-qris-img');
+            if (btnRemove) btnRemove.style.display = 'inline-block';
+            showToast('Foto QRIS berhasil dimuat.', 'info');
+        });
+    };
+    reader.readAsDataURL(file);
+}
+
+function removeQrisImage() {
+    const inputHidden = document.getElementById('setting-qris-image-data');
+    if (inputHidden) inputHidden.value = '';
+    const preview = document.getElementById('preview-qris-img');
+    if (preview) {
+        preview.src = '';
+        preview.style.display = 'none';
+    }
+    const placeholder = document.getElementById('placeholder-qris-upload');
+    if (placeholder) placeholder.style.display = 'block';
+    const btnRemove = document.getElementById('btn-remove-qris-img');
+    if (btnRemove) btnRemove.style.display = 'none';
+    const inputFile = document.getElementById('input-qris-file');
+    if (inputFile) inputFile.value = '';
+}
+
+function handleSavePaymentSettings(e) {
+    e.preventDefault();
+    paymentSettings.qrisMerchant = (document.getElementById('setting-qris-merchant').value || '').trim() || 'Delsi Shop';
+    paymentSettings.qrisImage = document.getElementById('setting-qris-image-data').value || '';
+    paymentSettings.bankName = (document.getElementById('setting-bank-name').value || '').trim() || 'BCA';
+    paymentSettings.bankRekening = (document.getElementById('setting-bank-rekening').value || '').trim() || '';
+    paymentSettings.bankOwner = (document.getElementById('setting-bank-owner').value || '').trim() || '';
+    paymentSettings.ewalletName = (document.getElementById('setting-ewallet-name').value || '').trim() || '';
+    paymentSettings.ewalletNumber = (document.getElementById('setting-ewallet-number').value || '').trim() || '';
+    paymentSettings.ewalletOwner = (document.getElementById('setting-ewallet-owner').value || '').trim() || '';
+
+    try {
+        localStorage.setItem(STORAGE_PAYMENT_SETTINGS_KEY, JSON.stringify(paymentSettings));
+    } catch (err) {
+        console.warn('Gagal simpan payment settings ke localStorage:', err);
+    }
+
+    if (typeof db !== 'undefined' && db) {
+        db.collection('settings').doc('payment').set(paymentSettings)
+            .catch(err => console.warn('Gagal simpan payment settings ke Firestore:', err));
+    }
+
+    updatePaymentUIFromSettings();
+    closePaymentSettingsModal();
+    showToast('Pengaturan pembayaran berhasil disimpan!', 'success');
+}
+
 function resetCart() {
     if (cart.length > 0 && !confirm('Apakah Anda yakin ingin mereset keranjang belanja?')) {
         return;
     }
     cart = [];
     const inputBayar = document.getElementById('input-bayar');
-    inputBayar.value = '';
-    inputBayar.disabled = false;
+    if (inputBayar) {
+        inputBayar.value = '';
+        inputBayar.disabled = false;
+    }
     const selectMetode = document.getElementById('select-metode-bayar');
     if (selectMetode) selectMetode.value = 'Tunai';
+    document.querySelectorAll('.payment-method-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.metode === 'Tunai');
+    });
     renderCart();
     updateMaxQtyLabel();
     onMetodeBayarChange();
@@ -1727,6 +2070,26 @@ function openReceiptModal(trx) {
     const kasirEl = document.getElementById('receipt-kasir-val');
     if (kasirEl) kasirEl.textContent = `Kasir: ${trx.kasir || 'Kasir'}`;
 
+    // Render QR Code struk
+    const qrContainer = document.getElementById('receipt-qr-code');
+    if (qrContainer) {
+        qrContainer.innerHTML = '';
+        if (typeof QRCode !== 'undefined') {
+            try {
+                new QRCode(qrContainer, {
+                    text: `DELSI-SHOP|${trx.id}|TOTAL:${trx.total}|METODE:${trx.metodePembayaran || 'Tunai'}`,
+                    width: 90,
+                    height: 90,
+                    colorDark: '#000000',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+            } catch (e) {
+                console.warn('Gagal render QR Code struk:', e);
+            }
+        }
+    }
+
     const modal = document.getElementById('receipt-modal-overlay');
     modal.classList.add('active');
 }
@@ -1754,12 +2117,24 @@ function printReceipt() {
    6. LAPORAN TRANSAKSI
    ========================================================================== */
 
+let currentReportMetodeFilter = 'all';
+
+function setReportMetodeFilter(metode) {
+    currentReportMetodeFilter = metode;
+    document.querySelectorAll('.payment-filter-bar .filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-metode') === metode);
+    });
+    renderReports();
+}
+
 function renderReports() {
     const tbody = document.getElementById('tbody-laporan');
     const statOmzet = document.getElementById('stat-total-omzet');
     const statCount = document.getElementById('stat-jumlah-transaksi');
     const statModal = document.getElementById('stat-total-modal');
     const statLaba = document.getElementById('stat-total-laba');
+    const statTunai = document.getElementById('stat-omzet-tunai');
+    const statNonTunai = document.getElementById('stat-omzet-nontunai');
 
     if (!tbody) return;
     tbody.innerHTML = '';
@@ -1782,11 +2157,15 @@ function renderReports() {
     } else if (currentReportFilter === 'date') {
         const dateVal = document.getElementById('filter-date') ? document.getElementById('filter-date').value : '';
         if (dateVal) {
-            // dateVal format: YYYY-MM-DD, trx.timestamp format: DD/MM/YYYY HH:MM:SS
             const parts = dateVal.split('-');
             const formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
             filtered = transactions.filter(t => t.timestamp && t.timestamp.startsWith(formattedDate));
         }
+    }
+
+    // Filter berdasarkan metode pembayaran
+    if (currentReportMetodeFilter && currentReportMetodeFilter !== 'all') {
+        filtered = filtered.filter(t => (t.metodePembayaran || 'Tunai') === currentReportMetodeFilter);
     }
 
     // Apply search filter
@@ -1806,10 +2185,15 @@ function renderReports() {
     }, 0);
     const totalLaba = totalOmzet - totalModal;
 
+    const totalOmzetTunai = filtered.filter(t => (t.metodePembayaran || 'Tunai') === 'Tunai').reduce((sum, t) => sum + t.total, 0);
+    const totalOmzetNonTunai = filtered.filter(t => (t.metodePembayaran || 'Tunai') !== 'Tunai').reduce((sum, t) => sum + t.total, 0);
+
     statOmzet.textContent = formatRupiah(totalOmzet);
     statCount.textContent = `${totalTrxCount} Transaksi`;
     if (statModal) statModal.textContent = formatRupiah(totalModal);
     if (statLaba) statLaba.textContent = formatRupiah(totalLaba);
+    if (statTunai) statTunai.textContent = formatRupiah(totalOmzetTunai);
+    if (statNonTunai) statNonTunai.textContent = formatRupiah(totalOmzetNonTunai);
 
     if (filtered.length === 0) {
         tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color: var(--text-secondary); padding: 1.5rem;">Belum ada riwayat transaksi.</td></tr>`;
@@ -1818,7 +2202,6 @@ function renderReports() {
 
     filtered.forEach((trx) => {
         const realIndex = transactions.indexOf(trx);
-        const metodeIcon = getMetodeIcon(trx.metodePembayaran || 'Tunai');
         const trxModal = (trx.items || []).reduce((s, item) => {
             const p = products.find(pp => pp.kode === item.kode);
             return s + (p ? (p.modal || 0) * item.jumlah : 0);
@@ -1828,7 +2211,7 @@ function renderReports() {
         tr.innerHTML = `
             <td><strong>${trx.id}</strong></td>
             <td>${trx.timestamp}</td>
-            <td><span class="metode-badge">${metodeIcon} ${escapeHtml(trx.metodePembayaran || 'Tunai')}</span></td>
+            <td>${getMetodeBadge(trx.metodePembayaran)}</td>
             <td>${escapeHtml(kasir)}</td>
             <td>${trx.totalItem} Item</td>
             <td><strong>${formatRupiah(trx.total)}</strong></td>
@@ -1847,6 +2230,23 @@ function renderReports() {
         `;
         tbody.appendChild(tr);
     });
+}
+
+function getMetodeBadge(metode) {
+    metode = metode || 'Tunai';
+    let cls = 'tunai';
+    let icon = '<i class="fa-solid fa-money-bill-wave"></i>';
+    if (metode === 'QRIS') {
+        cls = 'qris';
+        icon = '<i class="fa-solid fa-qrcode"></i>';
+    } else if (metode === 'Transfer Bank') {
+        cls = 'transfer';
+        icon = '<i class="fa-solid fa-building-columns"></i>';
+    } else if (metode === 'E-Wallet') {
+        cls = 'ewallet';
+        icon = '<i class="fa-solid fa-mobile-screen-button"></i>';
+    }
+    return `<span class="metode-badge ${cls}">${icon} ${escapeHtml(metode)}</span>`;
 }
 
 // Ikon untuk setiap metode pembayaran di laporan

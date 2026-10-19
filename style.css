@@ -1022,6 +1022,331 @@ body:not(.logged-out) .login-screen {
     gap: 0.35rem;
 }
 
+.metode-badge.tunai {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+}
+
+.metode-badge.qris {
+    background-color: #ffebee;
+    color: #c62828;
+    border: 1px solid #ffcdd2;
+}
+
+.metode-badge.transfer {
+    background-color: #e8eaf6;
+    color: #283593;
+    border: 1px solid #c5cae9;
+}
+
+.metode-badge.ewallet {
+    background-color: #e0f2f1;
+    color: #00695c;
+    border: 1px solid #b2dfdb;
+}
+
+/* --- Metode Pembayaran Styling --- */
+.payment-method-selector {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.4rem;
+    margin-top: 0.35rem;
+    margin-bottom: 0.75rem;
+}
+
+.payment-method-btn {
+    background-color: #f1f3f5;
+    border: 1.5px solid #dee2e6;
+    border-radius: 8px;
+    padding: 0.55rem 0.3rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    transition: var(--transition);
+}
+
+.payment-method-btn i {
+    font-size: 1.05rem;
+}
+
+.payment-method-btn:hover {
+    background-color: #e9ecef;
+    border-color: #ced4da;
+    color: var(--text-primary);
+}
+
+.payment-method-btn.active {
+    background-color: var(--primary-color);
+    border-color: var(--primary-dark);
+    color: #ffffff;
+    box-shadow: 0 3px 8px rgba(211, 47, 47, 0.25);
+}
+
+/* Quick Cash Buttons */
+.quick-cash-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.4rem;
+    margin-bottom: 0.5rem;
+}
+
+.btn-cash-pill {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+    border-radius: 20px;
+    padding: 0.25rem 0.65rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-cash-pill:hover {
+    background-color: #c8e6c9;
+    transform: translateY(-1px);
+}
+
+.btn-cash-clear {
+    background-color: #ffebee;
+    color: #c62828;
+    border-color: #ffcdd2;
+}
+
+.btn-cash-clear:hover {
+    background-color: #ffcdd2;
+}
+
+/* Payment Detail Cards (QRIS, Bank, E-Wallet) */
+.payment-detail-card {
+    background: #fdfdfd;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 0.85rem;
+    margin-bottom: 0.75rem;
+}
+
+.payment-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.65rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid #eeeeee;
+}
+
+.qris-badge, .bank-badge, .ewallet-badge {
+    font-size: 0.8rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.qris-badge { color: #d32f2f; }
+.bank-badge { color: #1565c0; }
+.ewallet-badge { color: #00897b; }
+
+.btn-setting-link {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    cursor: pointer;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+}
+
+.btn-setting-link:hover {
+    background: #f0f0f0;
+    color: var(--text-primary);
+}
+
+.merchant-name-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+}
+
+.qris-card-amount {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff8f8;
+    border: 1px dashed #ffcdd2;
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.qris-card-amount strong {
+    font-size: 1.15rem;
+    color: var(--primary-color);
+}
+
+.btn-show-qris {
+    font-size: 0.88rem;
+    padding: 0.6rem;
+}
+
+.account-info-box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+}
+
+.account-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.copyable-wrapper {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.btn-copy-account {
+    background: #e8eaf6;
+    border: 1px solid #c5cae9;
+    color: #3949ab;
+    border-radius: 4px;
+    padding: 0.15rem 0.4rem;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-copy-account:hover {
+    background: #3949ab;
+    color: #ffffff;
+}
+
+.highlight-amount-row {
+    margin-top: 0.35rem;
+    padding-top: 0.35rem;
+    border-top: 1px dashed #e0e0e0;
+}
+
+/* Modal QRIS Customer Display */
+.qris-modal-card {
+    max-width: 360px;
+    text-align: center;
+}
+
+.qris-merchant-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #ffebee;
+    border: 1px solid #ffcdd2;
+    border-radius: 20px;
+    padding: 0.3rem 0.85rem;
+    margin-bottom: 0.75rem;
+}
+
+.qris-tag {
+    background: var(--primary-color);
+    color: #ffffff;
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+}
+
+.qris-amount-display {
+    margin-bottom: 1rem;
+}
+
+.qris-amount-display small {
+    color: var(--text-secondary);
+    display: block;
+    font-size: 0.8rem;
+}
+
+.qris-amount-display h2 {
+    color: var(--primary-color);
+    font-size: 1.8rem;
+    margin-top: 0.1rem;
+}
+
+.qris-code-container {
+    background: #ffffff;
+    border: 2px solid #eeeeee;
+    border-radius: 12px;
+    padding: 1.25rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 0.85rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.qris-supported-apps {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+    margin-bottom: 1.25rem;
+}
+
+.qris-modal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* Modal Pengaturan Pembayaran */
+.payment-settings-modal-card {
+    max-width: 480px;
+}
+
+.payment-settings-section {
+    background: #fdfdfd;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.payment-settings-section h4 {
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.qris-upload-area {
+    border: 2px dashed #b0bec5;
+    border-radius: 8px;
+    padding: 1.25rem;
+    text-align: center;
+    cursor: pointer;
+    background: #fafafa;
+    transition: var(--transition);
+}
+
+.qris-upload-area:hover {
+    border-color: var(--primary-color);
+    background: #fff8f8;
+}
+
+.payment-filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+}
+
 .transaction-actions {
     display: flex;
     gap: 0.75rem;
