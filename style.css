@@ -716,6 +716,16 @@ body:not(.logged-out) .login-screen {
     transform: translateY(-1px);
 }
 
+.btn-warning {
+    background-color: #f57c00;
+    color: #ffffff;
+}
+
+.btn-warning:hover {
+    background-color: #e65100;
+    box-shadow: 0 4px 10px rgba(245, 124, 0, 0.3);
+}
+
 .btn-danger {
     background-color: var(--danger-color);
     color: #ffffff;

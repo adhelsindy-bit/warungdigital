@@ -9,7 +9,7 @@
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <!-- Font Awesome Icons for clean UI icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=10">
+    <link rel="stylesheet" href="style.css?v=11">
 </head>
 <body class="logged-out">
 
@@ -65,6 +65,9 @@
         <div class="header-container">
             <div class="header-user">
                 <span class="header-user-info"><i class="fa-solid fa-circle-user"></i> <span id="logged-user">admin</span> <em id="logged-role" class="header-role"></em></span>
+                <button class="btn-logout" onclick="cleanBrowserStorage()" title="Bersihkan cache penyimpanan browser">
+                    <i class="fa-solid fa-broom"></i> Bersihkan Cache
+                </button>
                 <button class="btn-logout" onclick="openUserModal()" id="btn-kelola-user" title="Kelola akun user" style="display:none;">
                     <i class="fa-solid fa-users-gear"></i> Kelola User
                 </button>
@@ -172,9 +175,12 @@
                     <button type="button" class="btn btn-secondary" onclick="document.getElementById('file-restore').click()">
                         <i class="fa-solid fa-upload"></i> Restore Data
                     </button>
+                    <button type="button" class="btn btn-warning" onclick="cleanBrowserStorage()" title="Bersihkan cache browser yang menumpuk">
+                        <i class="fa-solid fa-broom"></i> Bersihkan Cache Browser
+                    </button>
                     <input type="file" id="file-restore" accept=".json,application/json" style="display:none;" onchange="restoreData(event)">
                 </div>
-                <small class="form-info">Backup mengunduh seluruh data barang & transaksi. Restore mengembalikan seluruh data dari file JSON backup.</small>
+                <small class="form-info">Backup mengunduh data JSON. Restore mengembalikan data. Bersihkan Cache mengosongkan penyimpanan lokal browser yang penuh tanpa menghapus data di cloud.</small>
             </div>
         </section>
 
@@ -661,7 +667,7 @@
             console.warn("Firebase initialization error, fallback to localStorage:", e);
         }
     </script>
-    <script src="script.js?v=11"></script>
+    <script src="script.js?v=12"></script>
 
     <!-- MODAL SCANNER BARCODE & QR CODE -->
     <div id="scanner-modal-overlay" class="scanner-modal-overlay">

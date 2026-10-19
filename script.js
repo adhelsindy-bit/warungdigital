@@ -614,10 +614,101 @@ function sanitizeProductsForLocalStorage(items) {
     });
 }
 
+// Menghitung estimasi penggunaan LocalStorage browser dalam satuan Kilobyte (KB)
+function getLocalStorageUsageKb() {
+    try {
+        let total = 0;
+        for (let key in localStorage) {
+            if (Object.prototype.hasOwnProperty.call(localStorage, key)) {
+                total += ((localStorage[key] || '').length + (key || '').length) * 2;
+            }
+        }
+        return Math.round(total / 1024);
+    } catch (e) {
+        return 0;
+    }
+}
+
+// Membersihkan cache browser dan merampingkan LocalStorage agar kapasitas selalu lega
+function cleanBrowserStorage(silent = false) {
+    if (!silent) {
+        if (!confirm('Bersihkan cache penyimpanan browser sekarang?\n\nData barang & riwayat transaksi Anda TETAP AMAN di Cloud Firebase & IndexedDB.')) {
+            return;
+        }
+    }
+
+    try {
+        const initialSize = getLocalStorageUsageKb();
+
+        // 1. Bersihkan foto base64 berlebih dari LocalStorage produk
+        const storedProducts = localStorage.getItem(STORAGE_PRODUCTS_KEY);
+        if (storedProducts) {
+            try {
+                const parsed = JSON.parse(storedProducts);
+                if (Array.isArray(parsed)) {
+                    const sanitized = sanitizeProductsForLocalStorage(parsed);
+                    localStorage.setItem(STORAGE_PRODUCTS_KEY, JSON.stringify(sanitized));
+                }
+            } catch (e) {
+                console.warn('Gagal parsing produk saat bersih cache:', e);
+            }
+        }
+
+        // 2. Rampingkan riwayat transaksi di LocalStorage (ambil max 100 terbaru tanpa gambar)
+        const storedTx = localStorage.getItem(STORAGE_TRANSACTIONS_KEY);
+        if (storedTx) {
+            try {
+                let parsedTx = JSON.parse(storedTx);
+                if (Array.isArray(parsedTx)) {
+                    parsedTx.forEach(t => {
+                        if (Array.isArray(t.items)) {
+                            t.items.forEach(item => {
+                                if (item && typeof item.gambar === 'string' && item.gambar.length > 500) {
+                                    delete item.gambar;
+                                }
+                            });
+                        }
+                    });
+                    if (parsedTx.length > 100) {
+                        parsedTx = parsedTx.slice(0, 100);
+                    }
+                    localStorage.setItem(STORAGE_TRANSACTIONS_KEY, JSON.stringify(parsedTx));
+                }
+            } catch (e) {
+                console.warn('Gagal merampingkan transaksi:', e);
+            }
+        }
+
+        // 3. Bersihkan Cache Storage API jika ada
+        if (typeof window !== 'undefined' && 'caches' in window) {
+            caches.keys().then(names => {
+                names.forEach(name => caches.delete(name));
+            }).catch(e => console.warn('Gagal bersihkan CacheStorage:', e));
+        }
+
+        const finalSize = getLocalStorageUsageKb();
+        const freedKb = Math.max(0, initialSize - finalSize);
+
+        if (!silent) {
+            showToast(`Cache browser berhasil dibersihkan! Penyimpanan kini lega (${finalSize} KB terpakai, hemat ~${freedKb} KB).`, 'success');
+        } else if (freedKb > 100) {
+            console.log(`Auto-clean: Membersihkan ~${freedKb} KB cache penyimpanan LocalStorage.`);
+        }
+    } catch (err) {
+        console.error('Gagal membersihkan cache penyimpanan:', err);
+        if (!silent) {
+            showToast('Gagal membersihkan cache: ' + err.message, 'danger');
+        }
+    }
+}
+
 /* ==========================================================================
    1. INISIALISASI DATA, LOCALSTORAGE & FIREBASE FIRESTORE
    ========================================================================== */
 function initData() {
+    // Bersihkan otomatis sampah cache base64 lama yang menumpuk di LocalStorage saat web dibuka
+    cleanBrowserStorage(true);
+
     const storedProducts = localStorage.getItem(STORAGE_PRODUCTS_KEY);
     if (!storedProducts) {
         products = [...SAMPLE_PRODUCTS];
