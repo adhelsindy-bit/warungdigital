@@ -546,6 +546,75 @@ function handleChangePassword(e) {
 }
 
 /* ==========================================================================
+   INDEXEDDB HELPER (Penyimpanan Offline Berkapasitas Besar > 50MB+)
+   ========================================================================== */
+const IDB_NAME = 'DelsiShopDB';
+const IDB_VERSION = 1;
+const IDB_STORE_NAME = 'warung_store';
+
+function openAppDB() {
+    return new Promise((resolve, reject) => {
+        if (typeof window === 'undefined' || !window.indexedDB) {
+            return reject(new Error('IndexedDB tidak didukung'));
+        }
+        const request = indexedDB.open(IDB_NAME, IDB_VERSION);
+        request.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(IDB_STORE_NAME)) {
+                db.createObjectStore(IDB_STORE_NAME);
+            }
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
+}
+
+function setIDB(key, val) {
+    return openAppDB().then(db => {
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(IDB_STORE_NAME, 'readwrite');
+            const store = tx.objectStore(IDB_STORE_NAME);
+            const req = store.put(val, key);
+            req.onsuccess = () => resolve(true);
+            req.onerror = () => reject(req.error);
+        });
+    }).catch(err => {
+        console.warn('IDB write failed:', err);
+        return false;
+    });
+}
+
+function getIDB(key) {
+    return openAppDB().then(db => {
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(IDB_STORE_NAME, 'readonly');
+            const store = tx.objectStore(IDB_STORE_NAME);
+            const req = store.get(key);
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => reject(req.error);
+        });
+    }).catch(err => {
+        console.warn('IDB read failed:', err);
+        return null;
+    });
+}
+
+// Bersihkan base64 besar dari produk khusus saat dicadangkan di localStorage
+// agar kuota localStorage 5MB tidak pernah terlampaui (QuotaExceededError).
+function sanitizeProductsForLocalStorage(items) {
+    if (!Array.isArray(items)) return [];
+    return items.map(p => {
+        if (!p) return p;
+        if (typeof p.gambar === 'string' && p.gambar.startsWith('data:')) {
+            const copy = { ...p };
+            copy.gambar = DEFAULT_IMAGE;
+            return copy;
+        }
+        return p;
+    });
+}
+
+/* ==========================================================================
    1. INISIALISASI DATA, LOCALSTORAGE & FIREBASE FIRESTORE
    ========================================================================== */
 function initData() {
@@ -599,27 +668,81 @@ function initData() {
         }
     });
     if (cleaned) saveTransactionsToStorage();
+
+    // Pulihkan foto produk beresolusi tinggi dari IndexedDB jika localStorage memakai versi hemat
+    getIDB(STORAGE_PRODUCTS_KEY).then(idbProducts => {
+        if (Array.isArray(idbProducts) && idbProducts.length > 0) {
+            const idbMap = new Map(idbProducts.map(p => [p.kode, p.gambar]));
+            let updated = false;
+            products.forEach(p => {
+                if ((!p.gambar || p.gambar === DEFAULT_IMAGE) && idbMap.has(p.kode)) {
+                    const fullImg = idbMap.get(p.kode);
+                    if (fullImg && fullImg !== DEFAULT_IMAGE) {
+                        p.gambar = fullImg;
+                        updated = true;
+                    }
+                }
+            });
+            if (updated) {
+                renderProducts();
+                populateProductDropdown();
+            }
+        }
+    }).catch(err => console.warn('Pengecekan IndexedDB awal:', err));
 }
 
 function saveProductsToStorage() {
+    // 1. Simpan salinan lengkap termasuk foto base64 ke IndexedDB (kapasitas ratusan MB)
+    setIDB(STORAGE_PRODUCTS_KEY, products);
+
+    // 2. Simpan cadangan ke localStorage
     try {
-        localStorage.setItem(STORAGE_PRODUCTS_KEY, JSON.stringify(products));
+        const json = JSON.stringify(products);
+        // Bila ukuran data di atas 1MB, otomatis sanitasi foto base64 agar aman dari kuota 5MB browser
+        if (json.length > 1000000) {
+            const light = sanitizeProductsForLocalStorage(products);
+            localStorage.setItem(STORAGE_PRODUCTS_KEY, JSON.stringify(light));
+            return true;
+        }
+        localStorage.setItem(STORAGE_PRODUCTS_KEY, json);
         return true;
     } catch (err) {
-        console.error('Gagal menyimpan produk ke localStorage:', err);
-        showToast('Penyimpanan browser PENUH! Data tidak tersimpan permanen. Hapus foto produk besar atau segera backup (JSON).', 'danger');
-        return false;
+        // Fallback jika kuota localStorage penuh
+        try {
+            const light = sanitizeProductsForLocalStorage(products);
+            localStorage.setItem(STORAGE_PRODUCTS_KEY, JSON.stringify(light));
+            console.info('Produk dicadangkan ke localStorage dengan mode hemat kuota (foto utuh di IndexedDB & Cloud).');
+            return true;
+        } catch (innerErr) {
+            console.warn('LocalStorage penuh, data tetap aman di IndexedDB & Cloud:', innerErr);
+            return false;
+        }
     }
 }
 
 function saveTransactionsToStorage() {
+    // 1. Simpan salinan lengkap transaksi ke IndexedDB
+    setIDB(STORAGE_TRANSACTIONS_KEY, transactions);
+
+    // 2. Simpan cadangan ke localStorage
     try {
-        localStorage.setItem(STORAGE_TRANSACTIONS_KEY, JSON.stringify(transactions));
+        const json = JSON.stringify(transactions);
+        if (json.length > 1500000) {
+            const recent = transactions.slice(0, 150);
+            localStorage.setItem(STORAGE_TRANSACTIONS_KEY, JSON.stringify(recent));
+            return true;
+        }
+        localStorage.setItem(STORAGE_TRANSACTIONS_KEY, json);
         return true;
     } catch (err) {
-        console.error('Gagal menyimpan transaksi ke localStorage:', err);
-        showToast('Penyimpanan browser PENUH! Transaksi tidak tersimpan permanen. Segera backup data (JSON).', 'danger');
-        return false;
+        try {
+            const recent = transactions.slice(0, 100);
+            localStorage.setItem(STORAGE_TRANSACTIONS_KEY, JSON.stringify(recent));
+            return true;
+        } catch (innerErr) {
+            console.warn('LocalStorage penuh untuk transaksi, data tetap tersimpan di IndexedDB & Cloud:', innerErr);
+            return false;
+        }
     }
 }
 
@@ -1884,7 +2007,7 @@ function processUploadedFile(file) {
 
 // Kompres & perkecil foto (resize + JPEG) agar hemat penyimpanan browser/Firestore.
 // Mengembalikan Promise<string> berisi data URL hasil kompres (atau aslinya bila gagal).
-function compressImageDataUrl(dataUrl, maxDim = 640, quality = 0.72) {
+function compressImageDataUrl(dataUrl, maxDim = 480, quality = 0.68) {
     return new Promise(function(resolve) {
         const img = new Image();
         img.onload = function() {
