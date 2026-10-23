@@ -13,7 +13,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=3">
     <!-- Font Awesome Icons for clean UI icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=12">
+    <link rel="stylesheet" href="style.css?v=13">
 </head>
 <body class="logged-out">
 
@@ -314,11 +314,17 @@
                         <div class="scan-divider"><span>atau pilih manual</span></div>
 
                         <div class="form-group">
-                            <label for="select-barang">Pilih Barang</label>
-                            <select id="select-barang" required onchange="updateMaxQtyLabel()">
+                            <label id="label-pilih-barang">Pilih Barang</label>
+                            <select id="select-barang" onchange="updateMaxQtyLabel()" style="display:none;">
                                 <option value="">-- Pilih Barang --</option>
                                 <!-- Populated dynamically by JS -->
                             </select>
+                            <button type="button" id="product-picker-btn" class="product-picker-btn" onclick="openProductPicker()" aria-labelledby="label-pilih-barang">
+                                <img id="picker-selected-img" class="product-picker-thumb" src="" alt="" style="display:none;">
+                                <span id="picker-selected-text" class="product-picker-text">-- Pilih Barang --</span>
+                                <span id="picker-selected-price" class="product-picker-price"></span>
+                                <i class="fa-solid fa-chevron-down product-picker-arrow"></i>
+                            </button>
                             <small id="info-stok-pilihan" class="form-info">Pilih barang untuk melihat stok</small>
                         </div>
 
@@ -819,7 +825,7 @@
             console.warn("Firebase initialization error, fallback to localStorage:", e);
         }
     </script>
-    <script src="script.js?v=13"></script>
+    <script src="script.js?v=14"></script>
 
     <!-- MODAL SCANNER BARCODE & QR CODE -->
     <div id="scanner-modal-overlay" class="scanner-modal-overlay">
@@ -1082,6 +1088,22 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- MODAL PILIH BARANG BERGANBAR -->
+    <div id="product-picker-modal-overlay" class="modal-overlay" onclick="closeProductPickerOnOverlay(event)">
+        <div class="modal-card product-picker-modal-card" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-boxes-stacked"></i> Pilih Barang</h3>
+                <button class="close-btn" onclick="closeProductPicker()">&times;</button>
+            </div>
+            <div class="product-picker-search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="product-picker-search" placeholder="Cari nama atau kode barang..." oninput="filterProductPicker()">
+            </div>
+            <div id="product-picker-grid" class="product-picker-grid"></div>
+            <p id="product-picker-empty" class="product-picker-empty" style="display:none;">Barang tidak ditemukan.</p>
         </div>
     </div>
 </body>

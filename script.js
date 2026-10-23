@@ -1341,6 +1341,14 @@ function populateProductDropdown() {
     });
 
     select.value = currentVal;
+    updateProductPickerButton();
+
+    // Segarkan daftar pemilih barang bila sedang terbuka
+    const pickerOverlay = document.getElementById('product-picker-modal-overlay');
+    if (pickerOverlay && pickerOverlay.classList.contains('active')) {
+        const search = document.getElementById('product-picker-search');
+        renderProductPicker(search ? search.value : '');
+    }
 }
 
 function updateMaxQtyLabel() {
@@ -1352,7 +1360,11 @@ function updateMaxQtyLabel() {
     const previewNama = document.getElementById('preview-nama');
     const previewHarga = document.getElementById('preview-harga');
 
-    if (!select || !select.value) {
+    if (!select) return;
+
+    updateProductPickerButton();
+
+    if (!select.value) {
         infoStok.textContent = 'Pilih barang untuk melihat stok';
         infoStok.style.color = 'var(--text-secondary)';
         inputJumlah.removeAttribute('max');
@@ -1387,6 +1399,148 @@ function updateMaxQtyLabel() {
             previewHarga.textContent = formatRupiah(product.harga);
             previewContainer.classList.add('active');
         }
+    }
+}
+
+/* ==========================================================================
+   PEMILIH BARANG BERGANBAR (POS)
+   ========================================================================== */
+function updateProductPickerButton() {
+    const select = document.getElementById('select-barang');
+    const btn = document.getElementById('product-picker-btn');
+    const img = document.getElementById('picker-selected-img');
+    const text = document.getElementById('picker-selected-text');
+    const price = document.getElementById('picker-selected-price');
+    if (!select || !btn || !img || !text || !price) return;
+
+    const product = products.find(p => p.kode === select.value);
+    if (!product) {
+        img.style.display = 'none';
+        img.removeAttribute('src');
+        img.alt = '';
+        text.textContent = '-- Pilih Barang --';
+        price.textContent = '';
+        btn.classList.remove('has-value');
+        return;
+    }
+
+    img.onerror = function() {
+        this.onerror = null;
+        this.src = DEFAULT_IMAGE;
+    };
+    img.src = product.gambar || DEFAULT_IMAGE;
+    img.alt = product.nama;
+    img.style.display = 'block';
+    text.textContent = `${product.kode} - ${product.nama}`;
+    price.textContent = formatRupiah(product.harga);
+    btn.classList.add('has-value');
+}
+
+function renderProductPicker(filterText) {
+    const grid = document.getElementById('product-picker-grid');
+    const empty = document.getElementById('product-picker-empty');
+    if (!grid) return;
+
+    const q = String(filterText || '').trim().toLowerCase();
+    const select = document.getElementById('select-barang');
+    const selectedKode = select ? select.value : '';
+
+    const list = products.filter(p => {
+        if (!q) return true;
+        const nama = (p.nama || '').toLowerCase();
+        const kode = (p.kode || '').toLowerCase();
+        return nama.includes(q) || kode.includes(q);
+    });
+
+    grid.innerHTML = '';
+
+    if (list.length === 0) {
+        if (empty) empty.style.display = 'block';
+        return;
+    }
+    if (empty) empty.style.display = 'none';
+
+    list.forEach(p => {
+        const habis = p.stok <= 0;
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'product-picker-item' + (p.kode === selectedKode ? ' selected' : '');
+        item.disabled = habis;
+        item.innerHTML = `
+            <img src="${escapeHtml(p.gambar || DEFAULT_IMAGE)}" alt="${escapeHtml(p.nama)}" loading="lazy">
+            <span class="pp-info">
+                <span class="pp-name">${escapeHtml(p.nama)}</span>
+                <span class="pp-price">${formatRupiah(p.harga)}</span>
+                <span class="pp-stock${habis ? ' habis' : ''}">${habis ? 'Stok habis' : 'Stok: ' + p.stok}</span>
+            </span>
+        `;
+
+        const imgEl = item.querySelector('img');
+        if (imgEl) {
+            imgEl.addEventListener('error', function() {
+                this.onerror = null;
+                this.src = DEFAULT_IMAGE;
+            }, { once: true });
+        }
+
+        item.addEventListener('click', () => selectProductFromPicker(p.kode));
+        grid.appendChild(item);
+    });
+}
+
+function openProductPicker() {
+    const overlay = document.getElementById('product-picker-modal-overlay');
+    const search = document.getElementById('product-picker-search');
+    if (search) search.value = '';
+    renderProductPicker('');
+    if (overlay) overlay.classList.add('active');
+    // Fokus ke kolom pencarian hanya di layar besar agar keyboard HP tidak menutupi daftar
+    if (search && window.matchMedia('(min-width: 768px)').matches) {
+        setTimeout(() => search.focus(), 80);
+    }
+}
+
+function closeProductPicker() {
+    const overlay = document.getElementById('product-picker-modal-overlay');
+    if (overlay) overlay.classList.remove('active');
+}
+
+function closeProductPickerOnOverlay(event) {
+    if (event.target === event.currentTarget) closeProductPicker();
+}
+
+function filterProductPicker() {
+    const search = document.getElementById('product-picker-search');
+    renderProductPicker(search ? search.value : '');
+}
+
+function selectProductFromPicker(kode) {
+    const product = products.find(p => p.kode === kode);
+    if (!product) return;
+    if (product.stok <= 0) {
+        showToast('Stok barang ini habis.', 'warning');
+        return;
+    }
+
+    const select = document.getElementById('select-barang');
+    if (select) {
+        select.value = kode;
+        if (select.value !== kode) {
+            const opt = document.createElement('option');
+            opt.value = kode;
+            opt.textContent = `${product.kode} - ${product.nama}`;
+            select.appendChild(opt);
+            select.value = kode;
+        }
+    }
+
+    updateMaxQtyLabel();
+    closeProductPicker();
+
+    const inputJumlah = document.getElementById('input-jumlah');
+    if (inputJumlah) {
+        inputJumlah.focus();
+        inputJumlah.select();
     }
 }
 
@@ -3165,6 +3319,11 @@ document.addEventListener('keydown', function(e) {
         const userOverlay = document.getElementById('user-modal-overlay');
         if (userOverlay && userOverlay.style.display !== 'none') {
             closeUserModal();
+        }
+        // Tutup modal pilih barang bergambar
+        const pickerOverlay = document.getElementById('product-picker-modal-overlay');
+        if (pickerOverlay && pickerOverlay.classList.contains('active')) {
+            closeProductPicker();
         }
     }
 });
