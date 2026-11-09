@@ -276,15 +276,14 @@ body:not(.logged-out) .login-screen {
 .header-user {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: center;
     flex-wrap: wrap;
     gap: 0.5rem;
     width: 100%;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
 }
 
 .header-user-info {
-    margin-right: auto;
     font-size: 0.85rem;
     font-weight: 600;
     background: rgba(255, 255, 255, 0.15);
@@ -1546,10 +1545,10 @@ html[data-theme="dark"] .color-option {
 
 /* Logo Styling pada Header, Struk, Barcode, & Login */
 .brand-logo {
-    width: 42px;
-    height: 42px;
+    width: 80px;
+    height: 80px;
     object-fit: contain;
-    border-radius: 8px;
+    border-radius: 12px;
     vertical-align: middle;
 }
 
