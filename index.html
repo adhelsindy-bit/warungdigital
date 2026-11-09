@@ -152,8 +152,13 @@
 
             <!-- Grafik Penjualan -->
             <div class="card">
-                <div class="card-header">
-                    <h2><i class="fa-solid fa-chart-line"></i> Grafik Omzet 7 Hari Terakhir</h2>
+                <div class="card-header flex-between">
+                    <h2><i class="fa-solid fa-chart-line"></i> <span id="chart-omzet-title">Grafik Omzet 7 Hari Terakhir</span></h2>
+                    <div class="chart-period-buttons">
+                        <button type="button" class="chart-period-btn active" data-period="7days" onclick="setChartPeriod('7days')">7 Hari</button>
+                        <button type="button" class="chart-period-btn" data-period="30days" onclick="setChartPeriod('30days')">30 Hari</button>
+                        <button type="button" class="chart-period-btn" data-period="thisMonth" onclick="setChartPeriod('thisMonth')">Bulan Ini</button>
+                    </div>
                 </div>
                 <div class="chart-container">
                     <canvas id="chart-omzet"></canvas>

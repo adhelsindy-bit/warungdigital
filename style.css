@@ -1664,6 +1664,47 @@ html[data-theme="dark"] .color-option {
     width: 100%;
 }
 
+.chart-period-buttons {
+    display: inline-flex;
+    gap: 0.35rem;
+    background: var(--bg-color);
+    padding: 0.25rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.chart-period-btn {
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    padding: 0.35rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.chart-period-btn:hover {
+    color: var(--text-primary);
+}
+
+.chart-period-btn.active {
+    background: var(--card-bg);
+    color: var(--primary-color);
+    box-shadow: var(--shadow-sm);
+}
+
+html[data-theme="dark"] .chart-period-buttons {
+    background: #1e1e1e;
+    border-color: #383838;
+}
+
+html[data-theme="dark"] .chart-period-btn.active {
+    background: #2a2a2a;
+    color: var(--primary-light);
+}
+
 /* --- Backup & Restore --- */
 .backup-actions {
     display: flex;

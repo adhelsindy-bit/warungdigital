@@ -1105,6 +1105,9 @@ function switchTab(tabName) {
         renderReports();
     } else if (tabName === 'barang') {
         renderProducts();
+    } else if (tabName === 'dashboard') {
+        renderDashboardStokMenipis();
+        renderDashboardOmzet();
     }
 }
 
@@ -2208,6 +2211,11 @@ function applyDisplaySettings(settings) {
 
     const barcodeLogo = document.getElementById('barcode-shop-logo');
     if (barcodeLogo) barcodeLogo.src = logoSrc;
+
+    // Segarkan grafik omzet jika warna/tema tampilan berubah
+    if (typeof omzetChart !== 'undefined' && omzetChart) {
+        renderDashboardOmzet();
+    }
 }
 
 function openDisplaySettingsModal() {
@@ -3307,21 +3315,222 @@ function renderDashboardStokMenipis() {
     });
 }
 
+let omzetChart = null;
+let currentChartPeriod = '7days';
+
+function setChartPeriod(period) {
+    currentChartPeriod = period;
+    document.querySelectorAll('.chart-period-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-period') === period);
+    });
+    renderDashboardOmzet();
+}
+
+function hexToRgba(hex, alpha) {
+    if (!hex) return `rgba(21, 101, 192, ${alpha})`;
+    hex = hex.replace('#', '').trim();
+    if (hex.length === 3) {
+        hex = hex.split('').map(c => c + c).join('');
+    }
+    const r = parseInt(hex.substring(0, 2), 16) || 21;
+    const g = parseInt(hex.substring(2, 4), 16) || 101;
+    const b = parseInt(hex.substring(4, 6), 16) || 192;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 function renderDashboardOmzet() {
     const statOmzet = document.getElementById('dash-omzet-7hari');
-    if (!statOmzet) return;
-
     const now = new Date();
-    const sevenDaysAgo = new Date(now);
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const recentTransactions = transactions.filter(t => {
+    // 1. Hitung omzet 7 hari terakhir untuk kartu statistik atas
+    const sevenDaysAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+
+    const txLast7Days = transactions.filter(t => {
         if (!t.rawDate) return false;
         return new Date(t.rawDate) >= sevenDaysAgo;
     });
+    const omzet7Hari = txLast7Days.reduce((sum, t) => sum + (t.total || 0), 0);
+    if (statOmzet) {
+        statOmzet.textContent = formatRupiah(omzet7Hari);
+    }
 
-    const omzet = recentTransactions.reduce((sum, t) => sum + t.total, 0);
-    statOmzet.textContent = formatRupiah(omzet);
+    // 2. Siapkan data titik untuk grafik berdasarkan periode
+    const daysKeys = [];
+    const labels = [];
+    const dataOmzet = [];
+    const dataTxCount = [];
+    const titleEl = document.getElementById('chart-omzet-title');
+
+    let totalDays = 7;
+    if (currentChartPeriod === '30days') {
+        totalDays = 30;
+        if (titleEl) titleEl.textContent = 'Grafik Omzet 30 Hari Terakhir';
+    } else if (currentChartPeriod === 'thisMonth') {
+        totalDays = now.getDate();
+        if (titleEl) titleEl.textContent = 'Grafik Omzet Bulan Ini';
+    } else {
+        totalDays = 7;
+        if (titleEl) titleEl.textContent = 'Grafik Omzet 7 Hari Terakhir';
+    }
+
+    for (let i = totalDays - 1; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const dt = String(d.getDate()).padStart(2, '0');
+        const key = `${y}-${m}-${dt}`;
+
+        let labelText = '';
+        if (totalDays <= 7) {
+            labelText = d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' });
+        } else {
+            labelText = `${d.getDate()}/${d.getMonth() + 1}`;
+        }
+
+        daysKeys.push(key);
+        labels.push(labelText);
+        dataOmzet.push(0);
+        dataTxCount.push(0);
+    }
+
+    const keyIndexMap = new Map();
+    daysKeys.forEach((k, idx) => keyIndexMap.set(k, idx));
+
+    transactions.forEach(t => {
+        if (!t.rawDate) return;
+        const d = new Date(t.rawDate);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const dt = String(d.getDate()).padStart(2, '0');
+        const key = `${y}-${m}-${dt}`;
+
+        if (keyIndexMap.has(key)) {
+            const idx = keyIndexMap.get(key);
+            dataOmzet[idx] += (t.total || 0);
+            dataTxCount[idx] += 1;
+        }
+    });
+
+    // 3. Render Chart.js
+    const canvas = document.getElementById('chart-omzet');
+    if (!canvas || typeof Chart === 'undefined') return;
+
+    if (omzetChart) {
+        try {
+            omzetChart.destroy();
+        } catch (e) {}
+        omzetChart = null;
+    }
+
+    const ctx = canvas.getContext('2d');
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const rootStyle = getComputedStyle(document.documentElement);
+    const primaryColor = rootStyle.getPropertyValue('--primary-color').trim() || '#1565c0';
+    const textColor = isDark ? '#b0b0b0' : '#616161';
+    const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)';
+
+    const gradient = ctx.createLinearGradient(0, 0, 0, 260);
+    gradient.addColorStop(0, hexToRgba(primaryColor, 0.35));
+    gradient.addColorStop(1, hexToRgba(primaryColor, 0.02));
+
+    try {
+        omzetChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Omzet',
+                    data: dataOmzet,
+                    borderColor: primaryColor,
+                    backgroundColor: gradient,
+                    borderWidth: 3,
+                    tension: 0.35,
+                    fill: true,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: primaryColor,
+                    pointBorderWidth: 2,
+                    pointRadius: totalDays <= 7 ? 5 : 3,
+                    pointHoverRadius: totalDays <= 7 ? 7 : 5,
+                    pointHoverBackgroundColor: primaryColor,
+                    pointHoverBorderColor: '#ffffff',
+                    pointHoverBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 400
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: isDark ? '#262626' : '#1e293b',
+                        titleColor: '#ffffff',
+                        bodyColor: '#ffffff',
+                        padding: 10,
+                        cornerRadius: 8,
+                        displayColors: false,
+                        callbacks: {
+                            title: items => items[0].label,
+                            label: context => {
+                                const val = context.parsed.y || 0;
+                                const count = dataTxCount[context.dataIndex] || 0;
+                                return [
+                                    `Omzet: ${formatRupiah(val)}`,
+                                    `Jumlah: ${count} transaksi`
+                                ];
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: textColor,
+                            font: {
+                                family: "'Segoe UI', sans-serif",
+                                size: 11
+                            },
+                            maxRotation: 0,
+                            autoSkip: true,
+                            maxTicksLimit: totalDays <= 7 ? 7 : 12
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: gridColor
+                        },
+                        ticks: {
+                            color: textColor,
+                            font: {
+                                family: "'Segoe UI', sans-serif",
+                                size: 11
+                            },
+                            callback: function(value) {
+                                if (value >= 1000000) return 'Rp ' + (value / 1000000).toFixed(1) + ' jt';
+                                if (value >= 1000) return 'Rp ' + (value / 1000).toLocaleString('id-ID') + ' rb';
+                                return 'Rp ' + value;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    } catch (err) {
+        console.warn('Gagal menginisialisasi Chart.js:', err);
+    }
 }
 
 /* ==========================================================================
