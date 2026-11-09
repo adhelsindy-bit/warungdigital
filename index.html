@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Delsi Shop - Kasir Warung Digital</title>
     <meta name="theme-color" content="#d32f2f">
+    <!-- Terapkan pengaturan tampilan lebih awal untuk menghindari kedip -->
+    <script>
+        try {
+            var dsEarly = JSON.parse(localStorage.getItem('warung_display_settings_delsi') || '{}');
+            var rootHtml = document.documentElement;
+            if (dsEarly.color) rootHtml.setAttribute('data-color', dsEarly.color);
+            if (dsEarly.theme === 'dark') rootHtml.setAttribute('data-theme', 'dark');
+            if (dsEarly.fontSize === 'large') rootHtml.classList.add('font-large');
+        } catch (e) {}
+    </script>
     <!-- Favicon (logo toko) -->
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png?v=3">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
@@ -13,7 +23,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=3">
     <!-- Font Awesome Icons for clean UI icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=13">
+    <link rel="stylesheet" href="style.css?v=14">
 </head>
 <body class="logged-out">
 
@@ -30,10 +40,10 @@
     <div id="login-screen" class="login-screen">
         <div class="login-card">
             <div class="login-logo">
-                <i class="fa-solid fa-store"></i>
+                <img id="login-shop-logo" src="favicon-192.png?v=3" alt="Logo Toko">
             </div>
-            <h2>Delsi Shop</h2>
-            <p class="login-subtitle">Sistem Kasir & Manajemen Warung Digital</p>
+            <h2 id="login-shop-name">Delsi Shop</h2>
+            <p class="login-subtitle" id="login-shop-tagline">Sistem Kasir & Manajemen Warung Digital</p>
 
             <form id="login-form" onsubmit="handleLogin(event)">
                 <div class="login-field">
@@ -70,24 +80,27 @@
             <div class="header-user">
                 <span class="header-user-info"><i class="fa-solid fa-circle-user"></i> <span id="logged-user">admin</span> <em id="logged-role" class="header-role"></em></span>
                 <button class="btn-logout" onclick="cleanBrowserStorage()" title="Bersihkan cache penyimpanan browser">
-                    <i class="fa-solid fa-broom"></i> Bersihkan Cache
+                    <i class="fa-solid fa-broom"></i> <span class="btn-label">Bersihkan Cache</span>
+                </button>
+                <button class="btn-logout" onclick="openDisplaySettingsModal()" id="btn-pengaturan-tampilan" title="Pengaturan tampilan & branding toko">
+                    <i class="fa-solid fa-palette"></i> <span class="btn-label">Atur Tampilan</span>
                 </button>
                 <button class="btn-logout" onclick="openPaymentSettingsModal()" id="btn-setting-pembayaran" title="Pengaturan QRIS & Rekening Toko">
-                    <i class="fa-solid fa-wallet"></i> Atur Pembayaran
+                    <i class="fa-solid fa-wallet"></i> <span class="btn-label">Atur Pembayaran</span>
                 </button>
                 <button class="btn-logout" onclick="openUserModal()" id="btn-kelola-user" title="Kelola akun user" style="display:none;">
-                    <i class="fa-solid fa-users-gear"></i> Kelola User
+                    <i class="fa-solid fa-users-gear"></i> <span class="btn-label">Kelola User</span>
                 </button>
                 <button class="btn-logout" onclick="handleLogout()" title="Keluar dari akun">
-                    <i class="fa-solid fa-right-from-bracket"></i> Keluar
+                    <i class="fa-solid fa-right-from-bracket"></i> <span class="btn-label">Keluar</span>
                 </button>
             </div>
             <div class="brand">
-                <i class="fa-solid fa-store brand-icon"></i>
-                <h1>Delsi Shop</h1>
+                <img id="header-shop-logo" class="brand-logo" src="favicon-192.png?v=3" alt="Logo Toko">
+                <h1 id="header-shop-name">Delsi Shop</h1>
                 <span id="firebase-status-badge" class="firebase-badge offline"><i class="fa-solid fa-cloud"></i> Local Storage</span>
             </div>
-            <p class="tagline">Sistem Kasir & Manajemen Warung Digital</p>
+            <p class="tagline" id="header-shop-tagline">Sistem Kasir & Manajemen Warung Digital</p>
         </div>
     </header>
 
@@ -693,8 +706,9 @@
             <!-- Area yang akan dicetak -->
             <div id="printable-receipt" class="printable-receipt">
                 <div class="receipt-header">
-                    <h2>Warung Digital</h2>
-                    <h3>Delsi Shop</h3>
+                    <img id="receipt-shop-logo" class="receipt-logo" src="favicon-192.png?v=3" alt="Logo Toko">
+                    <h2 id="receipt-shop-name">Delsi Shop</h2>
+                    <p id="receipt-shop-tagline" class="receipt-address">Sistem Kasir & Manajemen Warung Digital</p>
                     <p class="receipt-address">Jl. Raya Warung Digital No. 88</p>
                     <p class="receipt-address">Telp: 0812-3456-7890</p>
                     <p id="receipt-date-time" class="receipt-datetime">Senin, 12 Agustus 2026 - 10:00:00</p>
@@ -741,7 +755,7 @@
 
                 <div class="receipt-footer">
                     <p>Terima kasih telah berbelanja</p>
-                    <p>di Delsi Shop!</p>
+                    <p>di <span id="receipt-shop-footer">Delsi Shop</span>!</p>
                 </div>
             </div>
 
@@ -759,7 +773,9 @@
     <!-- PRINATABLE AREA: LAPORAN -->
     <div id="printable-report" class="printable-report">
         <div class="report-print-header">
-            <h2>Warung Digital - Delsi Shop</h2>
+            <img id="report-print-logo" class="report-print-logo" src="favicon-192.png?v=3" alt="Logo Toko">
+            <h2 id="report-shop-name">Delsi Shop - Laporan Transaksi</h2>
+            <p id="report-shop-tagline">Sistem Kasir & Manajemen Warung Digital</p>
             <p>Jl. Raya Warung Digital No. 88 - Telp: 0812-3456-7890</p>
             <p id="report-print-date"></p>
         </div>
@@ -825,7 +841,7 @@
             console.warn("Firebase initialization error, fallback to localStorage:", e);
         }
     </script>
-    <script src="script.js?v=14"></script>
+    <script src="script.js?v=15"></script>
 
     <!-- MODAL SCANNER BARCODE & QR CODE -->
     <div id="scanner-modal-overlay" class="scanner-modal-overlay">
@@ -892,6 +908,7 @@
             </div>
             <div class="barcode-modal-body">
                 <div class="barcode-card" id="barcode-card">
+                    <img id="barcode-shop-logo" class="barcode-shop-logo" src="favicon-192.png?v=3" alt="Logo Toko">
                     <p class="barcode-shop-name" id="barcode-shop-name">Delsi Shop</p>
                     <p class="barcode-product-name" id="barcode-product-name"></p>
                     <svg id="barcode-svg"></svg>
@@ -1104,6 +1121,96 @@
             </div>
             <div id="product-picker-grid" class="product-picker-grid"></div>
             <p id="product-picker-empty" class="product-picker-empty" style="display:none;">Barang tidak ditemukan.</p>
+        </div>
+    </div>
+
+    <!-- MODAL PENGATURAN TAMPILAN -->
+    <div id="display-settings-modal-overlay" class="modal-overlay" onclick="closeDisplaySettingsOnOverlay(event)">
+        <div class="modal-card display-settings-modal-card" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-palette"></i> Pengaturan Tampilan</h3>
+                <button class="close-btn" onclick="closeDisplaySettingsModal()">&times;</button>
+            </div>
+            <form id="form-display-settings" onsubmit="handleSaveDisplaySettings(event)">
+                <div class="display-section">
+                    <h4><i class="fa-solid fa-circle-half-stroke"></i> Mode Tampilan</h4>
+                    <div class="theme-mode-options">
+                        <button type="button" class="theme-mode-btn" data-theme-value="light" onclick="selectDisplayTheme('light')">
+                            <i class="fa-solid fa-sun"></i> Terang
+                        </button>
+                        <button type="button" class="theme-mode-btn" data-theme-value="dark" onclick="selectDisplayTheme('dark')">
+                            <i class="fa-solid fa-moon"></i> Gelap
+                        </button>
+                    </div>
+                </div>
+
+                <div class="display-section">
+                    <h4><i class="fa-solid fa-droplet"></i> Warna Tema</h4>
+                    <div class="color-options">
+                        <button type="button" class="color-option" data-color-value="red" onclick="selectDisplayColor('red')" title="Merah">
+                            <span style="background:#d32f2f"></span> Merah
+                        </button>
+                        <button type="button" class="color-option" data-color-value="blue" onclick="selectDisplayColor('blue')" title="Biru">
+                            <span style="background:#1565c0"></span> Biru
+                        </button>
+                        <button type="button" class="color-option" data-color-value="green" onclick="selectDisplayColor('green')" title="Hijau">
+                            <span style="background:#2e7d32"></span> Hijau
+                        </button>
+                        <button type="button" class="color-option" data-color-value="orange" onclick="selectDisplayColor('orange')" title="Oranye">
+                            <span style="background:#e65100"></span> Oranye
+                        </button>
+                        <button type="button" class="color-option" data-color-value="purple" onclick="selectDisplayColor('purple')" title="Ungu">
+                            <span style="background:#6a1b9a"></span> Ungu
+                        </button>
+                    </div>
+                </div>
+
+                <div class="display-section">
+                    <h4><i class="fa-solid fa-text-height"></i> Ukuran Font</h4>
+                    <div class="font-options">
+                        <button type="button" class="font-option" data-font-value="normal" onclick="selectDisplayFont('normal')">Normal</button>
+                        <button type="button" class="font-option" data-font-value="large" onclick="selectDisplayFont('large')">Besar</button>
+                    </div>
+                </div>
+
+                <div class="display-section">
+                    <h4><i class="fa-solid fa-store"></i> Branding Toko</h4>
+                    <div class="form-group">
+                        <label for="setting-shop-name">Nama Toko</label>
+                        <input type="text" id="setting-shop-name" maxlength="40" placeholder="Contoh: Delsi Shop">
+                    </div>
+                    <div class="form-group">
+                        <label for="setting-shop-tagline">Tagline / Subjudul</label>
+                        <input type="text" id="setting-shop-tagline" maxlength="80" placeholder="Contoh: Sistem Kasir & Manajemen Warung Digital">
+                    </div>
+                    <div class="form-group">
+                        <label>Logo Toko</label>
+                        <div class="display-logo-row">
+                            <div class="display-logo-preview">
+                                <img id="display-logo-preview-img" src="favicon-192.png?v=3" alt="Logo Toko">
+                            </div>
+                            <div class="display-logo-actions">
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('display-logo-file').click()">
+                                    <i class="fa-solid fa-upload"></i> Pilih Logo
+                                </button>
+                                <button type="button" class="btn btn-outline-danger btn-sm" id="btn-remove-display-logo" onclick="removeDisplayLogo()">
+                                    <i class="fa-solid fa-rotate-left"></i> Pakai Logo Default
+                                </button>
+                                <input type="file" id="display-logo-file" accept="image/png,image/jpeg,image/webp" style="display:none;" onchange="handleDisplayLogoUpload(event)">
+                                <input type="hidden" id="setting-shop-logo" value="">
+                                <small class="form-info">PNG transparan paling bagus. Maks. 2MB.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:0.75rem; margin-top:1.5rem;">
+                    <button type="submit" class="btn btn-primary" style="flex:1;">
+                        <i class="fa-solid fa-floppy-disk"></i> Simpan Pengaturan
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="closeDisplaySettingsModal()">Batal</button>
+                </div>
+            </form>
         </div>
     </div>
 </body>

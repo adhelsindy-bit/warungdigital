@@ -25,6 +25,56 @@
     --transition: all 0.25s ease-in-out;
 }
 
+/* Tema Warna */
+html[data-color="blue"] {
+    --primary-color: #1565c0;
+    --primary-dark: #0d47a1;
+    --primary-light: #bbdefb;
+    --accent-color: #42a5f5;
+}
+
+html[data-color="green"] {
+    --primary-color: #2e7d32;
+    --primary-dark: #1b5e20;
+    --primary-light: #c8e6c9;
+    --accent-color: #66bb6a;
+}
+
+html[data-color="orange"] {
+    --primary-color: #e65100;
+    --primary-dark: #bf360c;
+    --primary-light: #ffe0b2;
+    --accent-color: #ff9800;
+}
+
+html[data-color="purple"] {
+    --primary-color: #6a1b9a;
+    --primary-dark: #4a148c;
+    --primary-light: #e1bee7;
+    --accent-color: #ab47bc;
+}
+
+/* Mode Gelap */
+html[data-theme="dark"] {
+    --bg-color: #121212;
+    --card-bg: #1e1e1e;
+    --text-primary: #f1f1f1;
+    --text-secondary: #b0b0b0;
+    --border-color: #333333;
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+/* Ukuran Font */
+html {
+    font-size: 16px;
+}
+
+html.font-large {
+    font-size: 18px;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -218,18 +268,23 @@ body:not(.logged-out) .login-screen {
 /* Info user & tombol logout di header */
 .header-container {
     position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .header-user {
-    position: absolute;
-    right: 0;
-    top: 0;
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    width: 100%;
+    margin-bottom: 0.5rem;
 }
 
 .header-user-info {
+    margin-right: auto;
     font-size: 0.85rem;
     font-weight: 600;
     background: rgba(255, 255, 255, 0.15);
@@ -1339,6 +1394,193 @@ body:not(.logged-out) .login-screen {
 .qris-upload-area:hover {
     border-color: var(--primary-color);
     background: #fff8f8;
+}
+
+/* Modal Pengaturan Tampilan */
+.display-settings-modal-card {
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.display-section {
+    background: #fdfdfd;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+html[data-theme="dark"] .display-section {
+    background: #252525;
+    border-color: #383838;
+}
+
+.display-section h4 {
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-primary);
+}
+
+.theme-mode-options,
+.font-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+}
+
+.theme-mode-btn,
+.font-option {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    background: #fff;
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+html[data-theme="dark"] .theme-mode-btn,
+html[data-theme="dark"] .font-option {
+    background: #1e1e1e;
+    border-color: #444;
+}
+
+.theme-mode-btn:hover,
+.font-option:hover {
+    border-color: var(--primary-color);
+}
+
+.theme-mode-btn.active,
+.font-option.active {
+    border-color: var(--primary-color);
+    background: var(--primary-light);
+    color: var(--primary-dark);
+}
+
+html[data-theme="dark"] .theme-mode-btn.active,
+html[data-theme="dark"] .font-option.active {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+}
+
+.color-options {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.color-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 0.75rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 20px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    transition: var(--transition);
+}
+
+html[data-theme="dark"] .color-option {
+    background: #1e1e1e;
+    border-color: #444;
+}
+
+.color-option span {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.color-option.active {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-light);
+    font-weight: 700;
+}
+
+.display-logo-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.display-logo-preview {
+    width: 72px;
+    height: 72px;
+    border-radius: 10px;
+    border: 2px dashed #b0bec5;
+    background: #fafafa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.display-logo-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.display-logo-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    align-items: flex-start;
+}
+
+/* Logo Styling pada Header, Struk, Barcode, & Login */
+.brand-logo {
+    width: 42px;
+    height: 42px;
+    object-fit: contain;
+    border-radius: 8px;
+    vertical-align: middle;
+}
+
+.login-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.receipt-logo {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    margin: 0 auto 0.5rem;
+    display: block;
+}
+
+.report-print-logo {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    margin: 0 auto 0.5rem;
+    display: block;
+}
+
+.barcode-shop-logo {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    margin: 0 auto 0.25rem;
+    display: block;
 }
 
 .payment-filter-bar {

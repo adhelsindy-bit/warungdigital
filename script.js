@@ -142,6 +142,7 @@ const SAMPLE_PRODUCTS = [
 document.addEventListener('DOMContentLoaded', () => {
     initAuth();
     initData();
+    initDisplaySettings();
     initPaymentSettings();
     migrateProductModal();
     renderProducts();
@@ -2075,6 +2076,262 @@ function handleSavePaymentSettings(e) {
     showToast('Pengaturan pembayaran berhasil disimpan!', 'success');
 }
 
+/* ==============================================
+   PENGATURAN TAMPILAN & BRANDING TOKO
+   ============================================== */
+const STORAGE_DISPLAY_SETTINGS_KEY = 'warung_display_settings_delsi';
+const DEFAULT_DISPLAY_SETTINGS = {
+    theme: 'light',
+    color: 'red',
+    fontSize: 'normal',
+    shopName: 'Delsi Shop',
+    shopTagline: 'Sistem Kasir & Manajemen Warung Digital',
+    shopLogo: ''
+};
+
+let displaySettings = { ...DEFAULT_DISPLAY_SETTINGS };
+let tempDisplayTheme = 'light';
+let tempDisplayColor = 'red';
+let tempDisplayFont = 'normal';
+let tempDisplayLogo = '';
+
+function initDisplaySettings() {
+    try {
+        const stored = localStorage.getItem(STORAGE_DISPLAY_SETTINGS_KEY);
+        if (stored) {
+            displaySettings = Object.assign({}, DEFAULT_DISPLAY_SETTINGS, JSON.parse(stored));
+        }
+    } catch (e) {
+        console.warn('Gagal memuat pengaturan tampilan dari localStorage:', e);
+    }
+
+    applyDisplaySettings(displaySettings);
+
+    if (typeof db !== 'undefined' && db) {
+        db.collection('settings').doc('display').get().then(doc => {
+            if (doc.exists) {
+                displaySettings = Object.assign({}, DEFAULT_DISPLAY_SETTINGS, doc.data());
+                try {
+                    localStorage.setItem(STORAGE_DISPLAY_SETTINGS_KEY, JSON.stringify(displaySettings));
+                } catch (e) {}
+                applyDisplaySettings(displaySettings);
+            }
+        }).catch(err => console.warn('Gagal sync display settings dari Firestore:', err));
+    }
+}
+
+function applyDisplaySettings(settings) {
+    if (!settings) settings = displaySettings;
+    const s = settings;
+    const root = document.documentElement;
+
+    // 1. Tema mode gelap/terang
+    if (s.theme === 'dark') {
+        root.setAttribute('data-theme', 'dark');
+    } else {
+        root.removeAttribute('data-theme');
+    }
+
+    // 2. Aksen warna
+    if (s.color && s.color !== 'red') {
+        root.setAttribute('data-color', s.color);
+    } else {
+        root.removeAttribute('data-color');
+    }
+
+    // 3. Ukuran font
+    if (s.fontSize === 'large') {
+        root.classList.add('font-large');
+    } else {
+        root.classList.remove('font-large');
+    }
+
+    // 4. Branding toko: nama & tagline
+    const shopName = s.shopName || 'Delsi Shop';
+    const shopTagline = s.shopTagline || 'Sistem Kasir & Manajemen Warung Digital';
+
+    const headerName = document.getElementById('header-shop-name');
+    if (headerName) headerName.textContent = shopName;
+
+    const headerTagline = document.getElementById('header-shop-tagline');
+    if (headerTagline) headerTagline.textContent = shopTagline;
+
+    const loginName = document.getElementById('login-shop-name');
+    if (loginName) loginName.textContent = shopName;
+
+    const loginTagline = document.getElementById('login-shop-tagline');
+    if (loginTagline) loginTagline.textContent = shopTagline;
+
+    const receiptName = document.getElementById('receipt-shop-name');
+    if (receiptName) receiptName.textContent = shopName;
+
+    const receiptTagline = document.getElementById('receipt-shop-tagline');
+    if (receiptTagline) receiptTagline.textContent = shopTagline;
+
+    const receiptFooter = document.getElementById('receipt-shop-footer');
+    if (receiptFooter) receiptFooter.textContent = shopName;
+
+    const reportName = document.getElementById('report-shop-name');
+    if (reportName) reportName.textContent = `${shopName} - Laporan Transaksi`;
+
+    const reportTagline = document.getElementById('report-shop-tagline');
+    if (reportTagline) reportTagline.textContent = shopTagline;
+
+    const barcodeName = document.getElementById('barcode-shop-name');
+    if (barcodeName) barcodeName.textContent = shopName;
+
+    document.title = `${shopName} - Kasir Warung Digital`;
+
+    // 5. Logo toko
+    const defaultLogoSrc = 'favicon-192.png?v=3';
+    const logoSrc = s.shopLogo || defaultLogoSrc;
+
+    const headerLogo = document.getElementById('header-shop-logo');
+    if (headerLogo) headerLogo.src = logoSrc;
+
+    const loginLogo = document.getElementById('login-shop-logo');
+    if (loginLogo) loginLogo.src = logoSrc;
+
+    const receiptLogo = document.getElementById('receipt-shop-logo');
+    if (receiptLogo) receiptLogo.src = logoSrc;
+
+    const reportLogo = document.getElementById('report-print-logo');
+    if (reportLogo) reportLogo.src = logoSrc;
+
+    const barcodeLogo = document.getElementById('barcode-shop-logo');
+    if (barcodeLogo) barcodeLogo.src = logoSrc;
+}
+
+function openDisplaySettingsModal() {
+    tempDisplayTheme = displaySettings.theme || 'light';
+    tempDisplayColor = displaySettings.color || 'red';
+    tempDisplayFont = displaySettings.fontSize || 'normal';
+    tempDisplayLogo = displaySettings.shopLogo || '';
+
+    const nameInput = document.getElementById('setting-shop-name');
+    if (nameInput) nameInput.value = displaySettings.shopName || 'Delsi Shop';
+
+    const taglineInput = document.getElementById('setting-shop-tagline');
+    if (taglineInput) taglineInput.value = displaySettings.shopTagline || 'Sistem Kasir & Manajemen Warung Digital';
+
+    const logoHidden = document.getElementById('setting-shop-logo');
+    if (logoHidden) logoHidden.value = tempDisplayLogo;
+
+    const previewImg = document.getElementById('display-logo-preview-img');
+    if (previewImg) previewImg.src = tempDisplayLogo || 'favicon-192.png?v=3';
+
+    const btnRemove = document.getElementById('btn-remove-display-logo');
+    if (btnRemove) btnRemove.style.display = tempDisplayLogo ? 'inline-block' : 'none';
+
+    updateDisplaySettingsModalUI();
+
+    const overlay = document.getElementById('display-settings-modal-overlay');
+    if (overlay) overlay.classList.add('active');
+}
+
+function updateDisplaySettingsModalUI() {
+    document.querySelectorAll('.theme-mode-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-theme-value') === tempDisplayTheme);
+    });
+
+    document.querySelectorAll('.color-option').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-color-value') === tempDisplayColor);
+    });
+
+    document.querySelectorAll('.font-option').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-font-value') === tempDisplayFont);
+    });
+}
+
+function selectDisplayTheme(theme) {
+    tempDisplayTheme = theme;
+    updateDisplaySettingsModalUI();
+}
+
+function selectDisplayColor(color) {
+    tempDisplayColor = color;
+    updateDisplaySettingsModalUI();
+}
+
+function selectDisplayFont(font) {
+    tempDisplayFont = font;
+    updateDisplaySettingsModalUI();
+}
+
+function handleDisplayLogoUpload(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+        showToast('Ukuran logo maksimal 2MB!', 'warning');
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        compressImageDataUrl(e.target.result, 320, 0.85).then(base64 => {
+            tempDisplayLogo = base64;
+            const logoHidden = document.getElementById('setting-shop-logo');
+            if (logoHidden) logoHidden.value = base64;
+            const previewImg = document.getElementById('display-logo-preview-img');
+            if (previewImg) previewImg.src = base64;
+            const btnRemove = document.getElementById('btn-remove-display-logo');
+            if (btnRemove) btnRemove.style.display = 'inline-block';
+            showToast('Logo berhasil dipilih!', 'info');
+        });
+    };
+    reader.readAsDataURL(file);
+}
+
+function removeDisplayLogo() {
+    tempDisplayLogo = '';
+    const logoHidden = document.getElementById('setting-shop-logo');
+    if (logoHidden) logoHidden.value = '';
+    const previewImg = document.getElementById('display-logo-preview-img');
+    if (previewImg) previewImg.src = 'favicon-192.png?v=3';
+    const fileInput = document.getElementById('display-logo-file');
+    if (fileInput) fileInput.value = '';
+    const btnRemove = document.getElementById('btn-remove-display-logo');
+    if (btnRemove) btnRemove.style.display = 'none';
+}
+
+function closeDisplaySettingsModal() {
+    const overlay = document.getElementById('display-settings-modal-overlay');
+    if (overlay) overlay.classList.remove('active');
+}
+
+function closeDisplaySettingsOnOverlay(event) {
+    if (event.target === event.currentTarget) {
+        closeDisplaySettingsModal();
+    }
+}
+
+function handleSaveDisplaySettings(event) {
+    event.preventDefault();
+    const nameInput = document.getElementById('setting-shop-name');
+    const taglineInput = document.getElementById('setting-shop-tagline');
+
+    displaySettings.theme = tempDisplayTheme;
+    displaySettings.color = tempDisplayColor;
+    displaySettings.fontSize = tempDisplayFont;
+    displaySettings.shopName = (nameInput && nameInput.value.trim()) || 'Delsi Shop';
+    displaySettings.shopTagline = (taglineInput && taglineInput.value.trim()) || 'Sistem Kasir & Manajemen Warung Digital';
+    displaySettings.shopLogo = tempDisplayLogo || '';
+
+    try {
+        localStorage.setItem(STORAGE_DISPLAY_SETTINGS_KEY, JSON.stringify(displaySettings));
+    } catch (e) {
+        console.warn('Gagal menyimpan display settings ke localStorage:', e);
+    }
+
+    if (typeof db !== 'undefined' && db) {
+        db.collection('settings').doc('display').set(displaySettings)
+            .catch(err => console.warn('Gagal menyimpan settings display ke Firestore:', err));
+    }
+
+    applyDisplaySettings(displaySettings);
+    closeDisplaySettingsModal();
+    showToast('Pengaturan tampilan berhasil disimpan!', 'success');
+}
+
 function resetCart() {
     if (cart.length > 0 && !confirm('Apakah Anda yakin ingin mereset keranjang belanja?')) {
         return;
@@ -3433,7 +3690,7 @@ function printProductBarcode() {
         </head>
         <body>
             <div class="barcode-card">
-                <p class="shop-name">Delsi Shop</p>
+                <p class="shop-name">${escapeHtml((displaySettings && displaySettings.shopName) || 'Delsi Shop')}</p>
                 <p class="product-name">${escapeHtml(document.getElementById('barcode-product-name').textContent)}</p>
                 <svg id="print-barcode"></svg>
                 <p class="price">${document.getElementById('barcode-price').textContent}</p>

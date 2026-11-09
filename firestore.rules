@@ -8,6 +8,10 @@ service cloud.firestore {
     match /transactions/{document} {
       allow read, write: if true;
     }
+    // Pengaturan toko (pembayaran & tampilan)
+    match /settings/{document} {
+      allow read, write: if true;
+    }
     // Tolak akses ke koleksi lain
     match /{document=**} {
       allow read, write: if false;
