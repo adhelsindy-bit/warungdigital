@@ -2107,17 +2107,25 @@ function initDisplaySettings() {
 
     applyDisplaySettings(displaySettings);
 
+    // Sinkronisasi real-time antar perangkat (HP & komputer)
     if (typeof db !== 'undefined' && db) {
-        db.collection('settings').doc('display').get().then(doc => {
-            if (doc.exists) {
-                displaySettings = Object.assign({}, DEFAULT_DISPLAY_SETTINGS, doc.data());
-                try {
-                    localStorage.setItem(STORAGE_DISPLAY_SETTINGS_KEY, JSON.stringify(displaySettings));
-                } catch (e) {}
+        db.collection('settings').doc('display').onSnapshot(doc => {
+            if (!doc.exists) return;
+            displaySettings = Object.assign({}, DEFAULT_DISPLAY_SETTINGS, doc.data());
+            try {
+                localStorage.setItem(STORAGE_DISPLAY_SETTINGS_KEY, JSON.stringify(displaySettings));
+            } catch (e) {}
+            // Jangan ganggu pratinjau saat modal sedang dibuka
+            if (!isDisplaySettingsModalOpen()) {
                 applyDisplaySettings(displaySettings);
             }
-        }).catch(err => console.warn('Gagal sync display settings dari Firestore:', err));
+        }, err => console.warn('Gagal sync display settings dari Firestore:', err));
     }
+}
+
+function isDisplaySettingsModalOpen() {
+    const overlay = document.getElementById('display-settings-modal-overlay');
+    return !!(overlay && overlay.classList.contains('active'));
 }
 
 function applyDisplaySettings(settings) {
@@ -2246,16 +2254,61 @@ function updateDisplaySettingsModalUI() {
 function selectDisplayTheme(theme) {
     tempDisplayTheme = theme;
     updateDisplaySettingsModalUI();
+    previewTempDisplaySettings();
 }
 
 function selectDisplayColor(color) {
     tempDisplayColor = color;
     updateDisplaySettingsModalUI();
+    previewTempDisplaySettings();
 }
 
 function selectDisplayFont(font) {
     tempDisplayFont = font;
     updateDisplaySettingsModalUI();
+    previewTempDisplaySettings();
+}
+
+function previewTempDisplaySettings() {
+    const nameInput = document.getElementById('setting-shop-name');
+    const taglineInput = document.getElementById('setting-shop-tagline');
+    applyDisplaySettings({
+        theme: tempDisplayTheme,
+        color: tempDisplayColor,
+        fontSize: tempDisplayFont,
+        shopName: (nameInput && nameInput.value.trim()) || 'Delsi Shop',
+        shopTagline: (taglineInput && taglineInput.value.trim()) || 'Sistem Kasir & Manajemen Warung Digital',
+        shopLogo: tempDisplayLogo
+    });
+}
+
+// Resize logo sambil mempertahankan transparansi (khusus PNG/WebP)
+function resizeLogoDataUrl(dataUrl, maxSize = 320) {
+    return new Promise(function(resolve) {
+        const img = new Image();
+        img.onload = function() {
+            try {
+                let width = img.width;
+                let height = img.height;
+                if (width > maxSize || height > maxSize) {
+                    const scale = Math.min(maxSize / width, maxSize / height);
+                    width = Math.max(1, Math.round(width * scale));
+                    height = Math.max(1, Math.round(height * scale));
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, width, height);
+                ctx.drawImage(img, 0, 0, width, height);
+                resolve(canvas.toDataURL('image/png'));
+            } catch (e) {
+                resolve(dataUrl);
+            }
+        };
+        img.onerror = function() { resolve(dataUrl); };
+        img.src = dataUrl;
+    });
 }
 
 function handleDisplayLogoUpload(event) {
@@ -2263,22 +2316,33 @@ function handleDisplayLogoUpload(event) {
     if (!file) return;
     if (file.size > 2 * 1024 * 1024) {
         showToast('Ukuran logo maksimal 2MB!', 'warning');
+        event.target.value = '';
         return;
     }
     const reader = new FileReader();
     reader.onload = function(e) {
-        compressImageDataUrl(e.target.result, 320, 0.85).then(base64 => {
-            tempDisplayLogo = base64;
-            const logoHidden = document.getElementById('setting-shop-logo');
-            if (logoHidden) logoHidden.value = base64;
-            const previewImg = document.getElementById('display-logo-preview-img');
-            if (previewImg) previewImg.src = base64;
-            const btnRemove = document.getElementById('btn-remove-display-logo');
-            if (btnRemove) btnRemove.style.display = 'inline-block';
-            showToast('Logo berhasil dipilih!', 'info');
-        });
+        resizeLogoDataUrl(e.target.result, 320)
+            .then(base64 => base64.length > 700000 ? resizeLogoDataUrl(e.target.result, 160) : base64)
+            .then(base64 => {
+                if (base64.length > 900000) {
+                    showToast('Logo terlalu besar. Gunakan gambar yang lebih sederhana.', 'warning');
+                    return;
+                }
+                tempDisplayLogo = base64;
+                const logoHidden = document.getElementById('setting-shop-logo');
+                if (logoHidden) logoHidden.value = base64;
+                const previewImg = document.getElementById('display-logo-preview-img');
+                if (previewImg) previewImg.src = base64;
+                const btnRemove = document.getElementById('btn-remove-display-logo');
+                if (btnRemove) btnRemove.style.display = 'inline-block';
+                previewTempDisplaySettings();
+                showToast('Logo berhasil dipilih!', 'info');
+            })
+            .catch(() => showToast('Gagal memproses logo.', 'warning'));
     };
     reader.readAsDataURL(file);
+    // Reset agar file yang sama bisa dipilih ulang setelah diproses
+    event.target.value = '';
 }
 
 function removeDisplayLogo() {
@@ -2291,11 +2355,14 @@ function removeDisplayLogo() {
     if (fileInput) fileInput.value = '';
     const btnRemove = document.getElementById('btn-remove-display-logo');
     if (btnRemove) btnRemove.style.display = 'none';
+    previewTempDisplaySettings();
 }
 
 function closeDisplaySettingsModal() {
     const overlay = document.getElementById('display-settings-modal-overlay');
     if (overlay) overlay.classList.remove('active');
+    // Batalkan pratinjau yang belum disimpan
+    applyDisplaySettings(displaySettings);
 }
 
 function closeDisplaySettingsOnOverlay(event) {
@@ -3672,6 +3739,13 @@ function printProductBarcode() {
                     font-weight: bold;
                     margin-bottom: 2px;
                 }
+                .shop-logo {
+                    width: 40px;
+                    height: 40px;
+                    object-fit: contain;
+                    margin: 0 auto 4px;
+                    display: block;
+                }
                 .product-name {
                     font-size: 11px;
                     color: #555;
@@ -3690,6 +3764,7 @@ function printProductBarcode() {
         </head>
         <body>
             <div class="barcode-card">
+                <img class="shop-logo" src="${escapeHtml((displaySettings && displaySettings.shopLogo) || 'favicon-192.png?v=3')}" alt="">
                 <p class="shop-name">${escapeHtml((displaySettings && displaySettings.shopName) || 'Delsi Shop')}</p>
                 <p class="product-name">${escapeHtml(document.getElementById('barcode-product-name').textContent)}</p>
                 <svg id="print-barcode"></svg>

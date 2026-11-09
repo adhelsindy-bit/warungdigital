@@ -23,7 +23,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=3">
     <!-- Font Awesome Icons for clean UI icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=15">
+    <link rel="stylesheet" href="style.css?v=16">
 </head>
 <body class="logged-out">
 
@@ -841,7 +841,7 @@
             console.warn("Firebase initialization error, fallback to localStorage:", e);
         }
     </script>
-    <script src="script.js?v=16"></script>
+    <script src="script.js?v=17"></script>
 
     <!-- MODAL SCANNER BARCODE & QR CODE -->
     <div id="scanner-modal-overlay" class="scanner-modal-overlay">
@@ -1177,11 +1177,11 @@
                     <h4><i class="fa-solid fa-store"></i> Branding Toko</h4>
                     <div class="form-group">
                         <label for="setting-shop-name">Nama Toko</label>
-                        <input type="text" id="setting-shop-name" maxlength="40" placeholder="Contoh: Delsi Shop">
+                        <input type="text" id="setting-shop-name" maxlength="40" placeholder="Contoh: Delsi Shop" oninput="previewTempDisplaySettings()">
                     </div>
                     <div class="form-group">
                         <label for="setting-shop-tagline">Tagline / Subjudul</label>
-                        <input type="text" id="setting-shop-tagline" maxlength="80" placeholder="Contoh: Sistem Kasir & Manajemen Warung Digital">
+                        <input type="text" id="setting-shop-tagline" maxlength="80" placeholder="Contoh: Sistem Kasir & Manajemen Warung Digital" oninput="previewTempDisplaySettings()">
                     </div>
                     <div class="form-group">
                         <label>Logo Toko</label>
