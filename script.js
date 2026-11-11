@@ -1420,6 +1420,7 @@ function initFirebaseSync() {
         if (typeof renderCustomerStorefront === 'function') renderCustomerStorefront();
         populateProductDropdown();
         renderDashboardStokMenipis();
+        renderDashboardStats();
     }, err => console.warn("Gagal mendengar data produk dari Firebase:", err));
 
     // Dengarkan data transaksi dari Firestore secara real-time.
@@ -1434,6 +1435,7 @@ function initFirebaseSync() {
         saveTransactionsToStorage();
         renderReports();
         renderDashboardOmzet();
+        renderDashboardStats();
     }, err => console.warn("Gagal mendengar data transaksi dari Firebase:", err));
 
     // Dengarkan data pengguna dari Firestore secara real-time (sinkron lintas perangkat/browser)
@@ -1460,6 +1462,7 @@ function initFirebaseSync() {
         if (changed) {
             saveUsers(localUsers);
             if (typeof renderUserList === 'function') renderUserList();
+            renderDashboardStats();
         }
     }, err => console.warn("Gagal mendengar data pengguna dari Firebase:", err));
 }
@@ -1469,32 +1472,38 @@ function pullFromFirestore() {
     const badge = document.getElementById('firebase-status-badge');
 
     return Promise.all([
-        db.collection('products').get(),
-        db.collection('transactions').get(),
-        db.collection('users').get()
+        db.collection('products').get().catch(err => { console.warn('Gagal muat products:', err); return null; }),
+        db.collection('transactions').get().catch(err => { console.warn('Gagal muat transactions:', err); return null; }),
+        db.collection('users').get().catch(err => { console.warn('Gagal muat users:', err); return null; })
     ]).then(([productSnapshot, transactionSnapshot, userSnapshot]) => {
-        const hasRemoteData = !productSnapshot.empty || !transactionSnapshot.empty || !userSnapshot.empty;
+        const hasRemoteData = (productSnapshot && !productSnapshot.empty) || 
+                              (transactionSnapshot && !transactionSnapshot.empty) || 
+                              (userSnapshot && !userSnapshot.empty);
 
         if (hasRemoteData) {
             const remoteProducts = [];
-            productSnapshot.forEach(doc => {
-                const data = doc.data();
-                const isGeneric = !data.gambar || 
-                    data.gambar === DEFAULT_IMAGE || 
-                    data.gambar.includes('1588964895597') || 
-                    (typeof data.gambar === 'string' && data.gambar.trim() === '');
-                if (isGeneric) {
-                    data.gambar = getProductAutoImage(data);
-                }
-                remoteProducts.push(data);
-            });
-            remoteProducts.sort((a, b) => a.kode.localeCompare(b.kode));
+            if (productSnapshot && !productSnapshot.empty) {
+                productSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    const isGeneric = !data.gambar || 
+                        data.gambar === DEFAULT_IMAGE || 
+                        data.gambar.includes('1588964895597') || 
+                        (typeof data.gambar === 'string' && data.gambar.trim() === '');
+                    if (isGeneric) {
+                        data.gambar = getProductAutoImage(data);
+                    }
+                    remoteProducts.push(data);
+                });
+                remoteProducts.sort((a, b) => a.kode.localeCompare(b.kode));
+            }
 
             const remoteTransactions = [];
-            transactionSnapshot.forEach(doc => {
-                remoteTransactions.push(doc.data());
-            });
-            remoteTransactions.sort((a, b) => new Date(b.rawDate || 0) - new Date(a.rawDate || 0));
+            if (transactionSnapshot && !transactionSnapshot.empty) {
+                transactionSnapshot.forEach(doc => {
+                    remoteTransactions.push(doc.data());
+                });
+                remoteTransactions.sort((a, b) => new Date(b.rawDate || 0) - new Date(a.rawDate || 0));
+            }
 
             // Muat dan merge pengguna dari Firestore
             if (userSnapshot && !userSnapshot.empty) {
@@ -1517,17 +1526,25 @@ function pullFromFirestore() {
                 }
             }
 
-            products = remoteProducts;
-            transactions = remoteTransactions;
+            if (remoteProducts.length > 0) {
+                products = remoteProducts;
+                saveProductsToStorage();
+            }
+            if (remoteTransactions.length > 0) {
+                transactions = remoteTransactions;
+                saveTransactionsToStorage();
+            }
+
             migrateProductModal();
-            saveProductsToStorage();
-            saveTransactionsToStorage();
             renderProducts();
+            if (typeof renderProductsKasir === 'function') renderProductsKasir();
+            if (typeof renderCustomerStorefront === 'function') renderCustomerStorefront();
             populateProductDropdown();
             renderCart();
             renderReports();
             renderDashboardStokMenipis();
             renderDashboardOmzet();
+            renderDashboardStats();
 
             if (badge) {
                 badge.className = 'firebase-badge online';
@@ -6432,11 +6449,12 @@ function handleCustomerChangePassword(e) {
    ========================================================================== */
 
 function renderDashboardStats() {
-    const statOmzet = document.getElementById('dash-omzet-total');
-    const statLaba = document.getElementById('dash-laba-total');
-    const statTrx = document.getElementById('dash-transaksi-total');
-    const statProduk = document.getElementById('dash-produk-total');
-    const statPelanggan = document.getElementById('dash-pelanggan-total');
+    const statOmzet = document.getElementById('dash-omzet-total') || document.getElementById('dash-total-omzet');
+    const statLaba = document.getElementById('dash-laba-total') || document.getElementById('dash-total-laba');
+    const statTrx = document.getElementById('dash-total-transaksi') || document.getElementById('dash-transaksi-total');
+    const statProduk = document.getElementById('dash-total-produk') || document.getElementById('dash-produk-total');
+    const statPelanggan = document.getElementById('dash-total-pelanggan') || document.getElementById('dash-pelanggan-total');
+    const statMenipis = document.getElementById('dash-stok-menipis');
 
     // 1. Total Omzet
     const totalOmzet = transactions.reduce((sum, t) => sum + (t.total || 0), 0);
@@ -6462,6 +6480,10 @@ function renderDashboardStats() {
     // 5. Total Pelanggan
     const users = getUsers();
     const totalCust = users.filter(u => (u.role || 'Kasir') === 'Pelanggan').length;
-    if (statPelanggan) statPelanggan.textContent = `${totalCust} Pengguna`;
+    if (statPelanggan) statPelanggan.textContent = `${totalCust} Pelanggan`;
+
+    // 6. Stok Menipis
+    const menipis = products.filter(p => p.stok <= 5);
+    if (statMenipis) statMenipis.textContent = `${menipis.length} Produk`;
 }
 
