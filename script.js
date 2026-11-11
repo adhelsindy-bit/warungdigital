@@ -385,23 +385,29 @@ function initAuth() {
 
 // Tab switcher di layar auth: Login vs Registrasi Pelanggan
 function switchAuthTab(tab) {
-    const btnLogin = document.getElementById('auth-tab-btn-login');
-    const btnReg = document.getElementById('auth-tab-btn-register');
+    const btnLogin = document.getElementById('auth-tab-login') || document.getElementById('auth-tab-btn-login');
+    const btnReg = document.getElementById('auth-tab-register') || document.getElementById('auth-tab-btn-register');
     const formLogin = document.getElementById('login-form');
     const formReg = document.getElementById('register-form');
     const errEl = document.getElementById('login-error');
+    const regErrEl = document.getElementById('register-error');
+    const hintEl = document.getElementById('login-hint');
+
     if (errEl) errEl.style.display = 'none';
+    if (regErrEl) regErrEl.style.display = 'none';
 
     if (tab === 'register') {
         if (btnLogin) btnLogin.classList.remove('active');
         if (btnReg) btnReg.classList.add('active');
         if (formLogin) formLogin.style.display = 'none';
         if (formReg) formReg.style.display = 'block';
+        if (hintEl) hintEl.style.display = 'none';
     } else {
         if (btnReg) btnReg.classList.remove('active');
         if (btnLogin) btnLogin.classList.add('active');
         if (formReg) formReg.style.display = 'none';
         if (formLogin) formLogin.style.display = 'block';
+        if (hintEl) hintEl.style.display = 'block';
     }
 }
 
@@ -415,37 +421,61 @@ function fillDemoAuth(username, password) {
     showToast(`Akun demo diisi: ${username}`, 'info');
 }
 
+function fillDemoLogin(username, password) {
+    fillDemoAuth(username, password);
+}
+window.fillDemoLogin = fillDemoLogin;
+window.fillDemoAuth = fillDemoAuth;
+
 // Registrasi Pelanggan Baru
-function handleRegister(e) {
+async function handleRegister(e) {
     e.preventDefault();
 
-    const username = document.getElementById('reg-username').value.trim();
-    const fullname = document.getElementById('reg-fullname').value.trim();
-    const phone = document.getElementById('reg-phone').value.trim();
-    const password = document.getElementById('reg-password').value;
-    const confirmPass = document.getElementById('reg-password-confirm').value;
-    const address = document.getElementById('reg-address') ? document.getElementById('reg-address').value.trim() : '';
+    const uEl = document.getElementById('reg-username');
+    const nEl = document.getElementById('reg-nama') || document.getElementById('reg-fullname');
+    const tEl = document.getElementById('reg-telepon') || document.getElementById('reg-phone');
+    const aEl = document.getElementById('reg-alamat') || document.getElementById('reg-address');
+    const pEl = document.getElementById('reg-password');
+    const cEl = document.getElementById('reg-password-confirm');
+    const regErrEl = document.getElementById('register-error');
+
+    const username = uEl ? uEl.value.trim() : '';
+    const fullname = nEl ? nEl.value.trim() : '';
+    const phone = tEl ? tEl.value.trim() : '';
+    const address = aEl ? aEl.value.trim() : '';
+    const password = pEl ? pEl.value : '';
+    const confirmPass = cEl ? cEl.value : '';
+
+    if (regErrEl) regErrEl.style.display = 'none';
+
+    const showRegError = (msg) => {
+        if (regErrEl) {
+            regErrEl.textContent = msg;
+            regErrEl.style.display = 'block';
+        }
+        showToast(msg, 'danger');
+    };
 
     if (username.length < 3) {
-        showToast('Username minimal 3 karakter.', 'warning');
+        showRegError('Username minimal 3 karakter.');
         return;
     }
     if (/[\\,\n\r\s]/.test(username)) {
-        showToast('Username tidak boleh mengandung spasi atau karakter khusus.', 'warning');
+        showRegError('Username tidak boleh mengandung spasi atau karakter khusus.');
         return;
     }
     if (password.length < 4) {
-        showToast('Password minimal 4 karakter.', 'warning');
+        showRegError('Password minimal 4 karakter.');
         return;
     }
     if (password !== confirmPass) {
-        showToast('Konfirmasi password tidak cocok!', 'danger');
+        showRegError('Konfirmasi password tidak cocok!');
         return;
     }
 
     const users = getUsers();
     if (users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
-        showToast(`Username '${username}' sudah terdaftar! Gunakan username lain.`, 'danger');
+        showRegError(`Username '${username}' sudah terdaftar! Silakan gunakan username lain.`);
         return;
     }
 
@@ -475,7 +505,8 @@ function handleRegister(e) {
             console.warn('Gagal menyimpan sesi register:', err);
         }
 
-        document.getElementById('register-form').reset();
+        const regForm = document.getElementById('register-form');
+        if (regForm) regForm.reset();
         document.body.classList.remove('logged-out');
         applySessionToHeader(session);
         switchTab('pelanggan-store');
@@ -483,9 +514,13 @@ function handleRegister(e) {
         showToast(`Selamat datang, ${newUser.fullName}! Akun Pelanggan Anda aktif.`, 'success');
         logActivity('registrasi', `Pengguna baru '${newUser.username}' mendaftar sebagai Pelanggan.`, newUser.username);
 
-        // Backup ke firestore jika online
+        // Backup langsung ke Firestore agar akun bisa login di seluruh perangkat
         if (typeof db !== 'undefined' && db) {
-            db.collection('users').doc(newUser.username).set(newUser).catch(() => {});
+            try {
+                await db.collection('users').doc(newUser.username).set(newUser);
+            } catch (err) {
+                console.warn('Gagal simpan akun ke Firestore:', err);
+            }
         }
     }
 }
@@ -605,7 +640,7 @@ function showLoginError(msg) {
     }
 }
 
-function handleLogin(e) {
+async function handleLogin(e) {
     e.preventDefault();
 
     const username = document.getElementById('login-username').value.trim();
@@ -618,11 +653,53 @@ function handleLogin(e) {
         return;
     }
 
-    const users = getUsers();
+    let users = getUsers();
     const inputHash = simpleHash(password);
-    const user = users.find(u =>
-        u.username.toLowerCase() === username.toLowerCase() && u.password === inputHash
+    let user = users.find(u =>
+        u.username.toLowerCase() === username.toLowerCase() && (u.password === inputHash || u.password === password)
     );
+
+    // Jika pengguna belum ada di localStorage (misal baru dibuat di perangkat lain / cloud),
+    // cek langsung ke Cloud Firestore jika online
+    if (!user && typeof db !== 'undefined' && db) {
+        try {
+            const doc = await db.collection('users').doc(username).get();
+            if (doc.exists) {
+                const cloudUser = doc.data();
+                if (cloudUser && (cloudUser.password === inputHash || cloudUser.password === password)) {
+                    user = cloudUser;
+                    user.password = inputHash; // Simpan hash yang standar
+                    const idx = users.findIndex(u => u.username.toLowerCase() === user.username.toLowerCase());
+                    if (idx === -1) {
+                        users.push(user);
+                    } else {
+                        users[idx] = user;
+                    }
+                    saveUsers(users);
+                }
+            } else {
+                // Alternatif: query bila username disimpan dengan huruf kapital berbeda di Firestore
+                const snap = await db.collection('users').get();
+                if (!snap.empty) {
+                    snap.forEach(d => {
+                        const cu = d.data();
+                        if (cu && cu.username && cu.username.toLowerCase() === username.toLowerCase()) {
+                            if (cu.password === inputHash || cu.password === password) {
+                                user = cu;
+                                user.password = inputHash;
+                                const idx = users.findIndex(u => u.username.toLowerCase() === user.username.toLowerCase());
+                                if (idx === -1) users.push(user);
+                                else users[idx] = user;
+                                saveUsers(users);
+                            }
+                        }
+                    });
+                }
+            }
+        } catch (err) {
+            console.warn('Gagal cek user ke Firestore:', err);
+        }
+    }
 
     if (!user) {
         showLoginError('Username atau password salah. Silakan coba lagi.');
@@ -1358,6 +1435,33 @@ function initFirebaseSync() {
         renderReports();
         renderDashboardOmzet();
     }, err => console.warn("Gagal mendengar data transaksi dari Firebase:", err));
+
+    // Dengarkan data pengguna dari Firestore secara real-time (sinkron lintas perangkat/browser)
+    db.collection('users').onSnapshot(snapshot => {
+        if (snapshot.empty) return;
+
+        const remoteUsers = [];
+        snapshot.forEach(doc => remoteUsers.push(doc.data()));
+        let localUsers = getUsers();
+        let changed = false;
+
+        remoteUsers.forEach(ru => {
+            if (!ru || !ru.username) return;
+            const idx = localUsers.findIndex(lu => lu.username.toLowerCase() === ru.username.toLowerCase());
+            if (idx === -1) {
+                localUsers.push(ru);
+                changed = true;
+            } else if (localUsers[idx].password !== ru.password || localUsers[idx].role !== ru.role) {
+                localUsers[idx] = { ...localUsers[idx], ...ru };
+                changed = true;
+            }
+        });
+
+        if (changed) {
+            saveUsers(localUsers);
+            if (typeof renderUserList === 'function') renderUserList();
+        }
+    }, err => console.warn("Gagal mendengar data pengguna dari Firebase:", err));
 }
 
 // Menarik data dari Cloud Firestore bila localStorage masih kosong
@@ -1366,9 +1470,10 @@ function pullFromFirestore() {
 
     return Promise.all([
         db.collection('products').get(),
-        db.collection('transactions').get()
-    ]).then(([productSnapshot, transactionSnapshot]) => {
-        const hasRemoteData = !productSnapshot.empty || !transactionSnapshot.empty;
+        db.collection('transactions').get(),
+        db.collection('users').get()
+    ]).then(([productSnapshot, transactionSnapshot, userSnapshot]) => {
+        const hasRemoteData = !productSnapshot.empty || !transactionSnapshot.empty || !userSnapshot.empty;
 
         if (hasRemoteData) {
             const remoteProducts = [];
@@ -1390,6 +1495,27 @@ function pullFromFirestore() {
                 remoteTransactions.push(doc.data());
             });
             remoteTransactions.sort((a, b) => new Date(b.rawDate || 0) - new Date(a.rawDate || 0));
+
+            // Muat dan merge pengguna dari Firestore
+            if (userSnapshot && !userSnapshot.empty) {
+                let localUsers = getUsers();
+                let modifiedUsers = false;
+                userSnapshot.forEach(doc => {
+                    const u = doc.data();
+                    if (!u || !u.username) return;
+                    const idx = localUsers.findIndex(lu => lu.username.toLowerCase() === u.username.toLowerCase());
+                    if (idx === -1) {
+                        localUsers.push(u);
+                        modifiedUsers = true;
+                    } else if (localUsers[idx].password !== u.password || localUsers[idx].role !== u.role) {
+                        localUsers[idx] = { ...localUsers[idx], ...u };
+                        modifiedUsers = true;
+                    }
+                });
+                if (modifiedUsers) {
+                    saveUsers(localUsers);
+                }
+            }
 
             products = remoteProducts;
             transactions = remoteTransactions;
@@ -1441,6 +1567,17 @@ function pushLocalToFirestore(allowDeletes) {
             ref: db.collection('transactions').doc(t.id),
             data: t
         });
+    });
+
+    // Pengguna: dokumen dengan ID = username
+    const localUsers = getUsers();
+    localUsers.forEach(u => {
+        if (u && u.username) {
+            upserts.push({
+                ref: db.collection('users').doc(u.username),
+                data: u
+            });
+        }
     });
 
     let deleteCount = 0;
