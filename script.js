@@ -29,6 +29,97 @@ window.addEventListener('unhandledrejection', function (event) {
     console.error('Unhandled promise rejection:', event.reason);
 });
 
+// Katalog Foto Produk Warung Digital Terverifikasi (HTTP 200 OK & Sesuai Barang Asli)
+const PRODUCT_IMAGE_CATALOG = {
+    'BRG001': 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400&auto=format&fit=crop', // Beras Premium 5kg
+    'BRG002': 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&auto=format&fit=crop', // Minyak Goreng 1L
+    'BRG003': 'https://images.unsplash.com/photo-1581441363689-1f3c3c414635?w=400&auto=format&fit=crop', // Gula Pasir 1kg
+    'BRG004': 'https://images.unsplash.com/photo-1612927601601-6638404737ce?w=400&auto=format&fit=crop', // Mie Instan Goreng
+    'BRG005': 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=400&auto=format&fit=crop', // Kopi Kapal Api 165g
+    'BRG006': 'https://images.unsplash.com/photo-1516448620398-c5f44bf9f441?w=400&auto=format&fit=crop', // Telur Ayam 1kg
+    'BRG007': 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400&auto=format&fit=crop', // Susu Kental Manis 370g
+    'BRG008': 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&auto=format&fit=crop', // Tepung Terigu 1kg
+    'BRG009': 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?w=400&auto=format&fit=crop', // Kecap Manis 520ml
+    'BRG010': 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=400&auto=format&fit=crop', // Saus Sambal 335ml
+    'BRG011': 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=400&auto=format&fit=crop', // Teh Celup Isi 25
+    'BRG012': 'https://images.unsplash.com/photo-1523362628745-0c100150b504?w=400&auto=format&fit=crop', // Air Mineral Botol 600ml
+    'BRG013': 'https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?w=400&auto=format&fit=crop', // Sabun Mandi Batang
+    'BRG014': 'https://images.unsplash.com/photo-1585842378054-ee2e52f94ba2?w=400&auto=format&fit=crop', // Deterjen Bubuk 800g
+    'BRG015': 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=400&auto=format&fit=crop', // Gas LPG 3kg
+    'BRG016': 'https://images.unsplash.com/photo-1612927601601-6638404737ce?w=400&auto=format&fit=crop', // Mie Indomie Goreng
+    'BRG017': 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&auto=format&fit=crop', // Mie Indomie Kuah Soto
+    'BRG018': 'https://images.unsplash.com/photo-1555126634-323283e090fa?w=400&auto=format&fit=crop', // Mie Sedaap Goreng
+    'BRG019': 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=400&auto=format&fit=crop', // Kopi ABC Sachet
+    'BRG020': 'https://images.unsplash.com/photo-1509785307050-d4066910ec1e?w=400&auto=format&fit=crop', // Kopi White Koffie
+    'BRG021': 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=400&auto=format&fit=crop', // Teh Sariwangi Celup
+    'BRG022': 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=400&auto=format&fit=crop', // Teh Pucuk Harum 350ml
+    'BRG023': 'https://images.unsplash.com/photo-1523362628745-0c100150b504?w=400&auto=format&fit=crop', // Air Mineral Aqua 1500ml
+    'BRG024': 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400&auto=format&fit=crop', // Susu UHT Ultra Milk 1L
+    'BRG025': 'https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=400&auto=format&fit=crop', // Susu Bendera Kental Manis
+    'BRG026': 'https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=400&auto=format&fit=crop', // Chitato Sapi Panggang
+    'BRG027': 'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=400&auto=format&fit=crop', // Qtela Singkong Balado
+    'BRG028': 'https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=400&auto=format&fit=crop', // Taro Net Seaweed
+    'BRG029': 'https://images.unsplash.com/photo-1582058091505-f87a2e55a40f?w=400&auto=format&fit=crop', // Permen Kopiko 78
+    'BRG030': 'https://images.unsplash.com/photo-1575224300306-1b8da36134ec?w=400&auto=format&fit=crop', // Permen Relaxa
+    'BRG031': 'https://images.unsplash.com/photo-1508736793122-f516e3ba5569?w=400&auto=format&fit=crop', // Garam Dapur Refina
+    'BRG032': 'https://images.unsplash.com/photo-1606923829579-0cb981a83e2e?w=400&auto=format&fit=crop', // Kaldu Masako Ayam
+    'BRG033': 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&auto=format&fit=crop', // Lada Bubuk Koepoe
+    'BRG034': 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=400&auto=format&fit=crop', // Saus Sambal ABC
+    'BRG035': 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?w=400&auto=format&fit=crop', // Kecap Manis ABC
+    'BRG036': 'https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?w=400&auto=format&fit=crop', // Margarin Blue Band
+    'BRG037': 'https://images.unsplash.com/photo-1549931319-a545dcf3bc73?w=400&auto=format&fit=crop', // Roti Tawar Sari Roti
+    'BRG038': 'https://images.unsplash.com/photo-1516448620398-c5f44bf9f441?w=400&auto=format&fit=crop', // Telur Ayam Butir
+    'BRG039': 'https://images.unsplash.com/photo-1584727638096-042c45049ebe?w=400&auto=format&fit=crop', // Sarden ABC Tomat
+    'BRG040': 'https://images.unsplash.com/photo-1585751119414-ef2636f8aede?w=400&auto=format&fit=crop'  // Shampo Pantene
+};
+
+// Dapatkan foto produk otomatis berdasarkan kode atau nama barang
+function getProductAutoImage(p) {
+    if (!p) return DEFAULT_IMAGE;
+
+    // 1. Cek kode barang resmi
+    if (p.kode && PRODUCT_IMAGE_CATALOG[p.kode]) {
+        return PRODUCT_IMAGE_CATALOG[p.kode];
+    }
+
+    // 2. Cek keyword pada nama barang
+    const name = (p.nama || '').toLowerCase();
+
+    if (name.includes('beras')) return PRODUCT_IMAGE_CATALOG['BRG001'];
+    if (name.includes('minyak')) return PRODUCT_IMAGE_CATALOG['BRG002'];
+    if (name.includes('gula')) return PRODUCT_IMAGE_CATALOG['BRG003'];
+    if (name.includes('indomie') && name.includes('soto')) return PRODUCT_IMAGE_CATALOG['BRG017'];
+    if (name.includes('mie') || name.includes('indomie') || name.includes('sedaap') || name.includes('noodle')) return PRODUCT_IMAGE_CATALOG['BRG004'];
+    if (name.includes('white koffie')) return PRODUCT_IMAGE_CATALOG['BRG020'];
+    if (name.includes('kopi') || name.includes('coffee') || name.includes('kapal api') || name.includes('koffie')) return PRODUCT_IMAGE_CATALOG['BRG005'];
+    if (name.includes('telur')) return PRODUCT_IMAGE_CATALOG['BRG006'];
+    if (name.includes('ultra milk')) return PRODUCT_IMAGE_CATALOG['BRG024'];
+    if (name.includes('susu') || name.includes('milk') || name.includes('dancow') || name.includes('bendera')) return PRODUCT_IMAGE_CATALOG['BRG007'];
+    if (name.includes('terigu') || name.includes('tepung') || name.includes('flour')) return PRODUCT_IMAGE_CATALOG['BRG008'];
+    if (name.includes('kecap') || name.includes('bango')) return PRODUCT_IMAGE_CATALOG['BRG009'];
+    if (name.includes('saus') || name.includes('sambal') || name.includes('chili')) return PRODUCT_IMAGE_CATALOG['BRG010'];
+    if (name.includes('pucuk')) return PRODUCT_IMAGE_CATALOG['BRG022'];
+    if (name.includes('teh') || name.includes('tea') || name.includes('sariwangi')) return PRODUCT_IMAGE_CATALOG['BRG011'];
+    if (name.includes('aqua') || name.includes('air mineral') || name.includes('le minerale') || name.includes('mineral')) return PRODUCT_IMAGE_CATALOG['BRG012'];
+    if (name.includes('sabun') || name.includes('soap') || name.includes('lifebuoy') || name.includes('lux') || name.includes('giv')) return PRODUCT_IMAGE_CATALOG['BRG013'];
+    if (name.includes('deterjen') || name.includes('rinso') || name.includes('daia') || name.includes('so klin') || name.includes('boom')) return PRODUCT_IMAGE_CATALOG['BRG014'];
+    if (name.includes('gas') || name.includes('lpg') || name.includes('elpiji')) return PRODUCT_IMAGE_CATALOG['BRG015'];
+    if (name.includes('chitato') || name.includes('keripik') || name.includes('chips')) return PRODUCT_IMAGE_CATALOG['BRG026'];
+    if (name.includes('qtela') || name.includes('singkong')) return PRODUCT_IMAGE_CATALOG['BRG027'];
+    if (name.includes('taro')) return PRODUCT_IMAGE_CATALOG['BRG028'];
+    if (name.includes('relaxa')) return PRODUCT_IMAGE_CATALOG['BRG030'];
+    if (name.includes('permen') || name.includes('kopiko') || name.includes('candy')) return PRODUCT_IMAGE_CATALOG['BRG029'];
+    if (name.includes('garam') || name.includes('salt') || name.includes('refina')) return PRODUCT_IMAGE_CATALOG['BRG031'];
+    if (name.includes('masako') || name.includes('royco') || name.includes('kaldu') || name.includes('ajinomoto') || name.includes('micin')) return PRODUCT_IMAGE_CATALOG['BRG032'];
+    if (name.includes('lada') || name.includes('merica') || name.includes('pepper')) return PRODUCT_IMAGE_CATALOG['BRG033'];
+    if (name.includes('margarin') || name.includes('mentega') || name.includes('butter') || name.includes('blue band')) return PRODUCT_IMAGE_CATALOG['BRG036'];
+    if (name.includes('roti') || name.includes('bread') || name.includes('sari roti')) return PRODUCT_IMAGE_CATALOG['BRG037'];
+    if (name.includes('sarden') || name.includes('sardines') || name.includes('ikan kaleng')) return PRODUCT_IMAGE_CATALOG['BRG039'];
+    if (name.includes('shampo') || name.includes('pantene') || name.includes('shampoo') || name.includes('sunsilk') || name.includes('clear')) return PRODUCT_IMAGE_CATALOG['BRG040'];
+
+    return DEFAULT_IMAGE;
+}
+
 // Data Sampel Awal Lengkap dengan Foto Produk (sesuai nama produk)
 const SAMPLE_PRODUCTS = [
     {
@@ -36,112 +127,115 @@ const SAMPLE_PRODUCTS = [
         nama: 'Beras Premium 5kg',
         harga: 65000, modal: 55000,
         stok: 20,
-        gambar: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG001']
     },
     {
         kode: 'BRG002',
         nama: 'Minyak Goreng 1L',
         harga: 18000, modal: 15000,
         stok: 35,
-        gambar: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG002']
     },
     {
         kode: 'BRG003',
         nama: 'Gula Pasir 1kg',
         harga: 15000, modal: 12000,
         stok: 25,
-        gambar: 'https://images.unsplash.com/photo-1581441363689-1f3c3c414635?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG003']
     },
     {
         kode: 'BRG004',
         nama: 'Mie Instan Goreng',
         harga: 3000, modal: 2200,
         stok: 120,
-        gambar: 'https://images.unsplash.com/photo-1612927601601-6638404737ce?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG004']
     },
     {
         kode: 'BRG005',
         nama: 'Kopi Kapal Api 165g',
         harga: 14000, modal: 11000,
         stok: 50,
-        gambar: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG005']
     },
     {
         kode: 'BRG006',
         nama: 'Telur Ayam 1kg',
         harga: 28000, modal: 24000,
         stok: 30,
-        gambar: 'https://images.unsplash.com/photo-1516448620398-c5f44bf9f441?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG006']
     },
     {
         kode: 'BRG007',
         nama: 'Susu Kental Manis 370g',
         harga: 12000, modal: 9500,
         stok: 40,
-        gambar: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG007']
     },
     {
         kode: 'BRG008',
         nama: 'Tepung Terigu 1kg',
         harga: 11000, modal: 9000,
         stok: 30,
-        gambar: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG008']
     },
     {
         kode: 'BRG009',
         nama: 'Kecap Manis 520ml',
         harga: 19000, modal: 15000,
         stok: 20,
-        gambar: 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG009']
     },
     {
         kode: 'BRG010',
         nama: 'Saus Sambal 335ml',
         harga: 13000, modal: 10000,
         stok: 25,
-        gambar: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG010']
     },
     {
         kode: 'BRG011',
         nama: 'Teh Celup Isi 25',
         harga: 8000, modal: 6000,
         stok: 45,
-        gambar: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG011']
     },
     {
         kode: 'BRG012',
         nama: 'Air Mineral Botol 600ml',
         harga: 4000, modal: 2800,
         stok: 80,
-        gambar: 'https://images.unsplash.com/photo-1523362628745-0c100150b504?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG012']
     },
     {
         kode: 'BRG013',
         nama: 'Sabun Mandi Batang',
         harga: 4500, modal: 3200,
         stok: 60,
-        gambar: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG013']
     },
     {
         kode: 'BRG014',
         nama: 'Deterjen Bubuk 800g',
         harga: 18000, modal: 14000,
         stok: 25,
-        gambar: 'https://images.unsplash.com/photo-1585842378054-ee2e52f94ba2?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG014']
     },
     {
         kode: 'BRG015',
         nama: 'Gas LPG 3kg (Isi Ulang)',
         harga: 21000, modal: 18500,
         stok: 15,
-        gambar: 'https://images.unsplash.com/photo-1517646287270-a5a9ca602e5c?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG015']
     }
 ];
 
 // --- Inisialisasi Aplikasi Saat DOM Loaded ---
 document.addEventListener('DOMContentLoaded', () => {
-    initAuth();
     initData();
+    initCategories();
+    initActivityLogs();
+    initOrders();
+    initCustomerCart();
     initDisplaySettings();
     initPaymentSettings();
     migrateProductModal();
@@ -149,18 +243,24 @@ document.addEventListener('DOMContentLoaded', () => {
     populateProductDropdown();
     renderCart();
     renderReports();
+    renderDashboardStats();
     renderDashboardStokMenipis();
     renderDashboardOmzet();
+    initAuth();
     initFirebaseSync();
 });
 
 /* ==========================================================================
-   0. AUTENTIKASI (LOGIN / LOGOUT)
+   0. AUTENTIKASI MULTI-ROLE & SESI (ADMIN, KASIR, PELANGGAN)
    ========================================================================== */
 const STORAGE_SESSION_KEY = 'warung_session_delsi';
 const STORAGE_USERS_KEY = 'warung_users_delsi';
+const STORAGE_CATEGORIES_KEY = 'warung_categories_delsi';
+const STORAGE_ORDERS_KEY = 'warung_orders_delsi';
+const STORAGE_ACTIVITY_LOGS_KEY = 'warung_activity_logs_delsi';
+const STORAGE_CUSTOMER_CART_KEY = 'warung_customer_cart_delsi';
 
-// Hash sederhana (bukan kriptografi kuat) - cukup agar password tidak tersimpan plaintext
+// Hash sederhana agar password tidak disimpan dalam format plaintext
 function simpleHash(str) {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
@@ -178,9 +278,45 @@ function getUsers() {
     } catch (e) {
         users = [];
     }
-    // Buat akun default admin/admin123 bila belum ada user sama sekali
-    if (users.length === 0) {
-        users = [{ username: 'admin', password: simpleHash('admin123'), role: 'Administrator' }];
+
+    // Default Seed Accounts: Admin, Kasir, dan Pelanggan
+    const defaultAccounts = [
+        {
+            username: 'admin',
+            password: simpleHash('admin123'),
+            role: 'Administrator',
+            fullName: 'Admin Utama / Pemilik',
+            phone: '081234567890',
+            createdAt: '2026-01-01T00:00:00.000Z'
+        },
+        {
+            username: 'kasir',
+            password: simpleHash('kasir123'),
+            role: 'Kasir',
+            fullName: 'Kasir Shift 1',
+            phone: '081234567891',
+            createdAt: '2026-01-01T00:00:00.000Z'
+        },
+        {
+            username: 'pelanggan',
+            password: simpleHash('pelanggan123'),
+            role: 'Pelanggan',
+            fullName: 'Budi Santoso',
+            phone: '081234567892',
+            address: 'Jl. Melati No. 45, RT 02/03',
+            createdAt: '2026-01-01T00:00:00.000Z'
+        }
+    ];
+
+    let modified = false;
+    defaultAccounts.forEach(def => {
+        if (!users.some(u => u.username.toLowerCase() === def.username.toLowerCase())) {
+            users.push(def);
+            modified = true;
+        }
+    });
+
+    if (modified) {
         try {
             localStorage.setItem(STORAGE_USERS_KEY, JSON.stringify(users));
         } catch (e) {
@@ -198,28 +334,261 @@ function getSession() {
     }
 }
 
-// Cek sesi saat halaman dibuka: tampilkan app bila sudah login
+function getSessionRole() {
+    const s = getSession();
+    return s && s.role ? s.role : 'Guest';
+}
+
+function isAdmin() {
+    return getSessionRole() === 'Administrator';
+}
+
+function isKasir() {
+    return getSessionRole() === 'Kasir';
+}
+
+function isPelanggan() {
+    return getSessionRole() === 'Pelanggan';
+}
+
+// RBAC Guard: memverifikasi role sebelum tindakan tertentu dijalankan
+function requireRole(allowedRoles, actionDesc) {
+    const currentRole = getSessionRole();
+    if (!allowedRoles.includes(currentRole)) {
+        const msg = `Akses Ditolak: Fitur '${actionDesc || 'ini'}' hanya dapat diakses oleh ${allowedRoles.join(' / ')}.`;
+        showToast(msg, 'danger');
+        console.warn(msg, { currentRole, allowedRoles });
+        return false;
+    }
+    return true;
+}
+
+// Cek sesi saat halaman dibuka
 function initAuth() {
     const session = getSession();
     if (session && session.username) {
         document.body.classList.remove('logged-out');
         applySessionToHeader(session);
+        // Navigasikan otomatis ke tab yang sesuai
+        const role = session.role || 'Kasir';
+        if (role === 'Administrator') {
+            switchTab('dashboard');
+        } else if (role === 'Kasir') {
+            switchTab('transaksi');
+        } else if (role === 'Pelanggan') {
+            switchTab('pelanggan-store');
+        }
     } else {
         document.body.classList.add('logged-out');
     }
 }
 
-// Tampilkan nama user, role, dan tombol Kelola User (admin saja) di header
+// Tab switcher di layar auth: Login vs Registrasi Pelanggan
+function switchAuthTab(tab) {
+    const btnLogin = document.getElementById('auth-tab-btn-login');
+    const btnReg = document.getElementById('auth-tab-btn-register');
+    const formLogin = document.getElementById('login-form');
+    const formReg = document.getElementById('register-form');
+    const errEl = document.getElementById('login-error');
+    if (errEl) errEl.style.display = 'none';
+
+    if (tab === 'register') {
+        if (btnLogin) btnLogin.classList.remove('active');
+        if (btnReg) btnReg.classList.add('active');
+        if (formLogin) formLogin.style.display = 'none';
+        if (formReg) formReg.style.display = 'block';
+    } else {
+        if (btnReg) btnReg.classList.remove('active');
+        if (btnLogin) btnLogin.classList.add('active');
+        if (formReg) formReg.style.display = 'none';
+        if (formLogin) formLogin.style.display = 'block';
+    }
+}
+
+// Autofill demo akun untuk pengujian cepat
+function fillDemoAuth(username, password) {
+    switchAuthTab('login');
+    const uInput = document.getElementById('login-username');
+    const pInput = document.getElementById('login-password');
+    if (uInput) uInput.value = username;
+    if (pInput) pInput.value = password;
+    showToast(`Akun demo diisi: ${username}`, 'info');
+}
+
+// Registrasi Pelanggan Baru
+function handleRegister(e) {
+    e.preventDefault();
+
+    const username = document.getElementById('reg-username').value.trim();
+    const fullname = document.getElementById('reg-fullname').value.trim();
+    const phone = document.getElementById('reg-phone').value.trim();
+    const password = document.getElementById('reg-password').value;
+    const confirmPass = document.getElementById('reg-password-confirm').value;
+    const address = document.getElementById('reg-address') ? document.getElementById('reg-address').value.trim() : '';
+
+    if (username.length < 3) {
+        showToast('Username minimal 3 karakter.', 'warning');
+        return;
+    }
+    if (/[\\,\n\r\s]/.test(username)) {
+        showToast('Username tidak boleh mengandung spasi atau karakter khusus.', 'warning');
+        return;
+    }
+    if (password.length < 4) {
+        showToast('Password minimal 4 karakter.', 'warning');
+        return;
+    }
+    if (password !== confirmPass) {
+        showToast('Konfirmasi password tidak cocok!', 'danger');
+        return;
+    }
+
+    const users = getUsers();
+    if (users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
+        showToast(`Username '${username}' sudah terdaftar! Gunakan username lain.`, 'danger');
+        return;
+    }
+
+    const newUser = {
+        username: username,
+        password: simpleHash(password),
+        role: 'Pelanggan',
+        fullName: fullname || username,
+        phone: phone || '',
+        address: address || '',
+        createdAt: new Date().toISOString()
+    };
+
+    users.push(newUser);
+    if (saveUsers(users)) {
+        const session = {
+            username: newUser.username,
+            role: newUser.role,
+            fullName: newUser.fullName,
+            phone: newUser.phone,
+            address: newUser.address,
+            loginAt: new Date().toISOString()
+        };
+        try {
+            localStorage.setItem(STORAGE_SESSION_KEY, JSON.stringify(session));
+        } catch (err) {
+            console.warn('Gagal menyimpan sesi register:', err);
+        }
+
+        document.getElementById('register-form').reset();
+        document.body.classList.remove('logged-out');
+        applySessionToHeader(session);
+        switchTab('pelanggan-store');
+
+        showToast(`Selamat datang, ${newUser.fullName}! Akun Pelanggan Anda aktif.`, 'success');
+        logActivity('registrasi', `Pengguna baru '${newUser.username}' mendaftar sebagai Pelanggan.`, newUser.username);
+
+        // Backup ke firestore jika online
+        if (typeof db !== 'undefined' && db) {
+            db.collection('users').doc(newUser.username).set(newUser).catch(() => {});
+        }
+    }
+}
+
+// Tampilkan nama user, role, navigasi dinamis, dan tombol role di header
 function applySessionToHeader(session) {
     const userEl = document.getElementById('logged-user');
-    if (userEl) userEl.textContent = session.username;
+    if (userEl) userEl.textContent = session.fullName || session.username;
 
     const roleEl = document.getElementById('logged-role');
     const role = session.role || 'Kasir';
     if (roleEl) roleEl.textContent = '(' + role + ')';
 
-    const btnKelola = document.getElementById('btn-kelola-user');
-    if (btnKelola) btnKelola.style.display = (role === 'Administrator') ? 'inline-flex' : 'none';
+    // Update class pada body untuk selektor styling role
+    document.body.classList.remove('role-admin', 'role-kasir', 'role-pelanggan');
+    if (role === 'Administrator') {
+        document.body.classList.add('role-admin');
+    } else if (role === 'Kasir') {
+        document.body.classList.add('role-kasir');
+    } else if (role === 'Pelanggan') {
+        document.body.classList.add('role-pelanggan');
+    }
+
+    // Toggle tombol header sesuai role
+    document.querySelectorAll('.btn-admin-only').forEach(el => {
+        el.style.display = (role === 'Administrator') ? 'inline-flex' : 'none';
+    });
+    document.querySelectorAll('.btn-kasir-only').forEach(el => {
+        el.style.display = (role === 'Kasir') ? 'inline-flex' : 'none';
+    });
+    document.querySelectorAll('.btn-pelanggan-only').forEach(el => {
+        el.style.display = (role === 'Pelanggan') ? 'inline-flex' : 'none';
+    });
+
+    // Render navigasi dinamis sesuai hak akses role
+    renderDynamicNavigation(role);
+
+    // Update counter keranjang belanja jika role Pelanggan
+    if (role === 'Pelanggan') {
+        updateCustomerCartBadge();
+    }
+}
+
+// Render dynamic tabs di #nav-container sesuai role
+function renderDynamicNavigation(role) {
+    const navContainer = document.getElementById('nav-container');
+    if (!navContainer) return;
+
+    let html = '';
+    if (role === 'Administrator') {
+        html = `
+            <button class="nav-btn active" onclick="switchTab('dashboard')">
+                <i class="fa-solid fa-chart-pie"></i> Dashboard
+            </button>
+            <button class="nav-btn" onclick="switchTab('barang')">
+                <i class="fa-solid fa-box-archive"></i> Manajemen Barang
+            </button>
+            <button class="nav-btn" onclick="switchTab('transaksi')">
+                <i class="fa-solid fa-cash-register"></i> Transaksi Kasir
+            </button>
+            <button class="nav-btn" onclick="switchTab('pesanan-admin')">
+                <i class="fa-solid fa-bell"></i> Pesanan Online 
+                <span class="nav-badge" id="nav-orders-count" style="display:none;">0</span>
+            </button>
+            <button class="nav-btn" onclick="switchTab('laporan')">
+                <i class="fa-solid fa-file-invoice-dollar"></i> Laporan Transaksi
+            </button>
+            <button class="nav-btn" onclick="switchTab('aktivitas')">
+                <i class="fa-solid fa-list-check"></i> Log Aktivitas
+            </button>
+        `;
+    } else if (role === 'Kasir') {
+        html = `
+            <button class="nav-btn active" onclick="switchTab('transaksi')">
+                <i class="fa-solid fa-cash-register"></i> Transaksi Kasir (POS)
+            </button>
+            <button class="nav-btn" onclick="switchTab('barang-kasir')">
+                <i class="fa-solid fa-boxes-stacked"></i> Stok & Produk
+            </button>
+            <button class="nav-btn" onclick="switchTab('pesanan-admin')">
+                <i class="fa-solid fa-bell"></i> Pesanan Masuk 
+                <span class="nav-badge" id="nav-orders-count-kasir" style="display:none;">0</span>
+            </button>
+            <button class="nav-btn" onclick="switchTab('riwayat-kasir')">
+                <i class="fa-solid fa-clock-rotate-left"></i> Riwayat Saya
+            </button>
+        `;
+    } else if (role === 'Pelanggan') {
+        html = `
+            <button class="nav-btn active" onclick="switchTab('pelanggan-store')">
+                <i class="fa-solid fa-store"></i> Belanja Produk
+            </button>
+            <button class="nav-btn" onclick="switchTab('pelanggan-orders')">
+                <i class="fa-solid fa-receipt"></i> Pesanan Saya 
+                <span class="nav-badge" id="nav-cust-orders-count" style="display:none;">0</span>
+            </button>
+            <button class="nav-btn" onclick="switchTab('pelanggan-profile')">
+                <i class="fa-solid fa-user-gear"></i> Profil Saya
+            </button>
+        `;
+    }
+
+    navContainer.innerHTML = html;
 }
 
 function showLoginError(msg) {
@@ -228,11 +597,10 @@ function showLoginError(msg) {
         errorEl.textContent = msg;
         errorEl.style.display = 'block';
     }
-    // Animasi goyang pada kartu login
     const card = document.querySelector('.login-card');
     if (card) {
         card.classList.remove('shake');
-        void card.offsetWidth; // restart animasi
+        void card.offsetWidth;
         card.classList.add('shake');
     }
 }
@@ -261,10 +629,12 @@ function handleLogin(e) {
         return;
     }
 
-    // Simpan sesi (tetap login sampai tombol Keluar ditekan)
     const session = {
         username: user.username,
         role: user.role || 'Kasir',
+        fullName: user.fullName || user.username,
+        phone: user.phone || '',
+        address: user.address || '',
         loginAt: new Date().toISOString()
     };
     try {
@@ -274,16 +644,30 @@ function handleLogin(e) {
         return;
     }
 
-    // Bersihkan form & tampilkan aplikasi
     document.getElementById('login-form').reset();
     document.body.classList.remove('logged-out');
     applySessionToHeader(session);
 
-    showToast(`Selamat datang, ${user.username}! (${session.role})`, 'success');
+    // Otomatis arahkan ke dashboard masing-masing role
+    if (session.role === 'Administrator') {
+        switchTab('dashboard');
+    } else if (session.role === 'Kasir') {
+        switchTab('transaksi');
+    } else if (session.role === 'Pelanggan') {
+        switchTab('pelanggan-store');
+    }
+
+    showToast(`Selamat datang, ${user.fullName || user.username}! (${session.role})`, 'success');
+    logActivity('login', `Pengguna '${user.username}' (${session.role}) berhasil login.`, user.username);
 }
 
 function handleLogout() {
     if (!confirm('Keluar dari akun ini?')) return;
+
+    const session = getSession();
+    if (session) {
+        logActivity('logout', `Pengguna '${session.username}' logout.`, session.username);
+    }
 
     try {
         localStorage.removeItem(STORAGE_SESSION_KEY);
@@ -292,19 +676,13 @@ function handleLogout() {
     }
 
     document.body.classList.add('logged-out');
+    document.body.classList.remove('role-admin', 'role-kasir', 'role-pelanggan');
 
-    // Reset form login
     const form = document.getElementById('login-form');
     if (form) form.reset();
-    const errorEl = document.getElementById('login-error');
-    if (errorEl) errorEl.style.display = 'none';
-    const passInput = document.getElementById('login-password');
-    if (passInput) passInput.type = 'password';
-    const passIcon = document.getElementById('toggle-pass-icon');
-    if (passIcon) passIcon.className = 'fa-solid fa-eye';
-
-    // Pindah ke tab dashboard agar bersih saat login berikutnya
-    switchTab('dashboard');
+    const regForm = document.getElementById('register-form');
+    if (regForm) regForm.reset();
+    switchAuthTab('login');
 }
 
 function togglePassword() {
@@ -322,17 +700,25 @@ function togglePassword() {
 }
 
 /* ==========================================================================
-   0b. KELOLA USER (TAMBAH / HAPUS / GANTI PASSWORD)
+   0b. KELOLA USER (TAMBAH / HAPUS / GANTI PASSWORD) - RBAC ADMIN
    ========================================================================== */
 
-function isAdmin() {
-    const session = getSession();
-    return !!(session && (session.role || 'Kasir') === 'Administrator');
+let currentUserRoleFilter = 'all';
+
+function filterUserList(roleFilter, btn) {
+    currentUserRoleFilter = roleFilter;
+    if (btn) {
+        const parent = btn.parentElement;
+        if (parent) {
+            parent.querySelectorAll('.btn-subtab').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+    }
+    renderUserList();
 }
 
 function openUserModal() {
-    if (!isAdmin()) {
-        showToast('Hanya Administrator yang bisa kelola user.', 'warning');
+    if (!requireRole(['Administrator'], 'mengelola akun pengguna')) {
         return;
     }
     const overlay = document.getElementById('user-modal-overlay');
@@ -340,11 +726,9 @@ function openUserModal() {
 
     renderUserList();
 
-    // Sembunyikan form tambah user bila bukan admin (pengaman ekstra)
     const addSection = document.getElementById('add-user-section');
     if (addSection) addSection.style.display = isAdmin() ? 'block' : 'none';
 
-    // Class .active dibutuhkan CSS (.modal-overlay tanpa .active = opacity 0 + pointer-events none)
     overlay.style.display = 'flex';
     requestAnimationFrame(() => overlay.classList.add('active'));
 }
@@ -357,7 +741,6 @@ function closeUserModal(e) {
         overlay.style.display = 'none';
     }
 
-    // Reset form-form di dalam modal
     const addForm = document.getElementById('form-add-user');
     if (addForm) addForm.reset();
     const chgForm = document.getElementById('form-change-pass');
@@ -372,14 +755,34 @@ function renderUserList() {
     const session = getSession();
     const currentName = session ? session.username : '';
 
-    if (users.length === 0) {
-        listEl.innerHTML = '<p class="form-info">Belum ada akun.</p>';
+    // Update filter counts
+    const countAll = document.getElementById('user-count-all');
+    const countAdmin = document.getElementById('user-count-admin');
+    const countKasir = document.getElementById('user-count-kasir');
+    const countPelanggan = document.getElementById('user-count-pelanggan');
+
+    if (countAll) countAll.textContent = users.length;
+    if (countAdmin) countAdmin.textContent = users.filter(u => (u.role || 'Kasir') === 'Administrator').length;
+    if (countKasir) countKasir.textContent = users.filter(u => (u.role || 'Kasir') === 'Kasir').length;
+    if (countPelanggan) countPelanggan.textContent = users.filter(u => (u.role || 'Kasir') === 'Pelanggan').length;
+
+    let filtered = users;
+    if (currentUserRoleFilter !== 'all') {
+        filtered = users.filter(u => (u.role || 'Kasir') === currentUserRoleFilter);
+    }
+
+    if (filtered.length === 0) {
+        listEl.innerHTML = '<p class="form-info" style="text-align:center; padding:1rem;">Tidak ada akun dalam kategori ini.</p>';
         return;
     }
 
-    listEl.innerHTML = users.map((u, idx) => {
+    listEl.innerHTML = filtered.map((u) => {
+        const realIdx = users.indexOf(u);
         const role = u.role || 'Kasir';
-        const roleClass = role === 'Administrator' ? 'admin' : 'kasir';
+        let roleClass = 'kasir';
+        if (role === 'Administrator') roleClass = 'admin';
+        else if (role === 'Pelanggan') roleClass = 'pelanggan';
+
         const isMe = u.username === currentName;
         const isLastAdmin = role === 'Administrator' &&
             users.filter(x => (x.role || 'Kasir') === 'Administrator').length <= 1;
@@ -392,16 +795,16 @@ function renderUserList() {
         return `
             <div class="user-item">
                 <div class="user-item-info">
-                    <span class="user-avatar">${escapeHtml(u.username.charAt(0).toUpperCase())}</span>
+                    <span class="user-avatar">${escapeHtml((u.fullName || u.username).charAt(0).toUpperCase())}</span>
                     <div>
-                        <div class="user-item-name">${escapeHtml(u.username)}</div>
-                        <div class="user-item-meta">${role}</div>
+                        <div class="user-item-name">${escapeHtml(u.fullName || u.username)} <span style="font-size:0.85rem; color:#888;">(@${escapeHtml(u.username)})</span></div>
+                        <div class="user-item-meta">${escapeHtml(u.phone ? '📱 ' + u.phone : role)}</div>
                     </div>
                 </div>
                 <div class="user-item-actions">
                     ${isMe ? '<span class="you-badge">Anda</span>' : ''}
-                    <span class="role-badge ${roleClass}">${role === 'Administrator' ? 'Admin' : 'Kasir'}</span>
-                    <button class="btn-user-delete" onclick="deleteUser(${idx})"
+                    <span class="role-badge ${roleClass}">${role}</span>
+                    <button class="btn-user-delete" onclick="deleteUser(${realIdx})"
                             ${cannotDelete ? 'disabled' : ''}
                             title="${cannotDelete ? reason : 'Hapus akun ini'}">
                         <i class="fa-solid fa-trash-can"></i>
@@ -425,12 +828,13 @@ function saveUsers(users) {
 function handleAddUser(e) {
     e.preventDefault();
 
-    if (!isAdmin()) {
-        showToast('Hanya Administrator yang bisa menambah user.', 'warning');
+    if (!requireRole(['Administrator'], 'menambah akun pengguna')) {
         return;
     }
 
     const username = document.getElementById('new-username').value.trim();
+    const fullname = document.getElementById('new-fullname') ? document.getElementById('new-fullname').value.trim() : '';
+    const phone = document.getElementById('new-phone') ? document.getElementById('new-phone').value.trim() : '';
     const password = document.getElementById('new-password').value;
     const role = document.getElementById('new-role').value;
 
@@ -442,9 +846,8 @@ function handleAddUser(e) {
         showToast('Password minimal 4 karakter.', 'warning');
         return;
     }
-    // Username tidak boleh mengandung koma (memicu error CSV import)
-    if (/[\\,\n\r]/.test(username)) {
-        showToast('Username tidak boleh mengandung koma atau baris baru.', 'warning');
+    if (/[\\,\n\r\s]/.test(username)) {
+        showToast('Username tidak boleh mengandung spasi atau koma.', 'warning');
         return;
     }
 
@@ -455,23 +858,30 @@ function handleAddUser(e) {
         return;
     }
 
-    users.push({
+    const newUserObj = {
         username: username,
         password: simpleHash(password),
         role: role,
+        fullName: fullname || username,
+        phone: phone || '',
         createdAt: new Date().toISOString()
-    });
+    };
+    users.push(newUserObj);
 
     if (saveUsers(users)) {
         document.getElementById('form-add-user').reset();
         renderUserList();
         showToast(`Akun '${username}' (${role}) berhasil ditambahkan!`, 'success');
+        logActivity('tambah_user', `Admin menambahkan akun baru '${username}' dengan role ${role}.`, username);
+
+        if (typeof db !== 'undefined' && db) {
+            db.collection('users').doc(username).set(newUserObj).catch(() => {});
+        }
     }
 }
 
 function deleteUser(index) {
-    if (!isAdmin()) {
-        showToast('Hanya Administrator yang bisa menghapus user.', 'warning');
+    if (!requireRole(['Administrator'], 'menghapus akun pengguna')) {
         return;
     }
 
@@ -494,10 +904,16 @@ function deleteUser(index) {
 
     if (!confirm(`Hapus akun '${target.username}' (${role})?`)) return;
 
+    const deletedUsername = target.username;
     users.splice(index, 1);
     if (saveUsers(users)) {
         renderUserList();
-        showToast(`Akun '${target.username}' berhasil dihapus.`, 'info');
+        showToast(`Akun '${deletedUsername}' berhasil dihapus.`, 'info');
+        logActivity('hapus_user', `Admin menghapus akun '${deletedUsername}' (${role}).`, deletedUsername);
+
+        if (typeof db !== 'undefined' && db) {
+            db.collection('users').doc(deletedUsername).delete().catch(() => {});
+        }
     }
 }
 
@@ -523,7 +939,7 @@ function handleChangePassword(e) {
         return;
     }
     if (newPass === oldPass) {
-        showToast('Password baru berbeda dari password lama.', 'warning');
+        showToast('Password baru harus berbeda dari password lama.', 'warning');
         return;
     }
 
@@ -544,6 +960,7 @@ function handleChangePassword(e) {
     if (saveUsers(users)) {
         document.getElementById('form-change-pass').reset();
         showToast('Password berhasil diganti!', 'success');
+        logActivity('ubah_password', `Pengguna '${session.username}' memperbarui password.`);
     }
 }
 
@@ -719,15 +1136,24 @@ function initData() {
     } else {
         try {
             products = JSON.parse(storedProducts);
-            // Migrasi: isi gambar dari sampel bila kode cocok, selain itu pakai default
+            // Migrasi: deteksi foto kosong atau placeholder generic bag, otomatis ganti dengan foto asli dari katalog
+            let updatedImages = false;
             products.forEach(p => {
-                if (!p.gambar) {
-                    const sample = SAMPLE_PRODUCTS.find(s => s.kode === p.kode);
-                    p.gambar = sample ? sample.gambar : DEFAULT_IMAGE;
+                const isGeneric = !p.gambar || 
+                    typeof p.gambar !== 'string' || 
+                    p.gambar.trim() === '' || 
+                    p.gambar === DEFAULT_IMAGE || 
+                    p.gambar.includes('1588964895597');
+                if (isGeneric) {
+                    p.gambar = getProductAutoImage(p);
+                    updatedImages = true;
                 }
             });
             if (products.length < 5) {
                 products = [...SAMPLE_PRODUCTS];
+                updatedImages = true;
+            }
+            if (updatedImages) {
                 saveProductsToStorage();
             }
         } catch (e) {
@@ -768,9 +1194,9 @@ function initData() {
             const idbMap = new Map(idbProducts.map(p => [p.kode, p.gambar]));
             let updated = false;
             products.forEach(p => {
-                if ((!p.gambar || p.gambar === DEFAULT_IMAGE) && idbMap.has(p.kode)) {
+                if ((!p.gambar || p.gambar === DEFAULT_IMAGE || p.gambar.includes('1588964895597')) && idbMap.has(p.kode)) {
                     const fullImg = idbMap.get(p.kode);
-                    if (fullImg && fullImg !== DEFAULT_IMAGE) {
+                    if (fullImg && fullImg !== DEFAULT_IMAGE && !fullImg.includes('1588964895597')) {
                         p.gambar = fullImg;
                         updated = true;
                     }
@@ -880,7 +1306,18 @@ function initFirebaseSync() {
 
         snapshot.forEach(doc => {
             const data = doc.data();
-            if (!data.gambar) data.gambar = DEFAULT_IMAGE;
+            const isGeneric = !data.gambar || 
+                data.gambar === DEFAULT_IMAGE || 
+                data.gambar.includes('1588964895597') || 
+                (typeof data.gambar === 'string' && data.gambar.trim() === '');
+
+            if (isGeneric) {
+                data.gambar = getProductAutoImage(data);
+                // Sinkronkan perbaikan foto ke Firestore bila diizinkan
+                if (typeof db !== 'undefined' && db && data.kode) {
+                    db.collection('products').doc(data.kode).set({ gambar: data.gambar }, { merge: true }).catch(() => {});
+                }
+            }
 
             // Perbaikan sekali saat pemuatan: kalau cloud tidak punya foto base64
             // padahal perangkat ini memilikinya, pakai & kirim kembali foto lokal itu.
@@ -902,6 +1339,8 @@ function initFirebaseSync() {
         products = remoteProducts;
         saveProductsToStorage();
         renderProducts();
+        if (typeof renderProductsKasir === 'function') renderProductsKasir();
+        if (typeof renderCustomerStorefront === 'function') renderCustomerStorefront();
         populateProductDropdown();
         renderDashboardStokMenipis();
     }, err => console.warn("Gagal mendengar data produk dari Firebase:", err));
@@ -935,7 +1374,13 @@ function pullFromFirestore() {
             const remoteProducts = [];
             productSnapshot.forEach(doc => {
                 const data = doc.data();
-                if (!data.gambar) data.gambar = DEFAULT_IMAGE;
+                const isGeneric = !data.gambar || 
+                    data.gambar === DEFAULT_IMAGE || 
+                    data.gambar.includes('1588964895597') || 
+                    (typeof data.gambar === 'string' && data.gambar.trim() === '');
+                if (isGeneric) {
+                    data.gambar = getProductAutoImage(data);
+                }
                 remoteProducts.push(data);
             });
             remoteProducts.sort((a, b) => a.kode.localeCompare(b.kode));
@@ -1077,9 +1522,24 @@ function pushLocalToFirestore(allowDeletes) {
 }
 
 /* ==========================================================================
-   2. NAVIGASI TAB
+   2. NAVIGASI TAB & RBAC PERMISSION GUARD
    ========================================================================== */
+const ROLE_TABS = {
+    'Administrator': ['dashboard', 'barang', 'transaksi', 'pesanan-admin', 'laporan', 'aktivitas'],
+    'Kasir': ['transaksi', 'barang-kasir', 'pesanan-admin', 'riwayat-kasir'],
+    'Pelanggan': ['pelanggan-store', 'pelanggan-orders', 'pelanggan-profile']
+};
+
 function switchTab(tabName) {
+    const role = getSessionRole();
+    const allowed = ROLE_TABS[role] || ['dashboard'];
+
+    if (!allowed.includes(tabName)) {
+        const defaultTab = allowed[0] || (role === 'Pelanggan' ? 'pelanggan-store' : (role === 'Kasir' ? 'transaksi' : 'dashboard'));
+        showToast(`Akses Dibatasi: Anda tidak memiliki izin untuk halaman '${tabName}'.`, 'warning');
+        tabName = defaultTab;
+    }
+
     const contents = document.querySelectorAll('.tab-content');
     contents.forEach(content => content.classList.remove('active'));
 
@@ -1098,6 +1558,7 @@ function switchTab(tabName) {
         activeBtn.classList.add('active');
     }
 
+    // Panggil fungsi render sesuai tab yang aktif
     if (tabName === 'transaksi') {
         populateProductDropdown();
         updateMaxQtyLabel();
@@ -1105,24 +1566,354 @@ function switchTab(tabName) {
         renderReports();
     } else if (tabName === 'barang') {
         renderProducts();
+        renderCategories();
+        populateCategoryDropdowns();
     } else if (tabName === 'dashboard') {
+        renderDashboardStats();
         renderDashboardStokMenipis();
         renderDashboardOmzet();
+        updateAdminOrdersBadge();
+    } else if (tabName === 'barang-kasir') {
+        renderProductsKasir();
+    } else if (tabName === 'pesanan-admin') {
+        renderAdminOrders();
+    } else if (tabName === 'riwayat-kasir') {
+        renderRiwayatKasir();
+    } else if (tabName === 'aktivitas') {
+        renderActivityLogs();
+    } else if (tabName === 'pelanggan-store') {
+        renderCustomerStorefront();
+    } else if (tabName === 'pelanggan-orders') {
+        renderCustomerOrders();
+    } else if (tabName === 'pelanggan-profile') {
+        renderCustomerProfile();
     }
 }
 
 /* ==========================================================================
-   3. MANAJEMEN BARANG (CRUD) WITH IMAGES
+   2b. MANAJEMEN KATEGORI PRODUK
+   ========================================================================== */
+let categories = [];
+
+const DEFAULT_CATEGORIES = [
+    { id: 'cat-1', name: 'Umum', desc: 'Kategori barang umum toko' },
+    { id: 'cat-2', name: 'Makanan & Minuman', desc: 'Makanan ringan, mie instan, minuman kemasan, susu' },
+    { id: 'cat-3', name: 'Sembako', desc: 'Beras, minyak goreng, gula, tepung, telur' },
+    { id: 'cat-4', name: 'Bumbu Dapur', desc: 'Kecap, saus, garam, micin, bumbu instan' },
+    { id: 'cat-5', name: 'Kebutuhan Rumah', desc: 'Sabun cuci, deterjen, sampo, pasta gigi, pembersih' },
+    { id: 'cat-6', name: 'Snack & Camilan', desc: 'Keripik, biskuit, wafer, permen, cokelat' }
+];
+
+function initCategories() {
+    try {
+        const stored = localStorage.getItem(STORAGE_CATEGORIES_KEY);
+        if (stored) {
+            categories = JSON.parse(stored);
+        } else {
+            categories = [...DEFAULT_CATEGORIES];
+            saveCategoriesToStorage();
+        }
+    } catch (e) {
+        categories = [...DEFAULT_CATEGORIES];
+    }
+    populateCategoryDropdowns();
+}
+
+function saveCategoriesToStorage() {
+    try {
+        localStorage.setItem(STORAGE_CATEGORIES_KEY, JSON.stringify(categories));
+    } catch (e) {
+        console.warn('Gagal menyimpan kategori:', e);
+    }
+    if (typeof db !== 'undefined' && db) {
+        categories.forEach(c => {
+            db.collection('categories').doc(c.id).set(c).catch(() => {});
+        });
+    }
+}
+
+function switchProductSubtab(subtab) {
+    const btnProd = document.getElementById('subtab-btn-produk');
+    const btnCat = document.getElementById('subtab-btn-kategori');
+    const contProd = document.getElementById('subtab-content-produk');
+    const contCat = document.getElementById('subtab-content-kategori');
+
+    if (subtab === 'kategori') {
+        if (btnProd) btnProd.classList.remove('active');
+        if (btnCat) btnCat.classList.add('active');
+        if (contProd) contProd.style.display = 'none';
+        if (contCat) contCat.style.display = 'block';
+        renderCategories();
+    } else {
+        if (btnCat) btnCat.classList.remove('active');
+        if (btnProd) btnProd.classList.add('active');
+        if (contCat) contCat.style.display = 'none';
+        if (contProd) contProd.style.display = 'block';
+        renderProducts();
+    }
+}
+
+function renderCategories() {
+    const tbody = document.getElementById('tbody-kategori');
+    if (!tbody) return;
+
+    if (categories.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:1.5rem; color:#888;">Belum ada kategori.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = categories.map((cat, idx) => {
+        const count = products.filter(p => (p.kategori || 'Umum') === cat.name).length;
+        const isUmum = cat.name.toLowerCase() === 'umum';
+
+        return `
+            <tr>
+                <td><strong>${escapeHtml(cat.name)}</strong></td>
+                <td>${escapeHtml(cat.desc || '-')}</td>
+                <td><span class="badge badge-stock-ok">${count} Produk</span></td>
+                <td>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="deleteCategory(${idx})"
+                            ${isUmum ? 'disabled title="Kategori Umum tidak boleh dihapus"' : 'title="Hapus Kategori"'}>
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function handleSaveCategory(e) {
+    e.preventDefault();
+    if (!requireRole(['Administrator'], 'menambah kategori')) return;
+
+    const nameInput = document.getElementById('kategori-nama').value.trim();
+    const descInput = document.getElementById('kategori-deskripsi').value.trim();
+
+    if (!nameInput) {
+        showToast('Nama kategori wajib diisi.', 'warning');
+        return;
+    }
+
+    if (categories.some(c => c.name.toLowerCase() === nameInput.toLowerCase())) {
+        showToast(`Kategori '${nameInput}' sudah ada!`, 'warning');
+        return;
+    }
+
+    const newCat = {
+        id: 'cat-' + Date.now().toString().slice(-6),
+        name: nameInput,
+        desc: descInput
+    };
+
+    categories.push(newCat);
+    saveCategoriesToStorage();
+    document.getElementById('form-kategori').reset();
+    renderCategories();
+    populateCategoryDropdowns();
+    showToast(`Kategori '${nameInput}' berhasil ditambahkan!`, 'success');
+    logActivity('kategori', `Admin menambahkan kategori '${nameInput}'.`, newCat.id);
+}
+
+function deleteCategory(idx) {
+    if (!requireRole(['Administrator'], 'menghapus kategori')) return;
+    const cat = categories[idx];
+    if (!cat) return;
+
+    if (cat.name.toLowerCase() === 'umum') {
+        showToast('Kategori default "Umum" tidak dapat dihapus.', 'warning');
+        return;
+    }
+
+    if (!confirm(`Hapus kategori '${cat.name}'? Produk berkategori ini akan dipindahkan ke kategori 'Umum'.`)) return;
+
+    // Pindahkan produk yang memakai kategori ini ke 'Umum'
+    products.forEach(p => {
+        if ((p.kategori || 'Umum') === cat.name) {
+            p.kategori = 'Umum';
+        }
+    });
+    saveProductsToStorage();
+
+    const catId = cat.id;
+    categories.splice(idx, 1);
+    saveCategoriesToStorage();
+
+    if (typeof db !== 'undefined' && db) {
+        db.collection('categories').doc(catId).delete().catch(() => {});
+    }
+
+    renderCategories();
+    populateCategoryDropdowns();
+    renderProducts();
+    showToast(`Kategori '${cat.name}' berhasil dihapus.`, 'info');
+    logActivity('kategori', `Admin menghapus kategori '${cat.name}'.`, catId);
+}
+
+function populateCategoryDropdowns() {
+    const adminCatSelect = document.getElementById('kategori-barang');
+    const kasirCatSelect = document.getElementById('kasir-kategori-barang');
+
+    const optionsHtml = categories.map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}</option>`).join('');
+
+    if (adminCatSelect) {
+        const cur = adminCatSelect.value;
+        adminCatSelect.innerHTML = optionsHtml;
+        if (cur) adminCatSelect.value = cur;
+    }
+    if (kasirCatSelect) {
+        const curKasir = kasirCatSelect.value;
+        kasirCatSelect.innerHTML = optionsHtml;
+        if (curKasir) kasirCatSelect.value = curKasir;
+    }
+}
+
+/* ==========================================================================
+   2c. AUDIT LOG AKTIVITAS TOKO (RBAC ADMIN)
+   ========================================================================== */
+let activityLogs = [];
+
+function initActivityLogs() {
+    try {
+        const stored = localStorage.getItem(STORAGE_ACTIVITY_LOGS_KEY);
+        activityLogs = stored ? JSON.parse(stored) : [];
+    } catch (e) {
+        activityLogs = [];
+    }
+}
+
+function logActivity(action, details, targetId) {
+    const session = getSession();
+    const entry = {
+        id: 'ACT-' + Date.now().toString().slice(-6),
+        timestamp: formatDate(new Date()),
+        rawDate: new Date().toISOString(),
+        user: session ? (session.fullName || session.username) : 'Sistem',
+        username: session ? session.username : 'sistem',
+        role: session ? (session.role || 'Kasir') : 'Sistem',
+        action: action,
+        details: details,
+        targetId: targetId || '-'
+    };
+
+    activityLogs.unshift(entry);
+    if (activityLogs.length > 500) {
+        activityLogs = activityLogs.slice(0, 500);
+    }
+
+    try {
+        localStorage.setItem(STORAGE_ACTIVITY_LOGS_KEY, JSON.stringify(activityLogs));
+    } catch (e) {
+        console.warn('Gagal menyimpan activity log:', e);
+    }
+
+    if (typeof db !== 'undefined' && db) {
+        db.collection('activity_logs').doc(entry.id).set(entry).catch(() => {});
+    }
+
+    const sectionAktivitas = document.getElementById('section-aktivitas');
+    if (sectionAktivitas && sectionAktivitas.classList.contains('active')) {
+        renderActivityLogs();
+    }
+}
+
+function renderActivityLogs() {
+    const tbody = document.getElementById('tbody-aktivitas');
+    if (!tbody) return;
+
+    const userFilter = document.getElementById('filter-aktivitas-user') ? document.getElementById('filter-aktivitas-user').value : 'all';
+    const searchVal = document.getElementById('search-aktivitas') ? document.getElementById('search-aktivitas').value.toLowerCase().trim() : '';
+
+    let filtered = activityLogs;
+    if (userFilter !== 'all') {
+        filtered = filtered.filter(l => (l.role || '').toLowerCase() === userFilter.toLowerCase());
+    }
+    if (searchVal) {
+        filtered = filtered.filter(l =>
+            (l.details || '').toLowerCase().includes(searchVal) ||
+            (l.user || '').toLowerCase().includes(searchVal) ||
+            (l.action || '').toLowerCase().includes(searchVal)
+        );
+    }
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:1.5rem; color:#888;">Belum ada riwayat aktivitas yang tercatat.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = filtered.map(log => {
+        let roleBadge = '<span class="role-badge kasir">Kasir</span>';
+        if (log.role === 'Administrator') roleBadge = '<span class="role-badge admin">Admin</span>';
+        else if (log.role === 'Pelanggan') roleBadge = '<span class="role-badge pelanggan">Pelanggan</span>';
+
+        return `
+            <tr>
+                <td><strong>${escapeHtml(log.id)}</strong></td>
+                <td>${escapeHtml(log.timestamp)}</td>
+                <td><strong>${escapeHtml(log.user)}</strong></td>
+                <td>${roleBadge}</td>
+                <td><span class="badge" style="background:#eef2ff; color:#3b82f6;">${escapeHtml(log.action)}</span></td>
+                <td>${escapeHtml(log.details)}</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function clearActivityLogs() {
+    if (!requireRole(['Administrator'], 'menghapus log aktivitas')) return;
+    if (!confirm('Apakah Anda yakin ingin mengosongkan seluruh riwayat log aktivitas?')) return;
+
+    activityLogs = [];
+    try {
+        localStorage.removeItem(STORAGE_ACTIVITY_LOGS_KEY);
+    } catch (e) {}
+
+    renderActivityLogs();
+    showToast('Seluruh log aktivitas berhasil dibersihkan.', 'info');
+}
+
+function exportActivityLogsCsv() {
+    if (!requireRole(['Administrator'], 'mengunduh log aktivitas')) return;
+    if (activityLogs.length === 0) {
+        showToast('Belum ada log aktivitas untuk diekspor.', 'warning');
+        return;
+    }
+
+    const headers = ['ID', 'Waktu', 'Pengguna', 'Role', 'Aksi', 'Keterangan'];
+    const rows = activityLogs.map(l => [
+        `"${l.id}"`,
+        `"${l.timestamp}"`,
+        `"${l.user}"`,
+        `"${l.role}"`,
+        `"${l.action}"`,
+        `"${(l.details || '').replace(/"/g, '""')}"`
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `Log_Aktivitas_Warung_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast('Log aktivitas berhasil diunduh (CSV).', 'success');
+}
+
+/* ==========================================================================
+   3. MANAJEMEN BARANG (CRUD) WITH IMAGES - KHUSUS ADMIN
    ========================================================================== */
 
 function renderProducts() {
     const tbody = document.getElementById('tbody-barang');
+    if (!tbody) return;
     const searchVal = document.getElementById('search-barang') ? document.getElementById('search-barang').value.toLowerCase().trim() : '';
     
     tbody.innerHTML = '';
 
     const filteredProducts = products.filter(p => 
-        p.nama.toLowerCase().includes(searchVal) || p.kode.toLowerCase().includes(searchVal)
+        p.nama.toLowerCase().includes(searchVal) || 
+        p.kode.toLowerCase().includes(searchVal) ||
+        (p.kategori && p.kategori.toLowerCase().includes(searchVal))
     );
 
     if (filteredProducts.length === 0) {
@@ -1140,9 +1931,12 @@ function renderProducts() {
             stockBadge = `<span class="badge badge-stock-low">Sedikit (${product.stok})</span>`;
         }
 
-        const imgUrl = product.gambar || DEFAULT_IMAGE;
+        const imgUrl = (product.gambar && product.gambar !== DEFAULT_IMAGE && !product.gambar.includes('1588964895597')) 
+            ? product.gambar 
+            : getProductAutoImage(product);
         const modalVal = product.modal || 0;
         const labaVal = product.harga - modalVal;
+        const kategoriTag = product.kategori ? `<span style="display:inline-block; font-size:0.75rem; background:#f1f5f9; padding:2px 6px; border-radius:4px; margin-top:3px; color:#475569;">${escapeHtml(product.kategori)}</span>` : '';
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -1150,7 +1944,10 @@ function renderProducts() {
                 <img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(product.nama)}" class="product-thumb" onerror="this.onerror=null; this.src='${DEFAULT_IMAGE}'">
             </td>
             <td><strong>${escapeHtml(product.kode)}</strong></td>
-            <td>${escapeHtml(product.nama)}</td>
+            <td>
+                <div>${escapeHtml(product.nama)}</div>
+                ${kategoriTag}
+            </td>
             <td>${formatRupiah(product.harga)}</td>
             <td>${formatRupiah(modalVal)}</td>
             <td><span style="color: var(--success-color); font-weight:600;">${formatRupiah(labaVal)}</span></td>
@@ -1186,24 +1983,28 @@ function generateProductCode() {
 function handleSaveProduct(e) {
     e.preventDefault();
 
+    if (!requireRole(['Administrator'], 'mengubah atau menambah barang')) {
+        return;
+    }
+
     try {
         const editIndex = parseInt(document.getElementById('edit-index').value);
         const namaInput = document.getElementById('nama-barang').value.trim();
         const hargaInput = parseInt(document.getElementById('harga-barang').value);
         const stokInput = parseInt(document.getElementById('stok-barang').value);
         const gambarInput = document.getElementById('gambar-barang').value.trim();
+        const kategoriInput = document.getElementById('kategori-barang') ? document.getElementById('kategori-barang').value : 'Umum';
+        const deskripsiInput = document.getElementById('deskripsi-barang') ? document.getElementById('deskripsi-barang').value.trim() : '';
 
         if (!namaInput || isNaN(hargaInput) || isNaN(stokInput)) {
-            showToast('Mohon isi Nama Barang, Harga Jual, dan Stok dengan angka yang benar.', 'warning');
+            showToast('Mohon isi Nama Barang, Harga Jual, dan Stok dengan benar.', 'warning');
             return;
         }
 
         let kodeInput;
         if (editIndex === -1) {
-            // Produk baru: auto-generate kode
             kodeInput = generateProductCode();
         } else {
-            // Edit produk: pertahankan kode lama
             if (!products[editIndex]) {
                 showToast('Data barang yang diedit tidak ditemukan. Silakan klik tombol Edit lagi.', 'danger');
                 resetProductForm();
@@ -1217,24 +2018,26 @@ function handleSaveProduct(e) {
         const productData = {
             kode: kodeInput,
             nama: namaInput,
+            kategori: kategoriInput,
+            deskripsi: deskripsiInput,
             harga: hargaInput,
             modal: modalInput,
             stok: stokInput,
-            gambar: gambarInput || DEFAULT_IMAGE
+            gambar: gambarInput || getProductAutoImage({ kode: kodeInput, nama: namaInput })
         };
 
         if (editIndex === -1) {
             products.push(productData);
             showToast('Barang berhasil ditambahkan!', 'success');
+            logActivity('tambah_produk', `Admin menambahkan produk '${productData.nama}' (${productData.kode})`, productData.kode);
         } else {
             products[editIndex] = productData;
             showToast('Data barang berhasil diperbarui!', 'success');
+            logActivity('edit_produk', `Admin memperbarui produk '${productData.nama}' (${productData.kode})`, productData.kode);
         }
 
         saveProductsToStorage();
 
-        // Simpan/backup langsung ke Firestore (jangan tunggu refresh)
-        // supaya perubahan tetap ada walau localStorage penuh atau halaman di-refresh.
         if (typeof db !== 'undefined' && db) {
             db.collection('products').doc(productData.kode).set(productData)
                 .catch(err => console.warn('Gagal simpan produk ke Firestore:', err));
@@ -1251,19 +2054,24 @@ function handleSaveProduct(e) {
 }
 
 function editProduct(index) {
+    if (!requireRole(['Administrator'], 'mengedit barang langsung')) {
+        return;
+    }
+
     const product = products[index];
     if (!product) return;
 
     document.getElementById('edit-index').value = index;
     document.getElementById('kode-barang').value = product.kode;
     document.getElementById('nama-barang').value = product.nama;
+    if (document.getElementById('kategori-barang')) document.getElementById('kategori-barang').value = product.kategori || 'Umum';
+    if (document.getElementById('deskripsi-barang')) document.getElementById('deskripsi-barang').value = product.deskripsi || '';
     document.getElementById('harga-barang').value = product.harga;
     document.getElementById('modal-barang').value = product.modal || '';
     document.getElementById('stok-barang').value = product.stok;
     document.getElementById('gambar-barang').value = product.gambar || '';
     updateLabaPreview();
 
-    // Tampilkan preview foto produk
     if (product.gambar) {
         const dropContent = document.getElementById('drop-zone-content');
         const dropPreview = document.getElementById('drop-zone-preview');
@@ -1274,7 +2082,6 @@ function editProduct(index) {
             dropImg.src = product.gambar;
             dropImg.onerror = function() { this.src = DEFAULT_IMAGE; };
         }
-        // Isi URL input jika bukan base64
         const urlInput = document.getElementById('gambar-url-input');
         if (urlInput && !product.gambar.startsWith('data:')) {
             urlInput.value = product.gambar;
@@ -1289,7 +2096,8 @@ function editProduct(index) {
 }
 
 function resetProductForm() {
-    document.getElementById('form-barang').reset();
+    const form = document.getElementById('form-barang');
+    if (form) form.reset();
     document.getElementById('edit-index').value = -1;
     document.getElementById('gambar-barang').value = '';
     document.getElementById('modal-barang').value = '';
@@ -1301,15 +2109,19 @@ function resetProductForm() {
 }
 
 function deleteProduct(index) {
+    if (!requireRole(['Administrator'], 'menghapus barang')) {
+        return;
+    }
+
     const product = products[index];
     if (!product) return;
 
     if (confirm(`Apakah Anda yakin ingin menghapus '${product.nama}'?`)) {
         const deletedKode = product.kode;
+        const deletedNama = product.nama;
         products.splice(index, 1);
         saveProductsToStorage();
 
-        // Hapus juga di Firestore supaya tidak muncul kembali saat refresh
         if (typeof db !== 'undefined' && db) {
             db.collection('products').doc(deletedKode).delete()
                 .catch(err => console.warn('Gagal hapus produk di Firestore:', err));
@@ -1319,6 +2131,7 @@ function deleteProduct(index) {
         populateProductDropdown();
         renderDashboardStokMenipis();
         showToast('Barang telah dihapus.', 'danger');
+        logActivity('hapus_produk', `Admin menghapus produk '${deletedNama}' (${deletedKode})`, deletedKode);
     }
 }
 
@@ -2458,7 +3271,8 @@ function processSaveTransaction() {
     const formattedDate = formatDate(now);
     const transactionId = 'TRX-' + Date.now().toString().slice(-6);
 
-    const kasirName = document.getElementById('input-kasir') ? document.getElementById('input-kasir').value.trim() || 'Kasir' : 'Kasir';
+    const session = getSession();
+    const kasirName = session ? (session.fullName || session.username) : (document.getElementById('input-kasir') ? document.getElementById('input-kasir').value.trim() || 'Kasir' : 'Kasir');
     const transactionData = {
         id: transactionId,
         timestamp: formattedDate,
@@ -2482,6 +3296,7 @@ function processSaveTransaction() {
 
     transactions.unshift(transactionData);
     const savedOk = saveTransactionsToStorage();
+    logActivity('transaksi', `Transaksi POS #${transactionId} diproses oleh '${kasirName}' (Total: ${formatRupiah(grandTotal)})`, transactionId);
 
     // Backup langsung ke Firestore (jangan tunggu refresh) - data aman walau localStorage penuh
     if (typeof db !== 'undefined' && db) {
@@ -2753,15 +3568,22 @@ function showReceiptFromReport(index) {
 }
 
 function deleteSingleReport(index) {
+    if (!requireRole(['Administrator'], 'menghapus transaksi')) return;
     const trx = transactions[index];
     if (!trx) return;
 
     if (confirm(`Apakah Anda yakin ingin menghapus catatan transaksi ${trx.id}?`)) {
+        const deletedId = trx.id;
         transactions.splice(index, 1);
         saveTransactionsToStorage();
 
+        if (typeof db !== 'undefined' && db) {
+            db.collection('transactions').doc(deletedId).delete().catch(() => {});
+        }
+
         renderReports();
         showToast('Transaksi berhasil dihapus dari laporan.', 'info');
+        logActivity('hapus_transaksi', `Admin menghapus transaksi #${deletedId}`, deletedId);
     }
 }
 
@@ -2788,107 +3610,107 @@ const BATCH_PRODUCTS = [
     // ===== Makanan & Minuman =====
     {
         kode: 'BRG016', nama: 'Mie Indomie Goreng', harga: 3500, modal: 2500, stok: 100,
-        gambar: 'https://images.unsplash.com/photo-1612927601601-6638404737ce?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG016']
     },
     {
         kode: 'BRG017', nama: 'Mie Indomie Kuah Soto', harga: 3500, modal: 2500, stok: 80,
-        gambar: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG017']
     },
     {
         kode: 'BRG018', nama: 'Mie Sedaap Goreng', harga: 3000, modal: 2200, stok: 90,
-        gambar: 'https://images.unsplash.com/photo-1555126634-323283e090fa?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG018']
     },
     {
         kode: 'BRG019', nama: 'Kopi ABC Sachet', harga: 2000, modal: 1400, stok: 150,
-        gambar: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG019']
     },
     {
         kode: 'BRG020', nama: 'Kopi White Koffie', harga: 3000, modal: 2000, stok: 60,
-        gambar: 'https://images.unsplash.com/photo-1497515114583-f21e2f1f577a?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG020']
     },
     {
         kode: 'BRG021', nama: 'Teh Sariwangi Celup', harga: 6500, modal: 5000, stok: 40,
-        gambar: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG021']
     },
     {
         kode: 'BRG022', nama: 'Teh Pucuk Harum 350ml', harga: 4000, modal: 2800, stok: 70,
-        gambar: 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG022']
     },
     {
         kode: 'BRG023', nama: 'Air Mineral Aqua 1500ml', harga: 6500, modal: 4500, stok: 50,
-        gambar: 'https://images.unsplash.com/photo-1523362628745-0c100150b504?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG023']
     },
     {
         kode: 'BRG024', nama: 'Susu UHT Ultra Milk 1L', harga: 16000, modal: 13000, stok: 30,
-        gambar: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG024']
     },
     {
         kode: 'BRG025', nama: 'Susu Bendera Kental Manis', harga: 10000, modal: 8000, stok: 35,
-        gambar: 'https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG025']
     },
     // ===== Snack & Cemilan =====
     {
         kode: 'BRG026', nama: 'Chitato Sapi Panggang 68g', harga: 10500, modal: 8500, stok: 25,
-        gambar: 'https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG026']
     },
     {
         kode: 'BRG027', nama: 'Qtela Singkong Balado 60g', harga: 8000, modal: 6000, stok: 30,
-        gambar: 'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG027']
     },
     {
         kode: 'BRG028', nama: 'Taro Net Seaweed 40g', harga: 5500, modal: 4000, stok: 40,
-        gambar: 'https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG028']
     },
     {
         kode: 'BRG029', nama: 'Permen Kopiko 78', harga: 1500, modal: 1000, stok: 200,
-        gambar: 'https://images.unsplash.com/photo-1582176604856-e8d411e9b95f?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG029']
     },
     {
         kode: 'BRG030', nama: 'Permen Relaxa', harga: 1500, modal: 1000, stok: 150,
-        gambar: 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG030']
     },
     // ===== Bumbu Dapur =====
     {
         kode: 'BRG031', nama: 'Garam Dapur Refina 500g', harga: 5000, modal: 3500, stok: 50,
-        gambar: 'https://images.unsplash.com/photo-1518110925495-5ae33f44aa2d?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG031']
     },
     {
         kode: 'BRG032', nama: 'Kaldu Masako Ayam 100g', harga: 6000, modal: 4500, stok: 45,
-        gambar: 'https://images.unsplash.com/photo-1606923829579-0cb981a83e2e?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG032']
     },
     {
         kode: 'BRG033', nama: 'Lada Bubuk Koepoe 50g', harga: 8000, modal: 6000, stok: 30,
-        gambar: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG033']
     },
     {
         kode: 'BRG034', nama: 'Saus Sambal ABC 275ml', harga: 10000, modal: 7500, stok: 35,
-        gambar: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG034']
     },
     {
         kode: 'BRG035', nama: 'Kecap Manis ABC 275ml', harga: 12000, modal: 9000, stok: 40,
-        gambar: 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG035']
     },
     // ===== Kebutuhan Pokok =====
     {
         kode: 'BRG036', nama: 'Margarin Blue Band 200g', harga: 9500, modal: 7500, stok: 30,
-        gambar: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG036']
     },
     {
         kode: 'BRG037', nama: 'Roti Tawar Sari Roti', harga: 11000, modal: 8500, stok: 20,
-        gambar: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG037']
     },
     {
         kode: 'BRG038', nama: 'Telur Ayam Butir', harga: 2500, modal: 2100, stok: 100,
-        gambar: 'https://images.unsplash.com/photo-1516448620398-c5f44bf9f441?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG038']
     },
     {
         kode: 'BRG039', nama: 'Sarden ABC Tomat 155g', harga: 11000, modal: 8500, stok: 25,
-        gambar: 'https://images.unsplash.com/photo-1534604973900-c43d4c4d8a46?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG039']
     },
     // ===== Kebutuhan Rumah Tangga =====
     {
         kode: 'BRG040', nama: 'Shampo Pantene Sachet', harga: 1000, modal: 650, stok: 200,
-        gambar: 'https://images.unsplash.com/photo-1585751119414-ef2636f8aede?w=300&auto=format&fit=crop'
+        gambar: PRODUCT_IMAGE_CATALOG['BRG040']
     },
 ];
 
@@ -2899,15 +3721,20 @@ function loadBatchSampleProducts() {
     BATCH_PRODUCTS.forEach(sample => {
         const exists = products.find(p => p.kode === sample.kode);
         if (!exists) {
-            products.push({ ...sample });
+            products.push({ ...sample, gambar: PRODUCT_IMAGE_CATALOG[sample.kode] || sample.gambar });
             addedCount++;
         } else {
+            if (!exists.gambar || exists.gambar === DEFAULT_IMAGE || exists.gambar.includes('1588964895597')) {
+                exists.gambar = PRODUCT_IMAGE_CATALOG[sample.kode] || sample.gambar;
+            }
             skippedCount++;
         }
     });
 
     saveProductsToStorage();
     renderProducts();
+    if (typeof renderProductsKasir === 'function') renderProductsKasir();
+    if (typeof renderCustomerStorefront === 'function') renderCustomerStorefront();
     populateProductDropdown();
 
     if (addedCount > 0) {
@@ -3302,7 +4129,9 @@ function renderDashboardStokMenipis() {
 
     tbody.innerHTML = '';
     menipis.forEach(product => {
-        const imgUrl = product.gambar || DEFAULT_IMAGE;
+        const imgUrl = (product.gambar && product.gambar !== DEFAULT_IMAGE && !product.gambar.includes('1588964895597')) 
+            ? product.gambar 
+            : getProductAutoImage(product);
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td><img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(product.nama)}" class="product-thumb" onerror="this.onerror=null; this.src='${DEFAULT_IMAGE}'"></td>
@@ -3994,3 +4823,1508 @@ function printProductBarcode() {
     `);
     printWindow.document.close();
 }
+
+/* ==========================================================================
+   12. FITUR KHUSUS KASIR (KATALOG & STOK, RESTOCK, EDIT DIIZINKAN)
+   ========================================================================== */
+
+function renderProductsKasir() {
+    const tbody = document.getElementById('tbody-barang-kasir');
+    if (!tbody) return;
+
+    const searchVal = document.getElementById('search-barang-kasir') ? document.getElementById('search-barang-kasir').value.toLowerCase().trim() : '';
+    tbody.innerHTML = '';
+
+    const filtered = products.filter(p =>
+        p.nama.toLowerCase().includes(searchVal) ||
+        p.kode.toLowerCase().includes(searchVal) ||
+        (p.kategori && p.kategori.toLowerCase().includes(searchVal))
+    );
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:1.5rem; color:#888;">Tidak ada produk yang cocok.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = filtered.map(p => {
+        const realIdx = products.findIndex(item => item.kode === p.kode);
+        const imgUrl = (p.gambar && p.gambar !== DEFAULT_IMAGE && !p.gambar.includes('1588964895597')) 
+            ? p.gambar 
+            : getProductAutoImage(p);
+
+        let stockBadge = `<span class="badge badge-stock-ok">${p.stok}</span>`;
+        if (p.stok <= 0) {
+            stockBadge = `<span class="badge badge-stock-out">Habis (0)</span>`;
+        } else if (p.stok <= 5) {
+            stockBadge = `<span class="badge badge-stock-low">Menipis (${p.stok})</span>`;
+        }
+
+        return `
+            <tr>
+                <td>
+                    <img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(p.nama)}" class="product-thumb" onerror="this.onerror=null; this.src='${DEFAULT_IMAGE}'">
+                </td>
+                <td><strong>${escapeHtml(p.kode)}</strong></td>
+                <td>
+                    <div><strong>${escapeHtml(p.nama)}</strong></div>
+                    <small style="color:#666;">${escapeHtml(p.deskripsi || '-')}</small>
+                </td>
+                <td><span class="product-category-tag">${escapeHtml(p.kategori || 'Umum')}</span></td>
+                <td><strong>${formatRupiah(p.harga)}</strong></td>
+                <td>${stockBadge}</td>
+                <td>
+                    <div class="action-btns">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="quickRestockProduct(${realIdx})" title="Tambah / Restock Stok">
+                            <i class="fa-solid fa-plus"></i> Restock
+                        </button>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="openKasirProductModal(${realIdx})" title="Edit Info Produk">
+                            <i class="fa-solid fa-pen-to-square"></i> Edit
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function quickRestockProduct(realIdx) {
+    if (!requireRole(['Kasir', 'Administrator'], 'menambah stok')) return;
+    const p = products[realIdx];
+    if (!p) return;
+
+    const tambahan = prompt(`Tambah stok untuk '${p.nama}' (Stok sekarang: ${p.stok}):\nMasukkan jumlah barang masuk:`, "10");
+    if (tambahan === null) return;
+
+    const qty = parseInt(tambahan);
+    if (isNaN(qty) || qty <= 0) {
+        showToast('Jumlah stok harus berupa angka lebih dari 0!', 'warning');
+        return;
+    }
+
+    p.stok += qty;
+    saveProductsToStorage();
+    renderProductsKasir();
+    renderProducts();
+    populateProductDropdown();
+    renderDashboardStokMenipis();
+
+    showToast(`Stok '${p.nama}' ditambah ${qty}. Total sekarang: ${p.stok}.`, 'success');
+    logActivity('restock_kasir', `Kasir menambah stok '${p.nama}' sebanyak +${qty} unit. Total: ${p.stok}`, p.kode);
+
+    if (typeof db !== 'undefined' && db) {
+        db.collection('products').doc(p.kode).set(p).catch(() => {});
+    }
+}
+
+function openKasirProductModal(index) {
+    if (!requireRole(['Kasir', 'Administrator'], 'mengelola produk')) return;
+    const modal = document.getElementById('kasir-product-modal');
+    if (!modal) return;
+
+    populateCategoryDropdowns();
+
+    const titleEl = document.getElementById('kasir-modal-title');
+    const idxInput = document.getElementById('kasir-edit-index');
+    const namaInput = document.getElementById('kasir-nama-barang');
+    const katSelect = document.getElementById('kasir-kategori-barang');
+    const hargaInput = document.getElementById('kasir-harga-barang');
+    const stokInput = document.getElementById('kasir-stok-barang');
+    const descInput = document.getElementById('kasir-deskripsi-barang');
+    const imgUrlInput = document.getElementById('kasir-gambar-url');
+
+    if (index === -1) {
+        // Tambah produk baru
+        titleEl.innerHTML = `<i class="fa-solid fa-plus-circle"></i> Tambah Produk Baru (Kasir)`;
+        idxInput.value = -1;
+        document.getElementById('form-barang-kasir').reset();
+    } else {
+        // Edit produk yang ada
+        const p = products[index];
+        if (!p) return;
+        titleEl.innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Edit Info Produk: ${escapeHtml(p.nama)}`;
+        idxInput.value = index;
+        namaInput.value = p.nama;
+        if (katSelect) katSelect.value = p.kategori || 'Umum';
+        hargaInput.value = p.harga;
+        stokInput.value = p.stok;
+        descInput.value = p.deskripsi || '';
+        imgUrlInput.value = p.gambar || '';
+    }
+
+    modal.style.display = 'flex';
+    requestAnimationFrame(() => modal.classList.add('active'));
+}
+
+function closeKasirProductModal(e) {
+    if (e && e.target !== e.currentTarget) return;
+    const modal = document.getElementById('kasir-product-modal');
+    if (modal) {
+        modal.classList.remove('active');
+        modal.style.display = 'none';
+    }
+}
+
+function handleKasirImageUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+        showToast('Ukuran foto terlalu besar (maksimal 2MB)!', 'warning');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+        const urlInput = document.getElementById('kasir-gambar-url');
+        if (urlInput) urlInput.value = ev.target.result;
+        showToast('Foto produk berhasil dipilih!', 'success');
+    };
+    reader.readAsDataURL(file);
+}
+
+function handleSaveProductKasir(e) {
+    e.preventDefault();
+    if (!requireRole(['Kasir', 'Administrator'], 'menyimpan produk')) return;
+
+    const editIndex = parseInt(document.getElementById('kasir-edit-index').value);
+    const nama = document.getElementById('kasir-nama-barang').value.trim();
+    const kategori = document.getElementById('kasir-kategori-barang').value;
+    const harga = parseInt(document.getElementById('kasir-harga-barang').value);
+    const stok = parseInt(document.getElementById('kasir-stok-barang').value);
+    const deskripsi = document.getElementById('kasir-deskripsi-barang').value.trim();
+    const existingProd = editIndex !== -1 ? products[editIndex] : null;
+    const fallbackImg = getProductAutoImage({ kode: existingProd ? existingProd.kode : '', nama: nama });
+    const gambar = document.getElementById('kasir-gambar-url').value.trim() || fallbackImg;
+
+    if (!nama || isNaN(harga) || isNaN(stok)) {
+        showToast('Mohon isi nama barang, harga, dan stok dengan benar!', 'warning');
+        return;
+    }
+
+    let kodeInput;
+    let modalVal = 0;
+
+    if (editIndex === -1) {
+        // Produk baru
+        kodeInput = generateProductCode();
+        modalVal = 0; // Kasir tidak mengisi harga modal
+        const newProduct = {
+            kode: kodeInput,
+            nama: nama,
+            kategori: kategori,
+            deskripsi: deskripsi,
+            harga: harga,
+            modal: modalVal,
+            stok: stok,
+            gambar: gambar
+        };
+        products.push(newProduct);
+        showToast(`Produk '${nama}' berhasil ditambahkan!`, 'success');
+        logActivity('produk_kasir', `Kasir menambahkan produk baru '${nama}' (${kodeInput})`, kodeInput);
+
+        if (typeof db !== 'undefined' && db) {
+            db.collection('products').doc(kodeInput).set(newProduct).catch(() => {});
+        }
+    } else {
+        // Edit produk lama
+        const existing = products[editIndex];
+        if (!existing) return;
+        kodeInput = existing.kode;
+        modalVal = existing.modal || 0; // Pertahankan harga modal asli dari admin!
+
+        existing.nama = nama;
+        existing.kategori = kategori;
+        existing.deskripsi = deskripsi;
+        existing.harga = harga;
+        existing.stok = stok;
+        existing.gambar = gambar;
+
+        showToast(`Info produk '${nama}' berhasil diperbarui!`, 'success');
+        logActivity('produk_kasir', `Kasir memperbarui data produk '${nama}' (${kodeInput})`, kodeInput);
+
+        if (typeof db !== 'undefined' && db) {
+            db.collection('products').doc(kodeInput).set(existing).catch(() => {});
+        }
+    }
+
+    saveProductsToStorage();
+    closeKasirProductModal();
+    renderProductsKasir();
+    renderProducts();
+    populateProductDropdown();
+    renderDashboardStokMenipis();
+}
+
+function openKasirPasswordModal() {
+    const modal = document.getElementById('kasir-password-modal');
+    if (!modal) return;
+    const form = document.getElementById('form-kasir-change-pass');
+    if (form) form.reset();
+    modal.style.display = 'flex';
+    requestAnimationFrame(() => modal.classList.add('active'));
+}
+
+function closeKasirPasswordModal(e) {
+    if (e && e.target !== e.currentTarget) return;
+    const modal = document.getElementById('kasir-password-modal');
+    if (modal) {
+        modal.classList.remove('active');
+        modal.style.display = 'none';
+    }
+}
+
+function handleKasirChangePassword(e) {
+    e.preventDefault();
+    const session = getSession();
+    if (!session) {
+        showToast('Sesi tidak ditemukan. Silakan login ulang.', 'danger');
+        return;
+    }
+
+    const oldPass = document.getElementById('kasir-old-password').value;
+    const newPass = document.getElementById('kasir-new-password').value;
+    const confirmPass = document.getElementById('kasir-confirm-password').value;
+
+    if (newPass.length < 4) {
+        showToast('Password baru minimal 4 karakter!', 'warning');
+        return;
+    }
+    if (newPass !== confirmPass) {
+        showToast('Ulangi password baru tidak cocok!', 'danger');
+        return;
+    }
+
+    const users = getUsers();
+    const u = users.find(item => item.username === session.username);
+    if (!u) {
+        showToast('Akun tidak ditemukan.', 'danger');
+        return;
+    }
+
+    if (u.password !== simpleHash(oldPass)) {
+        showToast('Password saat ini salah!', 'danger');
+        return;
+    }
+
+    u.password = simpleHash(newPass);
+    if (saveUsers(users)) {
+        closeKasirPasswordModal();
+        showToast('Password kasir berhasil diperbarui!', 'success');
+        logActivity('ubah_password', `Kasir '${session.username}' mengubah password.`, session.username);
+    }
+}
+
+/* ==========================================================================
+   13. RIWAYAT PENJUALAN KHUSUS KASIR PRIBADI
+   ========================================================================== */
+
+function renderRiwayatKasir() {
+    const tbody = document.getElementById('tbody-riwayat-kasir');
+    const statTrx = document.getElementById('stat-kasir-trx');
+    const statOmzet = document.getElementById('stat-kasir-omzet');
+    if (!tbody) return;
+
+    const session = getSession();
+    const kasirName = session ? session.username : '';
+
+    // Filter transaksi yang diproses kasir ini
+    const myTrx = transactions.filter(t =>
+        (t.kasir && t.kasir.toLowerCase() === kasirName.toLowerCase()) ||
+        (t.kasir && session.fullName && t.kasir.toLowerCase() === session.fullName.toLowerCase())
+    );
+
+    const totalTrx = myTrx.length;
+    const totalOmzet = myTrx.reduce((sum, t) => sum + (t.total || 0), 0);
+
+    if (statTrx) statTrx.textContent = `${totalTrx} Transaksi`;
+    if (statOmzet) statOmzet.textContent = formatRupiah(totalOmzet);
+
+    if (myTrx.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:1.5rem; color:#888;">Belum ada riwayat transaksi yang Anda lakukan.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = myTrx.map((t, idx) => {
+        const realIdx = transactions.indexOf(t);
+        return `
+            <tr>
+                <td>${idx + 1}</td>
+                <td><strong>${escapeHtml(t.id)}</strong></td>
+                <td>${escapeHtml(t.timestamp)}</td>
+                <td>${t.totalItem || (t.items ? t.items.length : 0)} Item</td>
+                <td><strong>${formatRupiah(t.total)}</strong></td>
+                <td>${getMetodeBadge(t.metodePembayaran)}</td>
+                <td>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="showReceiptFromReport(${realIdx})">
+                        <i class="fa-solid fa-receipt"></i> Struk
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+/* ==========================================================================
+   14. ONLINE STOREFRONT PELANGGAN & KERANJANG BELANJA
+   ========================================================================== */
+
+let customerCart = [];
+let currentCustomerCategoryFilter = 'all';
+let currentCustomerDetailProduct = null;
+
+function initCustomerCart() {
+    try {
+        const session = getSession();
+        const cartKey = STORAGE_CUSTOMER_CART_KEY + (session ? '_' + session.username : '');
+        const stored = localStorage.getItem(cartKey);
+        customerCart = stored ? JSON.parse(stored) : [];
+    } catch (e) {
+        customerCart = [];
+    }
+    updateCustomerCartBadge();
+}
+
+function saveCustomerCart() {
+    try {
+        const session = getSession();
+        const cartKey = STORAGE_CUSTOMER_CART_KEY + (session ? '_' + session.username : '');
+        localStorage.setItem(cartKey, JSON.stringify(customerCart));
+    } catch (e) {
+        console.warn('Gagal menyimpan cart pelanggan:', e);
+    }
+    updateCustomerCartBadge();
+}
+
+function updateCustomerCartBadge() {
+    const totalQty = customerCart.reduce((sum, i) => sum + i.qty, 0);
+    const countPills = document.querySelectorAll('#customer-cart-count, #customer-cart-btn-qty');
+    countPills.forEach(p => {
+        p.textContent = totalQty;
+    });
+}
+
+function renderCustomerStorefront() {
+    // 0. Update Store Banner Branding jika ada
+    const bannerName = document.getElementById('store-banner-name');
+    const bannerTagline = document.getElementById('store-banner-tagline');
+    if (bannerName && displaySettings && displaySettings.shopName) {
+        bannerName.textContent = displaySettings.shopName;
+    }
+    if (bannerTagline && displaySettings && displaySettings.shopTagline) {
+        bannerTagline.textContent = displaySettings.shopTagline;
+    }
+
+    // 1. Render Category Filter Pills
+    const pillsContainer = document.getElementById('customer-category-pills');
+    if (pillsContainer) {
+        let pillsHtml = `<button type="button" class="cat-pill ${currentCustomerCategoryFilter === 'all' ? 'active' : ''}" onclick="setCustomerCategoryFilter('all', this)"><i class="fa-solid fa-border-all"></i> Semua</button>`;
+        categories.forEach(cat => {
+            const isActive = currentCustomerCategoryFilter.toLowerCase() === cat.name.toLowerCase();
+            pillsHtml += `<button type="button" class="cat-pill ${isActive ? 'active' : ''}" onclick="setCustomerCategoryFilter('${escapeHtml(cat.name)}', this)">${escapeHtml(cat.name)}</button>`;
+        });
+        pillsContainer.innerHTML = pillsHtml;
+    }
+
+    // 2. Filter & Sort Products
+    const searchInput = document.getElementById('search-pelanggan-store') || document.getElementById('customer-search-input');
+    const searchVal = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+    const sortSelect = document.getElementById('sort-pelanggan-store') || document.getElementById('customer-sort-select');
+    const sortVal = sortSelect ? sortSelect.value : 'default';
+
+    let list = [...products];
+
+    // Filter Kategori
+    if (currentCustomerCategoryFilter !== 'all') {
+        list = list.filter(p => (p.kategori || 'Umum').toLowerCase() === currentCustomerCategoryFilter.toLowerCase());
+    }
+
+    // Filter Pencarian
+    if (searchVal) {
+        list = list.filter(p =>
+            p.nama.toLowerCase().includes(searchVal) ||
+            p.kode.toLowerCase().includes(searchVal) ||
+            (p.kategori && p.kategori.toLowerCase().includes(searchVal)) ||
+            (p.deskripsi && p.deskripsi.toLowerCase().includes(searchVal))
+        );
+    }
+
+    // Sorting
+    if (sortVal === 'price-low' || sortVal === 'price-asc') {
+        list.sort((a, b) => a.harga - b.harga);
+    } else if (sortVal === 'price-high' || sortVal === 'price-desc') {
+        list.sort((a, b) => b.harga - a.harga);
+    } else if (sortVal === 'name-az' || sortVal === 'name-asc') {
+        list.sort((a, b) => a.nama.localeCompare(b.nama));
+    } else if (sortVal === 'stock-desc') {
+        list.sort((a, b) => b.stok - a.stok);
+    }
+
+    // Update Counter
+    const countEl = document.getElementById('pelanggan-products-count');
+    if (countEl) {
+        countEl.textContent = `Menampilkan ${list.length} produk`;
+    }
+
+    // 3. Render Cards
+    const grid = document.getElementById('pelanggan-products-grid') || document.getElementById('customer-products-grid');
+    if (!grid) return;
+
+    if (list.length === 0) {
+        grid.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align:center; padding:3rem 1rem; color:#888;">
+                <i class="fa-solid fa-box-open" style="font-size:3rem; margin-bottom:1rem; opacity:0.4;"></i>
+                <p>Tidak ada produk yang cocok dengan pencarian atau kategori ini.</p>
+            </div>
+        `;
+        return;
+    }
+
+    grid.innerHTML = list.map(p => {
+        const isOutOfStock = p.stok <= 0;
+        const imgUrl = (p.gambar && p.gambar !== DEFAULT_IMAGE && !p.gambar.includes('1588964895597')) 
+            ? p.gambar 
+            : getProductAutoImage(p);
+
+        return `
+            <div class="pelanggan-product-card">
+                <div class="product-card-img" onclick="openCustomerProductDetail('${p.kode}')">
+                    <img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(p.nama)}" onerror="this.onerror=null; this.src='${DEFAULT_IMAGE}'">
+                    <span class="product-card-category">${escapeHtml(p.kategori || 'Umum')}</span>
+                    ${isOutOfStock ? '<div class="product-out-overlay">Stok Habis</div>' : ''}
+                </div>
+                <div class="product-card-body">
+                    <h4 class="product-card-title" onclick="openCustomerProductDetail('${p.kode}')" title="${escapeHtml(p.nama)}">${escapeHtml(p.nama)}</h4>
+                    <p class="product-card-desc">${escapeHtml(p.deskripsi || 'Produk berkualitas pilihan warung digital.')}</p>
+                    <div class="product-card-price-row">
+                        <span class="product-card-price">${formatRupiah(p.harga)}</span>
+                        <span class="product-card-stock">${isOutOfStock ? 'Habis' : 'Stok: ' + p.stok}</span>
+                    </div>
+                    <div class="product-card-actions">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="openCustomerProductDetail('${p.kode}')">
+                            <i class="fa-solid fa-eye"></i> Detail
+                        </button>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="quickCustomerAddToCart('${p.kode}')" ${isOutOfStock ? 'disabled' : ''}>
+                            <i class="fa-solid fa-cart-plus"></i> Beli
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function setCustomerCategoryFilter(catName, btn) {
+    currentCustomerCategoryFilter = catName;
+    if (btn) {
+        const parent = btn.parentElement;
+        if (parent) {
+            parent.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+    }
+    renderCustomerStorefront();
+}
+
+function filterCustomerStore() {
+    renderCustomerStorefront();
+}
+
+function openCustomerProductDetail(kode) {
+    const product = products.find(p => p.kode === kode);
+    if (!product) return;
+
+    currentCustomerDetailProduct = product;
+
+    const modal = document.getElementById('customer-product-detail-modal');
+    if (!modal) return;
+
+    const modalImg = (product.gambar && product.gambar !== DEFAULT_IMAGE && !product.gambar.includes('1588964895597')) 
+        ? product.gambar 
+        : getProductAutoImage(product);
+    document.getElementById('cust-modal-img').src = modalImg;
+    document.getElementById('cust-modal-name').textContent = product.nama;
+    document.getElementById('cust-modal-category').textContent = product.kategori || 'Umum';
+    document.getElementById('cust-modal-price').textContent = formatRupiah(product.harga);
+    document.getElementById('cust-modal-desc').textContent = product.deskripsi || 'Tidak ada keterangan khusus.';
+
+    const stockBadge = document.getElementById('cust-modal-stock');
+    if (stockBadge) {
+        if (product.stok <= 0) {
+            stockBadge.textContent = 'Stok Habis';
+            stockBadge.className = 'badge badge-stock-out';
+        } else {
+            stockBadge.textContent = `Tersedia: ${product.stok} unit`;
+            stockBadge.className = 'badge badge-stock-ok';
+        }
+    }
+
+    const qtyInput = document.getElementById('cust-modal-qty');
+    if (qtyInput) qtyInput.value = 1;
+
+    const btnAdd = document.getElementById('btn-cust-add-to-cart');
+    if (btnAdd) {
+        btnAdd.disabled = product.stok <= 0;
+    }
+
+    updateCustDetailSubtotal();
+
+    modal.style.display = 'flex';
+    requestAnimationFrame(() => modal.classList.add('active'));
+}
+
+function closeCustomerProductDetail(e) {
+    if (e && e.target !== e.currentTarget) return;
+    const modal = document.getElementById('customer-product-detail-modal');
+    if (modal) {
+        modal.classList.remove('active');
+        modal.style.display = 'none';
+    }
+}
+
+function adjustCustDetailQty(delta) {
+    const input = document.getElementById('cust-modal-qty');
+    if (!input || !currentCustomerDetailProduct) return;
+
+    let qty = parseInt(input.value) + delta;
+    if (qty < 1) qty = 1;
+    if (qty > currentCustomerDetailProduct.stok) {
+        qty = currentCustomerDetailProduct.stok;
+        showToast(`Stok maksimal tersedia hanya ${currentCustomerDetailProduct.stok} unit.`, 'warning');
+    }
+    input.value = qty;
+    updateCustDetailSubtotal();
+}
+
+function updateCustDetailSubtotal() {
+    if (!currentCustomerDetailProduct) return;
+    const input = document.getElementById('cust-modal-qty');
+    const qty = parseInt(input ? input.value : 1) || 1;
+    const subtotalEl = document.getElementById('cust-modal-subtotal');
+    if (subtotalEl) {
+        subtotalEl.textContent = formatRupiah(currentCustomerDetailProduct.harga * qty);
+    }
+}
+
+function submitCustDetailAddToCart() {
+    if (!currentCustomerDetailProduct) return;
+    const input = document.getElementById('cust-modal-qty');
+    const qty = parseInt(input ? input.value : 1) || 1;
+
+    addCustomerItemToCart(currentCustomerDetailProduct, qty);
+    closeCustomerProductDetail();
+}
+
+function quickCustomerAddToCart(kode) {
+    const product = products.find(p => p.kode === kode);
+    if (!product) return;
+    addCustomerItemToCart(product, 1);
+}
+
+function addCustomerItemToCart(product, qty) {
+    if (product.stok <= 0) {
+        showToast(`Produk '${product.nama}' sedang habis.`, 'warning');
+        return;
+    }
+
+    const existing = customerCart.find(i => i.kode === product.kode);
+    const currentQtyInCart = existing ? existing.qty : 0;
+
+    if (currentQtyInCart + qty > product.stok) {
+        showToast(`Jumlah di keranjang melebihi stok yang tersedia (${product.stok}).`, 'warning');
+        return;
+    }
+
+    if (existing) {
+        existing.qty += qty;
+        existing.subtotal = existing.qty * existing.harga;
+    } else {
+        const itemImg = (product.gambar && product.gambar !== DEFAULT_IMAGE && !product.gambar.includes('1588964895597')) 
+            ? product.gambar 
+            : getProductAutoImage(product);
+        customerCart.push({
+            kode: product.kode,
+            nama: product.nama,
+            harga: product.harga,
+            gambar: itemImg,
+            qty: qty,
+            subtotal: product.harga * qty
+        });
+    }
+
+    saveCustomerCart();
+    showToast(`✓ '${product.nama}' (${qty} item) ditambahkan ke keranjang!`, 'success');
+}
+
+function openCustomerCartModal() {
+    const modal = document.getElementById('customer-cart-modal');
+    if (!modal) return;
+    renderCustomerCart();
+    modal.style.display = 'flex';
+    requestAnimationFrame(() => modal.classList.add('active'));
+}
+
+function closeCustomerCartModal(e) {
+    if (e && e.target !== e.currentTarget) return;
+    const modal = document.getElementById('customer-cart-modal');
+    if (modal) {
+        modal.classList.remove('active');
+        modal.style.display = 'none';
+    }
+}
+
+function renderCustomerCart() {
+    const container = document.getElementById('customer-cart-items-container');
+    const totalEl = document.getElementById('customer-cart-total-price');
+    const btnCheckout = document.getElementById('btn-proceed-checkout');
+    if (!container) return;
+
+    const grandTotal = customerCart.reduce((sum, i) => sum + i.subtotal, 0);
+    if (totalEl) totalEl.textContent = formatRupiah(grandTotal);
+
+    if (btnCheckout) {
+        btnCheckout.disabled = customerCart.length === 0;
+    }
+
+    if (customerCart.length === 0) {
+        container.innerHTML = `
+            <div style="text-align:center; padding:3rem 1rem; color:#888;">
+                <i class="fa-solid fa-cart-shopping" style="font-size:3rem; margin-bottom:1rem; opacity:0.3;"></i>
+                <p>Keranjang belanja Anda masih kosong.</p>
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="closeCustomerCartModal()">Mulai Belanja</button>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = customerCart.map(item => {
+        const cartImg = (item.gambar && item.gambar !== DEFAULT_IMAGE && !item.gambar.includes('1588964895597'))
+            ? item.gambar
+            : getProductAutoImage(item);
+        return `
+            <div class="customer-cart-item-row">
+                <img src="${escapeHtml(cartImg)}" alt="${escapeHtml(item.nama)}" class="cart-item-thumb" onerror="this.onerror=null; this.src='${DEFAULT_IMAGE}'">
+                <div class="cart-item-info">
+                    <strong>${escapeHtml(item.nama)}</strong>
+                    <div style="color:var(--primary-color); font-size:0.9rem;">${formatRupiah(item.harga)}</div>
+                </div>
+                <div class="qty-stepper">
+                    <button type="button" onclick="changeCustomerCartQty('${item.kode}', -1)"><i class="fa-solid fa-minus"></i></button>
+                    <input type="text" value="${item.qty}" readonly>
+                    <button type="button" onclick="changeCustomerCartQty('${item.kode}', 1)"><i class="fa-solid fa-plus"></i></button>
+                </div>
+                <div class="cart-item-subtotal">
+                    <strong>${formatRupiah(item.subtotal)}</strong>
+                </div>
+                <button type="button" class="btn-remove-item" onclick="removeCustomerCartItem('${item.kode}')" title="Hapus Barang">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+            </div>
+        `;
+    }).join('');
+}
+
+function changeCustomerCartQty(kode, delta) {
+    const item = customerCart.find(i => i.kode === kode);
+    if (!item) return;
+
+    const product = products.find(p => p.kode === kode);
+    const newQty = item.qty + delta;
+
+    if (newQty <= 0) {
+        removeCustomerCartItem(kode);
+        return;
+    }
+
+    if (product && newQty > product.stok) {
+        showToast(`Stok maksimal barang '${item.nama}' hanya ${product.stok}.`, 'warning');
+        return;
+    }
+
+    item.qty = newQty;
+    item.subtotal = item.qty * item.harga;
+    saveCustomerCart();
+    renderCustomerCart();
+}
+
+function removeCustomerCartItem(kode) {
+    customerCart = customerCart.filter(i => i.kode !== kode);
+    saveCustomerCart();
+    renderCustomerCart();
+    showToast('Barang dihapus dari keranjang.', 'info');
+}
+
+function clearCustomerCart() {
+    if (customerCart.length === 0) return;
+    if (!confirm('Kosongkan semua barang dari keranjang belanja?')) return;
+    customerCart = [];
+    saveCustomerCart();
+    renderCustomerCart();
+    showToast('Keranjang belanja dikosongkan.', 'info');
+}
+
+/* ==========================================================================
+   15. CHECKOUT PESANAN PELANGGAN
+   ========================================================================== */
+
+function openCustomerCheckoutModal() {
+    if (customerCart.length === 0) {
+        showToast('Keranjang belanja masih kosong!', 'warning');
+        return;
+    }
+
+    closeCustomerCartModal();
+
+    const modal = document.getElementById('customer-checkout-modal');
+    if (!modal) return;
+
+    // Isi preview barang
+    const previewContainer = document.getElementById('checkout-items-preview');
+    if (previewContainer) {
+        previewContainer.innerHTML = customerCart.map(item => `
+            <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; font-size:0.9rem;">
+                <span>${escapeHtml(item.nama)} &times; ${item.qty}</span>
+                <strong>${formatRupiah(item.subtotal)}</strong>
+            </div>
+        `).join('');
+    }
+
+    const grandTotal = customerCart.reduce((sum, i) => sum + i.subtotal, 0);
+    const totalEl = document.getElementById('checkout-total-amount');
+    if (totalEl) totalEl.textContent = formatRupiah(grandTotal);
+
+    // Auto-fill profil pemesan
+    const session = getSession();
+    const nameInput = document.getElementById('checkout-name');
+    const phoneInput = document.getElementById('checkout-phone');
+    const addressInput = document.getElementById('checkout-address');
+
+    if (session) {
+        if (nameInput) nameInput.value = session.fullName || session.username;
+        if (phoneInput && session.phone) phoneInput.value = session.phone;
+        if (addressInput && session.address) addressInput.value = session.address;
+    }
+
+    modal.style.display = 'flex';
+    requestAnimationFrame(() => modal.classList.add('active'));
+}
+
+function closeCustomerCheckoutModal(e) {
+    if (e && e.target !== e.currentTarget) return;
+    const modal = document.getElementById('customer-checkout-modal');
+    if (modal) {
+        modal.classList.remove('active');
+        modal.style.display = 'none';
+    }
+}
+
+function toggleDeliveryAddress(isDelivery) {
+    const addrGroup = document.getElementById('checkout-address-group');
+    const addrInput = document.getElementById('checkout-address');
+    if (addrGroup) {
+        addrGroup.style.display = isDelivery ? 'block' : 'none';
+    }
+    if (addrInput) {
+        addrInput.required = isDelivery;
+    }
+}
+
+function handleCustomerCheckoutSubmit(e) {
+    e.preventDefault();
+
+    if (customerCart.length === 0) {
+        showToast('Keranjang belanja kosong!', 'warning');
+        return;
+    }
+
+    const name = document.getElementById('checkout-name').value.trim();
+    const phone = document.getElementById('checkout-phone').value.trim();
+    const deliveryRadio = document.querySelector('input[name="checkout-delivery-type"]:checked');
+    const deliveryType = deliveryRadio ? deliveryRadio.value : 'pickup';
+    const address = document.getElementById('checkout-address') ? document.getElementById('checkout-address').value.trim() : '';
+    const notes = document.getElementById('checkout-notes') ? document.getElementById('checkout-notes').value.trim() : '';
+    const paymentRadio = document.querySelector('input[name="checkout-payment-method"]:checked');
+    const paymentMethod = paymentRadio ? paymentRadio.value : 'tunai';
+
+    if (!name || !phone) {
+        showToast('Nama dan nomor WhatsApp wajib diisi.', 'warning');
+        return;
+    }
+    if (deliveryType === 'delivery' && !address) {
+        showToast('Alamat pengantaran wajib diisi untuk opsi antar!', 'warning');
+        return;
+    }
+
+    // Cek ketersediaan stok produk
+    for (const item of customerCart) {
+        const p = products.find(prod => prod.kode === item.kode);
+        if (!p || p.stok < item.qty) {
+            showToast(`Maaf, stok produk '${item.nama}' tidak mencukupi (sisa: ${p ? p.stok : 0}).`, 'danger');
+            return;
+        }
+    }
+
+    // Kurangi stok produk secara nyata
+    customerCart.forEach(item => {
+        const p = products.find(prod => prod.kode === item.kode);
+        if (p) {
+            p.stok -= item.qty;
+            if (p.stok < 0) p.stok = 0;
+        }
+    });
+    saveProductsToStorage();
+
+    const session = getSession();
+    const now = new Date();
+    const orderId = 'ORD-' + Date.now().toString().slice(-6);
+    const grandTotal = customerCart.reduce((sum, i) => sum + i.subtotal, 0);
+
+    let paymentMethodLabel = 'Tunai';
+    if (paymentMethod === 'qris') paymentMethodLabel = 'QRIS';
+    else if (paymentMethod === 'transfer') paymentMethodLabel = 'Transfer Bank';
+    else if (paymentMethod === 'ewallet') paymentMethodLabel = 'E-Wallet';
+
+    const newOrder = {
+        id: orderId,
+        customerUsername: session ? session.username : 'tamu',
+        customerName: name,
+        customerPhone: phone,
+        deliveryType: deliveryType, // 'pickup' | 'delivery'
+        address: address,
+        notes: notes,
+        paymentMethod: paymentMethodLabel,
+        paymentStatus: 'Belum Dibayar',
+        status: 'Menunggu Konfirmasi',
+        items: [...customerCart],
+        total: grandTotal,
+        createdAt: now.toISOString(),
+        timestamp: formatDate(now),
+        storeNote: ''
+    };
+
+    orders.unshift(newOrder);
+    saveOrdersToStorage();
+
+    // Reset keranjang belanja
+    customerCart = [];
+    saveCustomerCart();
+
+    closeCustomerCheckoutModal();
+    logActivity('pesanan_baru', `Pesanan online #${orderId} dibuat oleh pelanggan '${name}' (Total: ${formatRupiah(grandTotal)})`, orderId);
+
+    showToast(`Pesanan #${orderId} berhasil dibuat! Kami sedang menyiapkan pesanan Anda.`, 'success');
+
+    // Arahkan ke tab riwayat pesanan pelanggan
+    switchTab('pelanggan-orders');
+}
+
+/* ==========================================================================
+   16. MANAJEMEN PESANAN ONLINE (PELANGGAN, KASIR & ADMIN)
+   ========================================================================== */
+
+let orders = [];
+let currentAdminOrderFilter = 'all';
+let currentActiveOrder = null;
+
+function initOrders() {
+    try {
+        const stored = localStorage.getItem(STORAGE_ORDERS_KEY);
+        if (stored) {
+            orders = JSON.parse(stored);
+        } else {
+            // Seed sampel pesanan online untuk demo
+            orders = [
+                {
+                    id: 'ORD-101001',
+                    customerUsername: 'pelanggan',
+                    customerName: 'Budi Santoso',
+                    customerPhone: '081234567892',
+                    deliveryType: 'pickup',
+                    address: '',
+                    notes: 'Tolong siapkan rapi ya',
+                    paymentMethod: 'Tunai',
+                    paymentStatus: 'Belum Dibayar',
+                    status: 'Menunggu Konfirmasi',
+                    items: [
+                        { kode: 'BRG001', nama: 'Beras Premium 5kg', harga: 65000, qty: 1, subtotal: 65000 },
+                        { kode: 'BRG004', nama: 'Mie Instan Goreng', harga: 3000, qty: 5, subtotal: 15000 }
+                    ],
+                    total: 80000,
+                    createdAt: new Date().toISOString(),
+                    timestamp: formatDate(new Date()),
+                    storeNote: ''
+                }
+            ];
+            saveOrdersToStorage();
+        }
+    } catch (e) {
+        orders = [];
+    }
+    updateAdminOrdersBadge();
+}
+
+function saveOrdersToStorage() {
+    try {
+        localStorage.setItem(STORAGE_ORDERS_KEY, JSON.stringify(orders));
+    } catch (e) {
+        console.warn('Gagal menyimpan pesanan:', e);
+    }
+    if (typeof db !== 'undefined' && db) {
+        orders.slice(0, 50).forEach(o => {
+            db.collection('orders').doc(o.id).set(o).catch(() => {});
+        });
+    }
+    updateAdminOrdersBadge();
+}
+
+function updateAdminOrdersBadge() {
+    const pendingCount = orders.filter(o => o.status === 'Menunggu Konfirmasi').length;
+    const badgeAdmin = document.getElementById('nav-orders-count');
+    const badgeKasir = document.getElementById('nav-orders-count-kasir');
+    const alertBanner = document.getElementById('alert-pesanan-baru');
+    const alertCount = document.getElementById('alert-pesanan-count');
+
+    [badgeAdmin, badgeKasir].forEach(badge => {
+        if (badge) {
+            badge.textContent = pendingCount;
+            badge.style.display = pendingCount > 0 ? 'inline-block' : 'none';
+        }
+    });
+
+    if (alertBanner && alertCount) {
+        alertCount.textContent = pendingCount;
+        alertBanner.style.display = pendingCount > 0 ? 'flex' : 'none';
+    }
+
+    // Badge untuk pesanan pelanggan
+    const session = getSession();
+    if (session && session.role === 'Pelanggan') {
+        const myActiveOrders = orders.filter(o => o.customerUsername === session.username && o.status !== 'Selesai' && o.status !== 'Dibatalkan').length;
+        const custBadge = document.getElementById('nav-cust-orders-count');
+        if (custBadge) {
+            custBadge.textContent = myActiveOrders;
+            custBadge.style.display = myActiveOrders > 0 ? 'inline-block' : 'none';
+        }
+    }
+}
+
+// 16a. Render Pesanan Pelanggan (Riwayat Saya)
+function renderCustomerOrders() {
+    const container = document.getElementById('customer-orders-container') || document.getElementById('customer-orders-list');
+    if (!container) return;
+
+    const session = getSession();
+    const username = session ? session.username : '';
+
+    const myOrders = orders.filter(o => o.customerUsername === username);
+
+    if (myOrders.length === 0) {
+        container.innerHTML = `
+            <div style="text-align:center; padding:3rem 1rem; color:#888;">
+                <i class="fa-solid fa-receipt" style="font-size:3rem; margin-bottom:1rem; opacity:0.3;"></i>
+                <p>Anda belum memiliki riwayat pesanan.</p>
+                <button type="button" class="btn btn-primary btn-sm" onclick="switchTab('pelanggan-store')">Mulai Belanja Sekarang</button>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = myOrders.map(o => {
+        const statusBadge = getOrderStatusBadge(o.status);
+        const deliveryText = o.deliveryType === 'delivery' ? '🛵 Antar ke Alamat' : '🏬 Ambil di Toko';
+
+        return `
+            <div class="order-card">
+                <div class="order-card-header">
+                    <div>
+                        <strong>#${escapeHtml(o.id)}</strong>
+                        <div style="font-size:0.85rem; color:#666;">${escapeHtml(o.timestamp)}</div>
+                    </div>
+                    <div>${statusBadge}</div>
+                </div>
+                <div class="order-card-body">
+                    <div style="margin-bottom:0.5rem; color:#555;">
+                        <span><i class="fa-solid fa-truck"></i> ${deliveryText}</span> | 
+                        <span><i class="fa-solid fa-wallet"></i> ${escapeHtml(o.paymentMethod)}</span>
+                    </div>
+                    <div class="order-items-summary" style="font-size:0.9rem; margin-bottom:0.75rem;">
+                        ${o.items.map(i => `<div>&bull; ${escapeHtml(i.nama)} &times; ${i.qty}</div>`).join('')}
+                    </div>
+                    ${o.storeNote ? `<div style="background:#fef3c7; color:#92400e; padding:6px 10px; border-radius:6px; font-size:0.85rem; margin-bottom:0.5rem;"><strong>Catatan Toko:</strong> ${escapeHtml(o.storeNote)}</div>` : ''}
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #e0e0e0; padding-top:0.75rem;">
+                        <div>Total: <strong style="color:var(--primary-color); font-size:1.1rem;">${formatRupiah(o.total)}</strong></div>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="openCustomerOrderDetail('${o.id}')">
+                            <i class="fa-solid fa-eye"></i> Detail Pesanan
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function getOrderStatusBadge(status) {
+    if (status === 'Menunggu Konfirmasi') {
+        return `<span class="badge" style="background:#fef3c7; color:#b45309;"><i class="fa-solid fa-clock"></i> Menunggu Konfirmasi</span>`;
+    } else if (status === 'Diproses') {
+        return `<span class="badge" style="background:#dbeafe; color:#1d4ed8;"><i class="fa-solid fa-spinner fa-spin"></i> Diproses</span>`;
+    } else if (status === 'Siap Diambil') {
+        return `<span class="badge" style="background:#f3e8ff; color:#7e22ce;"><i class="fa-solid fa-box"></i> Siap Diambil / Diantar</span>`;
+    } else if (status === 'Selesai') {
+        return `<span class="badge" style="background:#dcfce7; color:#15803d;"><i class="fa-solid fa-circle-check"></i> Selesai</span>`;
+    } else if (status === 'Dibatalkan') {
+        return `<span class="badge" style="background:#fee2e2; color:#b91c1c;"><i class="fa-solid fa-circle-xmark"></i> Dibatalkan</span>`;
+    }
+    return `<span class="badge badge-stock-ok">${escapeHtml(status)}</span>`;
+}
+
+function openCustomerOrderDetail(orderId) {
+    const o = orders.find(item => item.id === orderId);
+    if (!o) return;
+
+    const modal = document.getElementById('customer-order-detail-modal');
+    const body = document.getElementById('customer-order-detail-body');
+    if (!modal || !body) return;
+
+    body.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; padding-bottom:0.75rem; border-bottom:1px solid #e0e0e0;">
+            <div>
+                <h4 style="margin:0;">No. Pesanan: #${escapeHtml(o.id)}</h4>
+                <small style="color:#666;">Waktu Pesan: ${escapeHtml(o.timestamp)}</small>
+            </div>
+            <div>${getOrderStatusBadge(o.status)}</div>
+        </div>
+
+        <div style="margin-bottom:1rem;">
+            <h5><i class="fa-solid fa-user"></i> Data Pemesan</h5>
+            <div style="font-size:0.9rem; line-height:1.6;">
+                <div><strong>Nama:</strong> ${escapeHtml(o.customerName)}</div>
+                <div><strong>WhatsApp:</strong> ${escapeHtml(o.customerPhone)}</div>
+                <div><strong>Opsi:</strong> ${o.deliveryType === 'delivery' ? 'Antar ke Alamat' : 'Ambil di Toko'}</div>
+                ${o.address ? `<div><strong>Alamat:</strong> ${escapeHtml(o.address)}</div>` : ''}
+                ${o.notes ? `<div><strong>Catatan:</strong> ${escapeHtml(o.notes)}</div>` : ''}
+            </div>
+        </div>
+
+        <div style="margin-bottom:1rem;">
+            <h5><i class="fa-solid fa-box"></i> Rincian Barang</h5>
+            <div style="border:1px solid #e0e0e0; border-radius:8px; overflow:hidden;">
+                <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+                    <thead>
+                        <tr style="background:#f8fafc; border-bottom:1px solid #e0e0e0;">
+                            <th style="padding:8px 12px; text-align:left;">Barang</th>
+                            <th style="padding:8px 12px; text-align:center;">Jumlah</th>
+                            <th style="padding:8px 12px; text-align:right;">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${o.items.map(item => `
+                            <tr style="border-bottom:1px solid #f1f5f9;">
+                                <td style="padding:8px 12px;">${escapeHtml(item.nama)}</td>
+                                <td style="padding:8px 12px; text-align:center;">${item.qty}</td>
+                                <td style="padding:8px 12px; text-align:right;">${formatRupiah(item.subtotal)}</td>
+                            </tr>
+                        `).join('')}
+                        <tr style="background:#f8fafc; font-weight:bold;">
+                            <td colspan="2" style="padding:10px 12px; text-align:right;">Total Pembayaran:</td>
+                            <td style="padding:10px 12px; text-align:right; color:var(--primary-color);">${formatRupiah(o.total)}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div style="background:#f1f5f9; padding:12px; border-radius:8px; font-size:0.9rem;">
+            <div><strong>Metode Pembayaran:</strong> ${escapeHtml(o.paymentMethod)} (${escapeHtml(o.paymentStatus || 'Belum Dibayar')})</div>
+            ${o.storeNote ? `<div style="margin-top:6px; color:#b45309;"><strong>Pesan Toko:</strong> ${escapeHtml(o.storeNote)}</div>` : ''}
+        </div>
+    `;
+
+    modal.style.display = 'flex';
+    requestAnimationFrame(() => modal.classList.add('active'));
+}
+
+function closeCustomerOrderDetail(e) {
+    if (e && e.target !== e.currentTarget) return;
+    const modal = document.getElementById('customer-order-detail-modal');
+    if (modal) {
+        modal.classList.remove('active');
+        modal.style.display = 'none';
+    }
+}
+
+// 16b. Render Pesanan Online untuk Admin & Kasir
+function renderAdminOrders() {
+    const container = document.getElementById('admin-orders-container') || document.getElementById('admin-orders-list');
+    if (!container) return;
+
+    let filtered = orders;
+    if (currentAdminOrderFilter !== 'all') {
+        filtered = orders.filter(o => o.status === currentAdminOrderFilter);
+    }
+
+    if (filtered.length === 0) {
+        container.innerHTML = `
+            <div style="text-align:center; padding:3rem 1rem; color:#888;">
+                <i class="fa-solid fa-bell-slash" style="font-size:3rem; margin-bottom:1rem; opacity:0.3;"></i>
+                <p>Tidak ada pesanan online dalam status ini.</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = filtered.map(o => {
+        const statusBadge = getOrderStatusBadge(o.status);
+        const deliveryText = o.deliveryType === 'delivery' ? '🛵 Antar' : '🏬 Ambil';
+
+        return `
+            <div class="order-card">
+                <div class="order-card-header">
+                    <div>
+                        <strong>#${escapeHtml(o.id)}</strong> - <span style="font-weight:600;">${escapeHtml(o.customerName)}</span>
+                        <div style="font-size:0.85rem; color:#666;">
+                            <span>📱 ${escapeHtml(o.customerPhone)}</span> | 
+                            <span>${escapeHtml(o.timestamp)}</span>
+                        </div>
+                    </div>
+                    <div>${statusBadge}</div>
+                </div>
+                <div class="order-card-body">
+                    <div style="display:flex; gap:1rem; margin-bottom:0.5rem; font-size:0.9rem; color:#555;">
+                        <span><strong>Pengiriman:</strong> ${deliveryText}</span>
+                        <span><strong>Bayar:</strong> ${escapeHtml(o.paymentMethod)}</span>
+                    </div>
+                    ${o.address ? `<div style="font-size:0.85rem; color:#555; margin-bottom:0.5rem;"><strong>Alamat:</strong> ${escapeHtml(o.address)}</div>` : ''}
+                    <div style="background:#f8fafc; padding:8px 12px; border-radius:6px; font-size:0.85rem; margin-bottom:0.75rem;">
+                        <strong>Pesanan (${o.items.length} jenis item):</strong>
+                        ${o.items.map(i => `<div style="margin-top:2px;">&bull; ${escapeHtml(i.nama)} &times; ${i.qty} (${formatRupiah(i.subtotal)})</div>`).join('')}
+                    </div>
+                    ${o.notes ? `<div style="font-size:0.85rem; color:#666; margin-bottom:0.5rem;"><em>Catatan Pembeli: "${escapeHtml(o.notes)}"</em></div>` : ''}
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #e0e0e0; padding-top:0.75rem;">
+                        <div>Total: <strong style="color:var(--primary-color); font-size:1.15rem;">${formatRupiah(o.total)}</strong></div>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="openOrderStatusModal('${o.id}')">
+                            <i class="fa-solid fa-clipboard-check"></i> Kelola Status
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function filterAdminOrders(status, btn) {
+    currentAdminOrderFilter = status;
+    if (btn) {
+        const parent = btn.parentElement;
+        if (parent) {
+            parent.querySelectorAll('.btn-subtab').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+    }
+    renderAdminOrders();
+}
+
+function openOrderStatusModal(orderId) {
+    if (!requireRole(['Administrator', 'Kasir'], 'mengubah status pesanan')) return;
+    const o = orders.find(item => item.id === orderId);
+    if (!o) return;
+
+    currentActiveOrder = o;
+
+    const modal = document.getElementById('order-status-modal');
+    const content = document.getElementById('order-status-modal-content');
+    const select = document.getElementById('update-order-status-select');
+    const noteInput = document.getElementById('update-order-note');
+
+    if (!modal || !content) return;
+
+    if (select) select.value = o.status;
+    if (noteInput) noteInput.value = o.storeNote || '';
+
+    content.innerHTML = `
+        <div style="background:#f8fafc; padding:12px; border-radius:8px; margin-bottom:1rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h4>Pesanan #${escapeHtml(o.id)}</h4>
+                <div>${getOrderStatusBadge(o.status)}</div>
+            </div>
+            <div style="font-size:0.9rem; line-height:1.6; margin-top:0.5rem;">
+                <div><strong>Pelanggan:</strong> ${escapeHtml(o.customerName)} (${escapeHtml(o.customerPhone)})</div>
+                <div><strong>Opsi:</strong> ${o.deliveryType === 'delivery' ? '🛵 Antar ke Alamat' : '🏬 Ambil di Toko'}</div>
+                ${o.address ? `<div><strong>Alamat:</strong> ${escapeHtml(o.address)}</div>` : ''}
+                <div><strong>Total:</strong> <strong style="color:var(--primary-color);">${formatRupiah(o.total)}</strong> (${escapeHtml(o.paymentMethod)})</div>
+            </div>
+        </div>
+        <div>
+            <strong>Daftar Barang:</strong>
+            <ul style="padding-left:1.25rem; font-size:0.9rem; margin-top:4px;">
+                ${o.items.map(i => `<li>${escapeHtml(i.nama)} &times; ${i.qty} = ${formatRupiah(i.subtotal)}</li>`).join('')}
+            </ul>
+        </div>
+    `;
+
+    modal.style.display = 'flex';
+    requestAnimationFrame(() => modal.classList.add('active'));
+}
+
+function closeOrderStatusModal(e) {
+    if (e && e.target !== e.currentTarget) return;
+    const modal = document.getElementById('order-status-modal');
+    if (modal) {
+        modal.classList.remove('active');
+        modal.style.display = 'none';
+    }
+}
+
+function submitUpdateOrderStatus() {
+    if (!currentActiveOrder) return;
+    const select = document.getElementById('update-order-status-select');
+    const noteInput = document.getElementById('update-order-note');
+    if (!select) return;
+
+    const oldStatus = currentActiveOrder.status;
+    const newStatus = select.value;
+    const note = noteInput ? noteInput.value.trim() : '';
+
+    currentActiveOrder.status = newStatus;
+    currentActiveOrder.storeNote = note;
+
+    // Jika dibatalkan, kembalikan stok barang ke sistem
+    if (newStatus === 'Dibatalkan' && oldStatus !== 'Dibatalkan') {
+        currentActiveOrder.items.forEach(item => {
+            const p = products.find(prod => prod.kode === item.kode);
+            if (p) p.stok += item.qty;
+        });
+        saveProductsToStorage();
+        renderProducts();
+        renderProductsKasir();
+        populateProductDropdown();
+        renderDashboardStokMenipis();
+    }
+
+    saveOrdersToStorage();
+    closeOrderStatusModal();
+    renderAdminOrders();
+    updateAdminOrdersBadge();
+
+    const session = getSession();
+    showToast(`Status pesanan #${currentActiveOrder.id} diubah ke '${newStatus}'.`, 'success');
+    logActivity('update_pesanan', `Status pesanan #${currentActiveOrder.id} diubah menjadi '${newStatus}' oleh ${session ? session.username : 'Petugas'}.`, currentActiveOrder.id);
+}
+
+function printOrderSlip() {
+    if (!currentActiveOrder) return;
+    const o = currentActiveOrder;
+
+    const printWin = window.open('', '_blank', 'width=400,height=600');
+    if (!printWin) {
+        showToast('Popup cetak diblokir browser. Izinkan popup untuk mencetak.', 'warning');
+        return;
+    }
+
+    printWin.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Struk Pesanan #${o.id}</title>
+            <style>
+                body { font-family: 'Courier New', monospace; font-size: 12px; margin: 0; padding: 10px; width: 280px; }
+                .text-center { text-align: center; }
+                .divider { border-top: 1px dashed #000; margin: 8px 0; }
+                table { width: 100%; border-collapse: collapse; }
+                td { vertical-align: top; }
+                @media print { body { width: 100%; } }
+            </style>
+        </head>
+        <body>
+            <div class="text-center">
+                <h3 style="margin:0;">DELSI SHOP</h3>
+                <small>Pesanan Online Warung Digital</small>
+            </div>
+            <div class="divider"></div>
+            <div>No. Order : #${o.id}</div>
+            <div>Waktu     : ${o.timestamp}</div>
+            <div>Pemesan   : ${escapeHtml(o.customerName)}</div>
+            <div>No. WA    : ${escapeHtml(o.customerPhone)}</div>
+            <div>Opsi      : ${o.deliveryType === 'delivery' ? 'Antar ke Alamat' : 'Ambil Sendiri'}</div>
+            ${o.address ? `<div>Alamat    : ${escapeHtml(o.address)}</div>` : ''}
+            <div>Status    : ${o.status}</div>
+            <div class="divider"></div>
+            <table>
+                ${o.items.map(i => `
+                    <tr>
+                        <td colspan="2">${escapeHtml(i.nama)}</td>
+                    </tr>
+                    <tr>
+                        <td style="color:#555;">${i.qty} &times; ${formatRupiah(i.harga)}</td>
+                        <td style="text-align:right;">${formatRupiah(i.subtotal)}</td>
+                    </tr>
+                `).join('')}
+            </table>
+            <div class="divider"></div>
+            <table>
+                <tr style="font-weight:bold;">
+                    <td>TOTAL:</td>
+                    <td style="text-align:right;">${formatRupiah(o.total)}</td>
+                </tr>
+                <tr>
+                    <td>Pembayaran:</td>
+                    <td style="text-align:right;">${o.paymentMethod}</td>
+                </tr>
+            </table>
+            ${o.notes ? `<div class="divider"></div><div>Catatan: ${escapeHtml(o.notes)}</div>` : ''}
+            <div class="divider"></div>
+            <div class="text-center">
+                <p>Terima Kasih Atas Pesanan Anda!</p>
+            </div>
+            <script>
+                setTimeout(() => { window.print(); window.close(); }, 500);
+            <\/script>
+        </body>
+        </html>
+    `);
+    printWin.document.close();
+}
+
+/* ==========================================================================
+   17. PROFIL PELANGGAN (VIEW & UPDATE PROFIL / PASSWORD)
+   ========================================================================== */
+
+function renderCustomerProfile() {
+    const session = getSession();
+    if (!session) return;
+
+    const users = getUsers();
+    const user = users.find(u => u.username === session.username) || session;
+
+    const nameDisplay = document.getElementById('cust-profile-name');
+    const userDisplay = document.getElementById('cust-profile-username');
+    const roleDisplay = document.getElementById('cust-profile-role');
+    const totalOrdersEl = document.getElementById('cust-profile-total-orders');
+    const completedOrdersEl = document.getElementById('cust-profile-completed-orders');
+
+    if (nameDisplay) nameDisplay.textContent = user.fullName || user.username;
+    if (userDisplay) userDisplay.textContent = '@' + user.username;
+    if (roleDisplay) roleDisplay.textContent = user.role || 'Pelanggan';
+
+    const myOrders = orders.filter(o => o.customerUsername === user.username);
+    const completed = myOrders.filter(o => o.status === 'Selesai');
+
+    if (totalOrdersEl) totalOrdersEl.textContent = `${myOrders.length} Pesanan`;
+    if (completedOrdersEl) completedOrdersEl.textContent = `${completed.length} Selesai`;
+
+    const fullnameInput = document.getElementById('cust-fullname-input');
+    const phoneInput = document.getElementById('cust-phone-input');
+    const addressInput = document.getElementById('cust-address-input');
+
+    if (fullnameInput) fullnameInput.value = user.fullName || '';
+    if (phoneInput) phoneInput.value = user.phone || '';
+    if (addressInput) addressInput.value = user.address || '';
+}
+
+function handleSaveCustomerProfile(e) {
+    e.preventDefault();
+    const session = getSession();
+    if (!session) return;
+
+    const fullname = document.getElementById('cust-fullname-input').value.trim();
+    const phone = document.getElementById('cust-phone-input').value.trim();
+    const address = document.getElementById('cust-address-input').value.trim();
+
+    const users = getUsers();
+    const u = users.find(item => item.username === session.username);
+    if (!u) return;
+
+    u.fullName = fullname || u.username;
+    u.phone = phone;
+    u.address = address;
+
+    if (saveUsers(users)) {
+        session.fullName = u.fullName;
+        session.phone = u.phone;
+        session.address = u.address;
+        localStorage.setItem(STORAGE_SESSION_KEY, JSON.stringify(session));
+
+        applySessionToHeader(session);
+        renderCustomerProfile();
+        showToast('Profil Anda berhasil diperbarui!', 'success');
+        logActivity('update_profil', `Pelanggan '${session.username}' memperbarui data profil.`, session.username);
+
+        if (typeof db !== 'undefined' && db) {
+            db.collection('users').doc(session.username).set(u).catch(() => {});
+        }
+    }
+}
+
+function handleCustomerChangePassword(e) {
+    e.preventDefault();
+    const session = getSession();
+    if (!session) return;
+
+    const oldPass = document.getElementById('cust-old-password').value;
+    const newPass = document.getElementById('cust-new-password').value;
+    const confirmPass = document.getElementById('cust-confirm-password').value;
+
+    if (newPass.length < 4) {
+        showToast('Password baru minimal 4 karakter!', 'warning');
+        return;
+    }
+    if (newPass !== confirmPass) {
+        showToast('Konfirmasi password baru tidak cocok!', 'danger');
+        return;
+    }
+
+    const users = getUsers();
+    const u = users.find(item => item.username === session.username);
+    if (!u) return;
+
+    if (u.password !== simpleHash(oldPass)) {
+        showToast('Password lama tidak benar!', 'danger');
+        return;
+    }
+
+    u.password = simpleHash(newPass);
+    if (saveUsers(users)) {
+        document.getElementById('form-customer-password').reset();
+        showToast('Password akun Anda berhasil diganti!', 'success');
+        logActivity('ubah_password', `Pelanggan '${session.username}' mengubah password.`, session.username);
+    }
+}
+
+/* ==========================================================================
+   18. DASHBOARD STATISTIK UTAMA (ADMIN DASHBOARD)
+   ========================================================================== */
+
+function renderDashboardStats() {
+    const statOmzet = document.getElementById('dash-omzet-total');
+    const statLaba = document.getElementById('dash-laba-total');
+    const statTrx = document.getElementById('dash-transaksi-total');
+    const statProduk = document.getElementById('dash-produk-total');
+    const statPelanggan = document.getElementById('dash-pelanggan-total');
+
+    // 1. Total Omzet
+    const totalOmzet = transactions.reduce((sum, t) => sum + (t.total || 0), 0);
+    if (statOmzet) statOmzet.textContent = formatRupiah(totalOmzet);
+
+    // 2. Total Laba
+    const totalModal = transactions.reduce((sum, t) => {
+        const m = (t.items || []).reduce((s, item) => {
+            const p = products.find(prod => prod.kode === item.kode);
+            return s + (p ? (p.modal || 0) * item.jumlah : 0);
+        }, 0);
+        return sum + m;
+    }, 0);
+    const totalLaba = totalOmzet - totalModal;
+    if (statLaba) statLaba.textContent = formatRupiah(totalLaba);
+
+    // 3. Total Transaksi
+    if (statTrx) statTrx.textContent = `${transactions.length} Transaksi`;
+
+    // 4. Total Produk
+    if (statProduk) statProduk.textContent = `${products.length} Produk`;
+
+    // 5. Total Pelanggan
+    const users = getUsers();
+    const totalCust = users.filter(u => (u.role || 'Kasir') === 'Pelanggan').length;
+    if (statPelanggan) statPelanggan.textContent = `${totalCust} Pengguna`;
+}
+

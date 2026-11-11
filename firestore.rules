@@ -12,6 +12,19 @@ service cloud.firestore {
     match /settings/{document} {
       allow read, write: if true;
     }
+    // Pengguna, Kategori, Pesanan Online, dan Log Aktivitas
+    match /users/{document} {
+      allow read, write: if true;
+    }
+    match /categories/{document} {
+      allow read, write: if true;
+    }
+    match /orders/{document} {
+      allow read, write: if true;
+    }
+    match /activity_logs/{document} {
+      allow read, write: if true;
+    }
     // Tolak akses ke koleksi lain
     match /{document=**} {
       allow read, write: if false;

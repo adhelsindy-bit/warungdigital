@@ -23,20 +23,23 @@
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=3">
     <!-- Font Awesome Icons for clean UI icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=16">
+    <link rel="stylesheet" href="style.css?v=20">
 </head>
 <body class="logged-out">
 
     <!-- Cek sesi login sebelum konten dirender (cegah kedip layar login) -->
     <script>
         try {
-            if (localStorage.getItem('warung_session_delsi')) {
+            var savedSession = JSON.parse(localStorage.getItem('warung_session_delsi') || 'null');
+            if (savedSession && savedSession.username) {
                 document.body.classList.remove('logged-out');
+                var r = (savedSession.role || 'Kasir').toLowerCase();
+                document.body.classList.add(r === 'administrator' ? 'role-admin' : (r === 'pelanggan' ? 'role-pelanggan' : 'role-kasir'));
             }
         } catch (e) {}
     </script>
 
-    <!-- HALAMAN LOGIN -->
+    <!-- HALAMAN LOGIN & REGISTRASI MULTI-ROLE -->
     <div id="login-screen" class="login-screen">
         <div class="login-card">
             <div class="login-logo">
@@ -45,9 +48,20 @@
             <h2 id="login-shop-name">Delsi Shop</h2>
             <p class="login-subtitle" id="login-shop-tagline">Sistem Kasir & Manajemen Warung Digital</p>
 
+            <!-- Tab Switch: Masuk vs Daftar Akun Pelanggan -->
+            <div class="auth-tabs">
+                <button type="button" class="auth-tab-btn active" id="auth-tab-login" onclick="switchAuthTab('login')">
+                    <i class="fa-solid fa-right-to-bracket"></i> Masuk (Login)
+                </button>
+                <button type="button" class="auth-tab-btn" id="auth-tab-register" onclick="switchAuthTab('register')">
+                    <i class="fa-solid fa-user-plus"></i> Daftar Pelanggan
+                </button>
+            </div>
+
+            <!-- Form Login (Admin, Kasir, Pelanggan) -->
             <form id="login-form" onsubmit="handleLogin(event)">
                 <div class="login-field">
-                    <label for="login-username"><i class="fa-solid fa-user"></i> Username</label>
+                    <label for="login-username"><i class="fa-solid fa-user"></i> Username / Email</label>
                     <input type="text" id="login-username" placeholder="Masukkan username"
                            autocomplete="username" autofocus required>
                 </div>
@@ -56,7 +70,7 @@
                     <div class="login-password-wrap">
                         <input type="password" id="login-password" placeholder="Masukkan password"
                                autocomplete="current-password" required>
-                        <button type="button" class="toggle-pass" onclick="togglePassword()"
+                        <button type="button" class="toggle-pass" onclick="togglePassword('login-password', 'toggle-pass-icon')"
                                 title="Tampilkan/sembunyikan password">
                             <i id="toggle-pass-icon" class="fa-solid fa-eye"></i>
                         </button>
@@ -66,11 +80,64 @@
                 <p id="login-error" class="login-error" style="display:none;"></p>
 
                 <button type="submit" class="btn btn-primary btn-block login-btn">
-                    <i class="fa-solid fa-right-to-bracket"></i> Masuk
+                    <i class="fa-solid fa-right-to-bracket"></i> Masuk ke Aplikasi
                 </button>
             </form>
 
-            <p class="login-hint" id="login-hint">Akun default: <strong>admin</strong> / <strong>admin123</strong></p>
+            <!-- Form Registrasi Akun Pelanggan Baru -->
+            <form id="register-form" onsubmit="handleRegister(event)" style="display:none;">
+                <div class="login-field">
+                    <label for="reg-username"><i class="fa-solid fa-at"></i> Username</label>
+                    <input type="text" id="reg-username" placeholder="Contoh: budi12"
+                           autocomplete="off" required minlength="3">
+                </div>
+                <div class="login-field">
+                    <label for="reg-nama"><i class="fa-solid fa-user"></i> Nama Lengkap</label>
+                    <input type="text" id="reg-nama" placeholder="Contoh: Budi Santoso"
+                           autocomplete="name" required>
+                </div>
+                <div class="login-field">
+                    <label for="reg-telepon"><i class="fa-brands fa-whatsapp"></i> No. WhatsApp / HP</label>
+                    <input type="tel" id="reg-telepon" placeholder="Contoh: 081234567890"
+                           autocomplete="tel" required>
+                </div>
+                <div class="login-field">
+                    <label for="reg-alamat"><i class="fa-solid fa-location-dot"></i> Alamat Domisili</label>
+                    <input type="text" id="reg-alamat" placeholder="Contoh: Jl. Merdeka No. 12"
+                           autocomplete="street-address" required>
+                </div>
+                <div class="login-field">
+                    <label for="reg-password"><i class="fa-solid fa-lock"></i> Password</label>
+                    <div class="login-password-wrap">
+                        <input type="password" id="reg-password" placeholder="Minimal 4 karakter"
+                               autocomplete="new-password" required minlength="4">
+                        <button type="button" class="toggle-pass" onclick="togglePassword('reg-password', 'reg-pass-icon')"
+                                title="Tampilkan/sembunyikan password">
+                            <i id="reg-pass-icon" class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="login-field">
+                    <label for="reg-password-confirm"><i class="fa-solid fa-shield-halved"></i> Ulangi Password</label>
+                    <input type="password" id="reg-password-confirm" placeholder="Ketik ulang password"
+                           autocomplete="new-password" required minlength="4">
+                </div>
+
+                <p id="register-error" class="login-error" style="display:none;"></p>
+
+                <button type="submit" class="btn btn-success btn-block login-btn">
+                    <i class="fa-solid fa-user-check"></i> Daftar Sekarang & Belanja
+                </button>
+            </form>
+
+            <div class="login-hint-box" id="login-hint">
+                <small><i class="fa-solid fa-circle-info"></i> Akun Bawaan:</small>
+                <div class="login-demo-tags">
+                    <span class="demo-tag admin" onclick="fillDemoLogin('admin', 'admin123')"><strong>Admin:</strong> admin / admin123</span>
+                    <span class="demo-tag kasir" onclick="fillDemoLogin('kasir', 'kasir123')"><strong>Kasir:</strong> kasir / kasir123</span>
+                    <span class="demo-tag pelanggan" onclick="fillDemoLogin('pelanggan', 'pelanggan123')"><strong>Pelanggan:</strong> pelanggan / pelanggan123</span>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -78,19 +145,41 @@
     <header class="app-header">
         <div class="header-container">
             <div class="header-user">
-                <span class="header-user-info"><i class="fa-solid fa-circle-user"></i> <span id="logged-user">admin</span> <em id="logged-role" class="header-role"></em></span>
-                <button class="btn-logout" onclick="cleanBrowserStorage()" title="Bersihkan cache penyimpanan browser">
+                <span class="header-user-info">
+                    <i class="fa-solid fa-circle-user"></i> 
+                    <span id="logged-user">admin</span> 
+                    <em id="logged-role" class="header-role"></em>
+                </span>
+
+                <!-- Tombol Khusus Admin -->
+                <button class="btn-logout btn-admin-only" onclick="cleanBrowserStorage()" id="btn-bersihkan-cache" title="Bersihkan cache penyimpanan browser">
                     <i class="fa-solid fa-broom"></i> <span class="btn-label">Bersihkan Cache</span>
                 </button>
-                <button class="btn-logout" onclick="openDisplaySettingsModal()" id="btn-pengaturan-tampilan" title="Pengaturan tampilan & branding toko">
+                <button class="btn-logout btn-admin-only" onclick="openDisplaySettingsModal()" id="btn-pengaturan-tampilan" title="Pengaturan tampilan & branding toko">
                     <i class="fa-solid fa-palette"></i> <span class="btn-label">Atur Tampilan</span>
                 </button>
-                <button class="btn-logout" onclick="openPaymentSettingsModal()" id="btn-setting-pembayaran" title="Pengaturan QRIS & Rekening Toko">
+                <button class="btn-logout btn-admin-only" onclick="openPaymentSettingsModal()" id="btn-setting-pembayaran" title="Pengaturan QRIS & Rekening Toko">
                     <i class="fa-solid fa-wallet"></i> <span class="btn-label">Atur Pembayaran</span>
                 </button>
-                <button class="btn-logout" onclick="openUserModal()" id="btn-kelola-user" title="Kelola akun user" style="display:none;">
+                <button class="btn-logout btn-admin-only" onclick="openUserModal()" id="btn-kelola-user" title="Kelola akun user & pelanggan">
                     <i class="fa-solid fa-users-gear"></i> <span class="btn-label">Kelola User</span>
                 </button>
+
+                <!-- Tombol Khusus Kasir -->
+                <button class="btn-logout btn-kasir-only" onclick="openKasirPasswordModal()" id="btn-kasir-pass" title="Ganti password kasir" style="display:none;">
+                    <i class="fa-solid fa-key"></i> <span class="btn-label">Ganti Password</span>
+                </button>
+
+                <!-- Tombol Khusus Pelanggan -->
+                <button class="btn-logout btn-pelanggan-only" onclick="openCustomerCartModal()" id="btn-customer-cart" title="Keranjang Belanja" style="display:none;">
+                    <i class="fa-solid fa-cart-shopping"></i> <span class="btn-label">Keranjang</span>
+                    <span id="customer-cart-count" class="cart-pill-badge">0</span>
+                </button>
+                <button class="btn-logout btn-pelanggan-only" onclick="switchTab('pelanggan-profile')" id="btn-customer-profile" title="Profil Akun" style="display:none;">
+                    <i class="fa-solid fa-user-gear"></i> <span class="btn-label">Profil Saya</span>
+                </button>
+
+                <!-- Tombol Keluar (Semua Role) -->
                 <button class="btn-logout" onclick="handleLogout()" title="Keluar dari akun">
                     <i class="fa-solid fa-right-from-bracket"></i> <span class="btn-label">Keluar</span>
                 </button>
@@ -104,56 +193,92 @@
         </div>
     </header>
 
-    <!-- Navigasi Utama -->
+    <!-- Navigasi Dinamis Berdasarkan Role -->
     <nav class="app-nav">
-        <div class="nav-container">
-            <button class="nav-btn active" onclick="switchTab('dashboard')">
-                <i class="fa-solid fa-gauge-high"></i> Dashboard
-            </button>
-            <button class="nav-btn" onclick="switchTab('barang')">
-                <i class="fa-solid fa-boxes-stacked"></i> Manajemen Barang
-            </button>
-            <button class="nav-btn" onclick="switchTab('transaksi')">
-                <i class="fa-solid fa-cash-register"></i> Transaksi Kasir
-            </button>
-            <button class="nav-btn" onclick="switchTab('laporan')">
-                <i class="fa-solid fa-chart-line"></i> Laporan Transaksi
-            </button>
+        <div class="nav-container" id="nav-container">
+            <!-- Rendered dynamically by applySessionToHeader() -->
         </div>
     </nav>
 
     <!-- Main Container -->
     <main class="main-container">
 
-        <!-- SECTION DASHBOARD -->
+        <!-- SECTION DASHBOARD (ADMIN) -->
         <section id="section-dashboard" class="tab-content active">
-            <!-- Ringkasan Stok Menipis & Alat Data -->
+            <!-- Alert Pesanan Online Masuk (jika ada pesanan yang perlu dikonfirmasi) -->
+            <div id="alert-pesanan-masuk" class="order-alert-banner" style="display:none;" onclick="switchTab('pesanan-admin')">
+                <i class="fa-solid fa-bell fa-shake"></i>
+                <span id="alert-pesanan-text">Ada 0 pesanan online baru dari pelanggan menunggu konfirmasi!</span>
+                <button type="button" class="btn btn-sm btn-primary">Lihat Pesanan &rarr;</button>
+            </div>
+
+            <!-- Ringkasan Statistik Utama Toko -->
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-icon bg-red">
-                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <i class="fa-solid fa-wallet"></i>
                     </div>
                     <div class="stat-info">
-                        <h3>Produk Stok Menipis (&le; 5)</h3>
-                        <p id="dash-stok-menipis">0 Produk</p>
+                        <h3>Total Pendapatan (Omzet)</h3>
+                        <p id="dash-omzet-total">Rp 0</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon bg-green">
+                        <i class="fa-solid fa-circle-dollar-to-slot"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Keuntungan (Laba Bersih)</h3>
+                        <p id="dash-laba-total">Rp 0</p>
                     </div>
                 </div>
 
                 <div class="stat-card">
                     <div class="stat-icon bg-blue">
-                        <i class="fa-solid fa-chart-simple"></i>
+                        <i class="fa-solid fa-receipt"></i>
                     </div>
                     <div class="stat-info">
-                        <h3>Omzet 7 Hari Terakhir</h3>
-                        <p id="dash-omzet-7hari">Rp 0</p>
+                        <h3>Total Transaksi</h3>
+                        <p id="dash-total-transaksi">0 Transaksi</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon bg-orange">
+                        <i class="fa-solid fa-boxes-stacked"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Jumlah Produk</h3>
+                        <p id="dash-total-produk">0 Produk</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon bg-blue">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Pelanggan Terdaftar</h3>
+                        <p id="dash-total-pelanggan">0 Pelanggan</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon bg-red">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Stok Menipis (&le; 5)</h3>
+                        <p id="dash-stok-menipis">0 Produk</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Grafik Penjualan -->
+            <!-- Grafik Penjualan Omzet -->
             <div class="card">
                 <div class="card-header flex-between">
-                    <h2><i class="fa-solid fa-chart-line"></i> <span id="chart-omzet-title">Grafik Omzet 7 Hari Terakhir</span></h2>
+                    <h2><i class="fa-solid fa-chart-line"></i> <span id="chart-omzet-title">Grafik Omzet Penjualan</span></h2>
                     <div class="chart-period-buttons">
                         <button type="button" class="chart-period-btn active" data-period="7days" onclick="setChartPeriod('7days')">7 Hari</button>
                         <button type="button" class="chart-period-btn" data-period="30days" onclick="setChartPeriod('30days')">30 Hari</button>
@@ -177,6 +302,7 @@
                                 <th>Foto</th>
                                 <th>Kode</th>
                                 <th>Nama</th>
+                                <th>Kategori</th>
                                 <th>Stok Tersisa</th>
                                 <th>Aksi</th>
                             </tr>
@@ -188,10 +314,10 @@
                 </div>
             </div>
 
-            <!-- Backup & Restore Data -->
+            <!-- Backup & Restore Data (Admin Only) -->
             <div class="card">
                 <div class="card-header">
-                    <h2><i class="fa-solid fa-database"></i> Backup & Restore Data</h2>
+                    <h2><i class="fa-solid fa-database"></i> Backup & Restore Data Toko</h2>
                 </div>
                 <div class="backup-actions">
                     <button type="button" class="btn btn-primary" onclick="backupData()">
@@ -205,112 +331,191 @@
                     </button>
                     <input type="file" id="file-restore" accept=".json,application/json" style="display:none;" onchange="restoreData(event)">
                 </div>
-                <small class="form-info">Backup mengunduh data JSON. Restore mengembalikan data. Bersihkan Cache mengosongkan penyimpanan lokal browser yang penuh tanpa menghapus data di cloud.</small>
+                <small class="form-info">Cadangkan seluruh data produk, transaksi, kategori, pesanan, dan akun pengguna dalam file JSON.</small>
             </div>
         </section>
 
-        <!-- SECTION 1: MANAJEMEN BARANG -->
+        <!-- SECTION 1: MANAJEMEN BARANG & KATEGORI (ADMIN) -->
         <section id="section-barang" class="tab-content">
-            <div class="grid-2col">
-                <!-- Form Tambah / Edit Barang -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2 id="form-barang-title"><i class="fa-solid fa-plus-circle"></i> Tambah Barang</h2>
-                    </div>
-                    <form id="form-barang" onsubmit="handleSaveProduct(event)">
-                        <input type="hidden" id="edit-index" value="-1">
-                        <input type="hidden" id="kode-barang" value="">
+            <!-- Sub-tab Navigasi: Produk vs Kategori -->
+            <div class="sub-tab-bar">
+                <button type="button" class="sub-tab-btn active" id="subtab-btn-produk" onclick="switchBarangSubtab('produk')">
+                    <i class="fa-solid fa-boxes-stacked"></i> Daftar & Form Produk
+                </button>
+                <button type="button" class="sub-tab-btn" id="subtab-btn-kategori" onclick="switchBarangSubtab('kategori')">
+                    <i class="fa-solid fa-tags"></i> Kelola Kategori Produk
+                </button>
+            </div>
 
-                        <div class="form-group">
-                            <label for="nama-barang">Nama Barang</label>
-                            <input type="text" id="nama-barang" placeholder="Contoh: Beras 5kg" required>
+            <!-- Panel 1: Produk -->
+            <div id="panel-barang-produk">
+                <div class="grid-2col">
+                    <!-- Form Tambah / Edit Barang -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 id="form-barang-title"><i class="fa-solid fa-plus-circle"></i> Tambah Barang Baru</h2>
                         </div>
+                        <form id="form-barang" onsubmit="handleSaveProduct(event)">
+                            <input type="hidden" id="edit-index" value="-1">
+                            <input type="hidden" id="kode-barang" value="">
 
-                        <div class="form-group">
-                            <label for="harga-barang">Harga Jual (Rp)</label>
-                            <input type="number" id="harga-barang" min="0" placeholder="Contoh: 65000" required>
-                        </div>
+                            <div class="form-group">
+                                <label for="nama-barang">Nama Barang *</label>
+                                <input type="text" id="nama-barang" placeholder="Contoh: Beras Premium 5kg" required>
+                            </div>
 
-                        <div class="form-group">
-                            <label for="modal-barang">Harga Modal (Rp)</label>
-                            <input type="number" id="modal-barang" min="0" placeholder="Contoh: 55000" oninput="updateLabaPreview()">
-                            <small id="info-laba-item" class="form-info">Laba per item: Rp 0</small>
-                        </div>
+                            <div class="form-group">
+                                <label for="kategori-barang">Kategori Produk *</label>
+                                <select id="kategori-barang" class="form-control" required>
+                                    <!-- Populated dynamically by JS -->
+                                </select>
+                            </div>
 
-                        <div class="form-group">
-                            <label for="stok-barang">Stok</label>
-                            <input type="number" id="stok-barang" min="0" placeholder="Contoh: 20" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Foto Produk (Opsional)</label>
-                            
-                            <!-- Drop Zone Upload -->
-                            <div id="drop-zone" class="drop-zone" onclick="document.getElementById('file-gambar').click()" ondragover="event.preventDefault(); this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="handleFileDrop(event)">
-                                <div id="drop-zone-content">
-                                    <i class="fa-solid fa-cloud-arrow-up drop-zone-icon"></i>
-                                    <p class="drop-zone-text">Seret & lepas foto ke sini</p>
-                                    <p class="drop-zone-hint">atau klik untuk memilih file</p>
-                                    <p class="drop-zone-formats">JPG, PNG, WebP (maks. 2MB)</p>
+                            <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+                                <div class="form-group">
+                                    <label for="harga-barang">Harga Jual (Rp) *</label>
+                                    <input type="number" id="harga-barang" min="0" placeholder="Contoh: 65000" required oninput="updateLabaPreview()">
                                 </div>
-                                <div id="drop-zone-preview" class="drop-zone-preview" style="display:none;">
-                                    <img id="drop-zone-img" src="" alt="Preview">
-                                    <button type="button" class="btn btn-danger btn-sm" onclick="event.stopPropagation(); removeUploadedPhoto()" title="Hapus Foto">
-                                        <i class="fa-solid fa-trash-can"></i> Hapus Foto
-                                    </button>
+                                <div class="form-group">
+                                    <label for="modal-barang">Harga Modal / Beli (Rp) *</label>
+                                    <input type="number" id="modal-barang" min="0" placeholder="Contoh: 55000" oninput="updateLabaPreview()">
                                 </div>
                             </div>
-                            <input type="file" id="file-gambar" accept="image/jpeg,image/png,image/webp" style="display:none;" onchange="handleFileSelect(event)">
-                            <input type="hidden" id="gambar-barang" value="">
-                            <small class="form-info">Atau masukkan URL manual:</small>
-                            <input type="url" id="gambar-url-input" placeholder="https://example.com/foto.jpg" oninput="handleUrlInput(this.value)" style="margin-top:0.3rem;">
-                        </div>
+                            <small id="info-laba-item" class="form-info" style="margin-bottom:0.75rem; display:block;">Laba per item: Rp 0</small>
 
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-primary" id="btn-simpan-barang">
-                                <i class="fa-solid fa-floppy-disk"></i> Simpan Barang
-                            </button>
-                            <button type="button" class="btn btn-secondary" id="btn-batal-edit" style="display: none;" onclick="resetProductForm()">
-                                <i class="fa-solid fa-xmark"></i> Batal
-                            </button>
+                            <div class="form-group">
+                                <label for="stok-barang">Stok Barang *</label>
+                                <input type="number" id="stok-barang" min="0" placeholder="Contoh: 20" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="deskripsi-barang">Deskripsi Produk (Untuk Toko Online Pelanggan)</label>
+                                <textarea id="deskripsi-barang" class="form-control" rows="2" placeholder="Tuliskan deskripsi produk atau kemasan..."></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Foto Produk (Opsional)</label>
+                                
+                                <!-- Drop Zone Upload -->
+                                <div id="drop-zone" class="drop-zone" onclick="document.getElementById('file-gambar').click()" ondragover="event.preventDefault(); this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="handleFileDrop(event)">
+                                    <div id="drop-zone-content">
+                                        <i class="fa-solid fa-cloud-arrow-up drop-zone-icon"></i>
+                                        <p class="drop-zone-text">Seret & lepas foto ke sini</p>
+                                        <p class="drop-zone-hint">atau klik untuk memilih file</p>
+                                        <p class="drop-zone-formats">JPG, PNG, WebP (maks. 2MB)</p>
+                                    </div>
+                                    <div id="drop-zone-preview" class="drop-zone-preview" style="display:none;">
+                                        <img id="drop-zone-img" src="" alt="Preview">
+                                        <button type="button" class="btn btn-danger btn-sm" onclick="event.stopPropagation(); removeUploadedPhoto()" title="Hapus Foto">
+                                            <i class="fa-solid fa-trash-can"></i> Hapus Foto
+                                        </button>
+                                    </div>
+                                </div>
+                                <input type="file" id="file-gambar" accept="image/jpeg,image/png,image/webp" style="display:none;" onchange="handleFileSelect(event)">
+                                <input type="hidden" id="gambar-barang" value="">
+                                <small class="form-info">Atau masukkan URL manual:</small>
+                                <input type="url" id="gambar-url-input" placeholder="https://example.com/foto.jpg" oninput="handleUrlInput(this.value)" style="margin-top:0.3rem;">
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary" id="btn-simpan-barang">
+                                    <i class="fa-solid fa-floppy-disk"></i> Simpan Barang
+                                </button>
+                                <button type="button" class="btn btn-secondary" id="btn-batal-edit" style="display: none;" onclick="resetProductForm()">
+                                    <i class="fa-solid fa-xmark"></i> Batal
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Tabel Daftar Barang -->
+                    <div class="card">
+                        <div class="card-header flex-between">
+                            <h2><i class="fa-solid fa-list-check"></i> Daftar Seluruh Barang</h2>
+                            <div class="header-actions" style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+                                <button class="btn btn-primary btn-sm" onclick="loadBatchSampleProducts()" title="Tambahkan 25 produk warung otomatis sekaligus">
+                                    <i class="fa-solid fa-wand-magic-sparkles"></i> Auto Insert 25 Produk
+                                </button>
+                                <button class="btn btn-secondary btn-sm" onclick="openImportModal()" title="Import produk dari file CSV / JSON">
+                                    <i class="fa-solid fa-file-import"></i> Import CSV/JSON
+                                </button>
+                                <div class="search-box">
+                                    <input type="text" id="search-barang" placeholder="Cari nama, kode, kategori..." oninput="renderProducts()">
+                                </div>
+                            </div>
                         </div>
-                    </form>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Foto</th>
+                                        <th>Kode</th>
+                                        <th>Nama</th>
+                                        <th>Kategori</th>
+                                        <th>Harga Jual</th>
+                                        <th>Modal</th>
+                                        <th>Laba</th>
+                                        <th>Stok</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-barang">
+                                    <!-- Rendered dynamically by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
+            </div>
 
-                <!-- Tabel Daftar Barang -->
-                <div class="card">
-                    <div class="card-header flex-between">
-                        <h2><i class="fa-solid fa-list-check"></i> Daftar Barang</h2>
-                        <div class="header-actions" style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
-                            <button class="btn btn-primary btn-sm" onclick="loadBatchSampleProducts()" title="Tambahkan 25 produk warung otomatis sekaligus">
-                                <i class="fa-solid fa-wand-magic-sparkles"></i> Auto Insert 25 Produk
-                            </button>
-                            <button class="btn btn-secondary btn-sm" onclick="openImportModal()" title="Import produk dari file CSV / JSON">
-                                <i class="fa-solid fa-file-import"></i> Import CSV/JSON
-                            </button>
-                            <div class="search-box">
-                                <input type="text" id="search-barang" placeholder="Cari barang..." oninput="renderProducts()">
-                            </div>
+            <!-- Panel 2: Kelola Kategori Produk -->
+            <div id="panel-barang-kategori" style="display:none;">
+                <div class="grid-2col">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 id="form-kategori-title"><i class="fa-solid fa-plus-circle"></i> Tambah Kategori Baru</h2>
                         </div>
+                        <form id="form-kategori" onsubmit="handleSaveCategory(event)">
+                            <input type="hidden" id="edit-kategori-index" value="-1">
+                            <div class="form-group">
+                                <label for="input-kategori-nama">Nama Kategori *</label>
+                                <input type="text" id="input-kategori-nama" placeholder="Contoh: Snack & Minuman Dingin" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="input-kategori-icon">Ikon Kategori (Font Awesome / Emoji)</label>
+                                <input type="text" id="input-kategori-icon" placeholder="Contoh: fa-cookie-bite atau 🍪" value="fa-tag">
+                                <small class="form-info">Contoh: fa-bowl-rice, fa-bottle-water, fa-spray-can, fa-cookie-bite</small>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary" id="btn-simpan-kategori">
+                                    <i class="fa-solid fa-floppy-disk"></i> Simpan Kategori
+                                </button>
+                                <button type="button" class="btn btn-secondary" id="btn-batal-kategori" style="display:none;" onclick="resetCategoryForm()">
+                                    <i class="fa-solid fa-xmark"></i> Batal
+                                </button>
+                            </div>
+                        </form>
                     </div>
-                    <div class="table-responsive">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Foto</th>
-                                    <th>Kode</th>
-                                    <th>Nama</th>
-                                    <th>Harga Jual</th>
-                                    <th>Modal</th>
-                                    <th>Laba</th>
-                                    <th>Stok</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tbody-barang">
-                                <!-- Rendered dynamically by JS -->
-                            </tbody>
-                        </table>
+
+                    <div class="card">
+                        <div class="card-header flex-between">
+                            <h2><i class="fa-solid fa-tags"></i> Daftar Kategori Toko</h2>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Ikon</th>
+                                        <th>Nama Kategori</th>
+                                        <th>Jumlah Produk</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-kategori">
+                                    <!-- Rendered dynamically by JS -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -698,6 +903,316 @@
             </div>
         </section>
 
+        <!-- SECTION: MANAJEMEN PESANAN ONLINE (ADMIN & KASIR) -->
+        <section id="section-pesanan-admin" class="tab-content">
+            <div class="card">
+                <div class="card-header flex-between">
+                    <h2><i class="fa-solid fa-clipboard-list"></i> Pesanan Online Pelanggan</h2>
+                    <div class="header-actions">
+                        <button class="btn btn-secondary btn-sm" onclick="renderAdminOrders()">
+                            <i class="fa-solid fa-rotate"></i> Muat Ulang
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filter Status Pesanan -->
+                <div class="order-filter-bar">
+                    <button type="button" class="order-filter-btn active" data-status="all" onclick="setAdminOrderStatusFilter('all')">
+                        Semua (<span id="count-orders-all">0</span>)
+                    </button>
+                    <button type="button" class="order-filter-btn status-menunggu" data-status="Menunggu Konfirmasi" onclick="setAdminOrderStatusFilter('Menunggu Konfirmasi')">
+                        <i class="fa-solid fa-clock"></i> Menunggu (<span id="count-orders-menunggu">0</span>)
+                    </button>
+                    <button type="button" class="order-filter-btn status-diproses" data-status="Diproses" onclick="setAdminOrderStatusFilter('Diproses')">
+                        <i class="fa-solid fa-spinner"></i> Diproses (<span id="count-orders-diproses">0</span>)
+                    </button>
+                    <button type="button" class="order-filter-btn status-siap" data-status="Siap Diambil" onclick="setAdminOrderStatusFilter('Siap Diambil')">
+                        <i class="fa-solid fa-box-check"></i> Siap Diambil/Diantar (<span id="count-orders-siap">0</span>)
+                    </button>
+                    <button type="button" class="order-filter-btn status-selesai" data-status="Selesai" onclick="setAdminOrderStatusFilter('Selesai')">
+                        <i class="fa-solid fa-circle-check"></i> Selesai (<span id="count-orders-selesai">0</span>)
+                    </button>
+                    <button type="button" class="order-filter-btn status-batal" data-status="Dibatalkan" onclick="setAdminOrderStatusFilter('Dibatalkan')">
+                        <i class="fa-solid fa-circle-xmark"></i> Dibatalkan (<span id="count-orders-batal">0</span>)
+                    </button>
+                </div>
+
+                <div id="admin-orders-container" class="admin-orders-grid">
+                    <!-- Rendered dynamically by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: LOG AKTIVITAS KASIR & TOKO (ADMIN ONLY) -->
+        <section id="section-aktivitas" class="tab-content">
+            <div class="card">
+                <div class="card-header flex-between">
+                    <h2><i class="fa-solid fa-clock-rotate-left"></i> Log Aktivitas Kasir & Sistem Toko</h2>
+                    <div class="header-actions" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+                        <button class="btn btn-secondary btn-sm" onclick="exportActivityLogsCsv()" title="Export CSV Log Aktivitas">
+                            <i class="fa-solid fa-file-csv"></i> Export CSV
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="clearActivityLogs()" title="Hapus Riwayat Log">
+                            <i class="fa-solid fa-trash-can"></i> Bersihkan Log
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filter Log -->
+                <div class="report-filter-bar" style="margin-bottom:1rem;">
+                    <div class="filter-group">
+                        <label for="filter-log-user" class="filter-label">Filter Pengguna:</label>
+                        <select id="filter-log-user" class="form-control" style="width:auto;" onchange="renderActivityLogs()">
+                            <option value="all">Semua Pengguna</option>
+                        </select>
+                    </div>
+                    <div class="search-box">
+                        <input type="text" id="search-log" placeholder="Cari aktivitas atau rincian..." oninput="renderActivityLogs()">
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Waktu & Tanggal</th>
+                                <th>User</th>
+                                <th>Role</th>
+                                <th>Aksi</th>
+                                <th>Rincian Aktivitas</th>
+                                <th>Target</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-aktivitas">
+                            <!-- Rendered dynamically by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: KATALOG & CEK STOK BARANG (KASIR) -->
+        <section id="section-barang-kasir" class="tab-content">
+            <div class="card">
+                <div class="card-header flex-between">
+                    <h2><i class="fa-solid fa-boxes-stacked"></i> Katalog & Cek Stok Barang</h2>
+                    <div class="header-actions" style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+                        <button type="button" class="btn btn-primary btn-sm" onclick="openKasirProductModal(-1)">
+                            <i class="fa-solid fa-plus-circle"></i> Tambah Barang Baru
+                        </button>
+                        <div class="search-box">
+                            <input type="text" id="search-barang-kasir" placeholder="Cari barang atau kode..." oninput="renderProductsKasir()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filter Kategori Kasir -->
+                <div class="category-pills-bar" id="kasir-category-pills" style="margin-bottom:1rem;">
+                    <!-- Rendered dynamically by JS -->
+                </div>
+
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Foto</th>
+                                <th>Kode</th>
+                                <th>Nama Barang</th>
+                                <th>Kategori</th>
+                                <th>Harga Jual</th>
+                                <th>Stok Tersedia</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-barang-kasir">
+                            <!-- Rendered dynamically by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: RIWAYAT TRANSAKSI SAYA (KASIR) -->
+        <section id="section-riwayat-kasir" class="tab-content">
+            <!-- Stats Ringkas Kasir -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon bg-blue">
+                        <i class="fa-solid fa-wallet"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Total Penjualan Saya</h3>
+                        <p id="kasir-stat-omzet">Rp 0</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon bg-green">
+                        <i class="fa-solid fa-receipt"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Jumlah Transaksi Saya</h3>
+                        <p id="kasir-stat-count">0 Transaksi</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header flex-between">
+                    <h2><i class="fa-solid fa-clock-rotate-left"></i> Riwayat Transaksi Kasir Anda</h2>
+                    <div class="search-box">
+                        <input type="text" id="search-riwayat-kasir" placeholder="Cari no. transaksi..." oninput="renderRiwayatKasir()">
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>No. Transaksi</th>
+                                <th>Waktu & Tanggal</th>
+                                <th>Metode Bayar</th>
+                                <th>Jumlah Item</th>
+                                <th>Total Belanja</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-riwayat-kasir">
+                            <!-- Rendered dynamically by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: TOKO BELANJA ONLINE (PELANGGAN) -->
+        <section id="section-pelanggan-store" class="tab-content">
+            <!-- Hero Promo Banner Modern -->
+            <div class="pelanggan-hero-banner">
+                <div class="hero-content">
+                    <span class="hero-badge"><i class="fa-solid fa-fire"></i> Belanja Mudah & Cepat</span>
+                    <h2>Selamat Datang di <span id="store-banner-name">Delsi Shop</span></h2>
+                    <p id="store-banner-tagline">Temukan kebutuhan sembako, makanan, minuman, dan perlengkapan rumah tangga dengan harga terbaik dan terpercaya!</p>
+                    <div class="hero-features">
+                        <span><i class="fa-solid fa-bolt"></i> Stok Real-Time</span>
+                        <span><i class="fa-solid fa-qrcode"></i> Bayar QRIS & Transfer</span>
+                        <span><i class="fa-solid fa-store"></i> Ambil di Toko / Antar</span>
+                    </div>
+                </div>
+                <div class="hero-illustration">
+                    <i class="fa-solid fa-bag-shopping"></i>
+                </div>
+            </div>
+
+            <!-- Toolbar Kategori & Pencarian Pelanggan -->
+            <div class="pelanggan-toolbar-card">
+                <div class="pelanggan-search-row">
+                    <div class="search-box search-box-large">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="search-pelanggan-store" placeholder="Cari beras, minyak, mie, kopi, dll..." oninput="renderCustomerStorefront()">
+                    </div>
+                    <div class="sort-box">
+                        <label for="sort-pelanggan-store"><i class="fa-solid fa-arrow-down-short-wide"></i> Urutkan:</label>
+                        <select id="sort-pelanggan-store" onchange="renderCustomerStorefront()">
+                            <option value="default">Rekomendasi</option>
+                            <option value="price-asc">Harga Terendah</option>
+                            <option value="price-desc">Harga Tertinggi</option>
+                            <option value="name-asc">Nama A &rarr; Z</option>
+                            <option value="stock-desc">Stok Terbanyak</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Category Pills Bar -->
+                <div class="customer-category-pills" id="customer-category-pills">
+                    <!-- Populated dynamically by JS -->
+                </div>
+            </div>
+
+            <!-- Grid Produk Katalog Online -->
+            <div class="pelanggan-store-container">
+                <div class="pelanggan-store-header-count">
+                    <h3>Katalog Produk</h3>
+                    <span id="pelanggan-products-count" class="badge-count">Menampilkan 0 produk</span>
+                </div>
+                <div id="pelanggan-products-grid" class="pelanggan-products-grid">
+                    <!-- Populated dynamically by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: PESANAN SAYA (PELANGGAN) -->
+        <section id="section-pelanggan-orders" class="tab-content">
+            <div class="card">
+                <div class="card-header flex-between">
+                    <h2><i class="fa-solid fa-box-archive"></i> Riwayat & Status Pesanan Saya</h2>
+                    <button class="btn btn-secondary btn-sm" onclick="renderCustomerOrders()">
+                        <i class="fa-solid fa-rotate"></i> Muat Ulang
+                    </button>
+                </div>
+                <div id="customer-orders-container" class="customer-orders-list">
+                    <!-- Rendered dynamically by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: PROFIL & AKUN SAYA (PELANGGAN) -->
+        <section id="section-pelanggan-profile" class="tab-content">
+            <div class="grid-2col">
+                <!-- Data Diri Pelanggan -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-id-card"></i> Data Pribadi Pelanggan</h2>
+                    </div>
+                    <form id="form-customer-profile" onsubmit="handleSaveCustomerProfile(event)">
+                        <div class="form-group">
+                            <label for="prof-username">Username</label>
+                            <input type="text" id="prof-username" class="form-control" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label for="prof-nama">Nama Lengkap *</label>
+                            <input type="text" id="prof-nama" class="form-control" required placeholder="Nama lengkap Anda">
+                        </div>
+                        <div class="form-group">
+                            <label for="prof-telepon">Nomor WhatsApp / HP *</label>
+                            <input type="tel" id="prof-telepon" class="form-control" required placeholder="08xxxxxxxxxx">
+                        </div>
+                        <div class="form-group">
+                            <label for="prof-alamat">Alamat Pengiriman / Domisili *</label>
+                            <textarea id="prof-alamat" class="form-control" rows="3" required placeholder="Alamat lengkap rumah atau patokan jalan"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan Profil
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Ganti Password Akun Pelanggan -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-key"></i> Ganti Password Akun</h2>
+                    </div>
+                    <form id="form-customer-change-pass" onsubmit="handleCustomerChangePassword(event)">
+                        <div class="form-group">
+                            <label for="prof-old-pass">Password Saat Ini *</label>
+                            <input type="password" id="prof-old-pass" class="form-control" required autocomplete="current-password" placeholder="Password lama">
+                        </div>
+                        <div class="form-group">
+                            <label for="prof-new-pass">Password Baru *</label>
+                            <input type="password" id="prof-new-pass" class="form-control" required minlength="4" autocomplete="new-password" placeholder="Minimal 4 karakter">
+                        </div>
+                        <div class="form-group">
+                            <label for="prof-confirm-pass">Ulangi Password Baru *</label>
+                            <input type="password" id="prof-confirm-pass" class="form-control" required minlength="4" autocomplete="new-password" placeholder="Ketik ulang password baru">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <i class="fa-solid fa-shield-halved"></i> Perbarui Password
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
     </main>
 
     <!-- MODAL / CONTAINER CETAK STRUK -->
@@ -846,7 +1361,7 @@
             console.warn("Firebase initialization error, fallback to localStorage:", e);
         }
     </script>
-    <script src="script.js?v=17"></script>
+    <script src="script.js?v=20"></script>
 
     <!-- MODAL SCANNER BARCODE & QR CODE -->
     <div id="scanner-modal-overlay" class="scanner-modal-overlay">
@@ -936,13 +1451,21 @@
     <div id="user-modal-overlay" class="modal-overlay" style="display:none;" onclick="closeUserModal(event)">
         <div class="modal-card user-modal-card" onclick="event.stopPropagation()">
             <div class="modal-header">
-                <h3><i class="fa-solid fa-users-gear"></i> Kelola User</h3>
+                <h3><i class="fa-solid fa-users-gear"></i> Kelola Pengguna & Role</h3>
                 <button class="close-btn" onclick="closeUserModal()">&times;</button>
+            </div>
+
+            <!-- Filter Role Tab -->
+            <div class="user-role-filters" style="display:flex; gap:0.5rem; margin-bottom:1rem; border-bottom:1px solid #e0e0e0; padding-bottom:0.5rem; flex-wrap:wrap;">
+                <button type="button" class="btn btn-sm btn-subtab active" onclick="filterUserList('all', this)">Semua (<span id="user-count-all">0</span>)</button>
+                <button type="button" class="btn btn-sm btn-subtab" onclick="filterUserList('Administrator', this)">Admin (<span id="user-count-admin">0</span>)</button>
+                <button type="button" class="btn btn-sm btn-subtab" onclick="filterUserList('Kasir', this)">Kasir (<span id="user-count-kasir">0</span>)</button>
+                <button type="button" class="btn btn-sm btn-subtab" onclick="filterUserList('Pelanggan', this)">Pelanggan (<span id="user-count-pelanggan">0</span>)</button>
             </div>
 
             <!-- Daftar User -->
             <div class="user-list-section">
-                <h4 class="user-section-title"><i class="fa-solid fa-list"></i> Daftar Akun</h4>
+                <h4 class="user-section-title"><i class="fa-solid fa-list"></i> Daftar Akun Pengguna</h4>
                 <div id="user-list" class="user-list">
                     <!-- Rendered by JS -->
                 </div>
@@ -950,27 +1473,40 @@
 
             <!-- Tambah User Baru (hanya admin) -->
             <div id="add-user-section" class="user-form-section">
-                <h4 class="user-section-title"><i class="fa-solid fa-user-plus"></i> Tambah Akun Baru</h4>
+                <h4 class="user-section-title"><i class="fa-solid fa-user-plus"></i> Tambah Pengguna Baru</h4>
                 <form id="form-add-user" onsubmit="handleAddUser(event)">
-                    <div class="form-group">
-                        <label for="new-username">Username</label>
-                        <input type="text" id="new-username" placeholder="Contoh: kasir2" 
-                               autocomplete="off" required minlength="3">
+                    <div class="form-row">
+                        <div class="form-group" style="flex:1;">
+                            <label for="new-username">Username *</label>
+                            <input type="text" id="new-username" placeholder="Contoh: kasir2 / pelanggan1" 
+                                   autocomplete="off" required minlength="3">
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label for="new-fullname">Nama Lengkap</label>
+                            <input type="text" id="new-fullname" placeholder="Contoh: Siti Aisyah" autocomplete="name">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group" style="flex:1;">
+                            <label for="new-password">Password *</label>
+                            <input type="password" id="new-password" placeholder="Min. 4 karakter" 
+                                   autocomplete="new-password" required minlength="4">
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label for="new-role">Role Pengguna *</label>
+                            <select id="new-role" required>
+                                <option value="Kasir">Kasir</option>
+                                <option value="Pelanggan">Pelanggan</option>
+                                <option value="Administrator">Administrator</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="form-group">
-                        <label for="new-password">Password</label>
-                        <input type="password" id="new-password" placeholder="Min. 4 karakter" 
-                               autocomplete="new-password" required minlength="4">
-                    </div>
-                    <div class="form-group">
-                        <label for="new-role">Role</label>
-                        <select id="new-role" required>
-                            <option value="Kasir">Kasir</option>
-                            <option value="Administrator">Administrator</option>
-                        </select>
+                        <label for="new-phone">No. WhatsApp / HP (Opsional)</label>
+                        <input type="tel" id="new-phone" placeholder="Contoh: 08123456789">
                     </div>
                     <button type="submit" class="btn btn-primary btn-block">
-                        <i class="fa-solid fa-plus"></i> Tambah Akun
+                        <i class="fa-solid fa-plus"></i> Tambah Pengguna Baru
                     </button>
                 </form>
             </div>
@@ -1214,6 +1750,317 @@
                         <i class="fa-solid fa-floppy-disk"></i> Simpan Pengaturan
                     </button>
                     <button type="button" class="btn btn-secondary" onclick="closeDisplaySettingsModal()">Batal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- MODAL PELANGGAN: DETAIL PRODUK -->
+    <!-- ================================================================= -->
+    <div id="customer-product-detail-modal" class="modal-overlay" style="display:none;" onclick="closeCustomerProductDetail(event)">
+        <div class="modal-card customer-detail-modal-card" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-circle-info"></i> Detail Produk</h3>
+                <button class="close-btn" onclick="closeCustomerProductDetail()">&times;</button>
+            </div>
+            <div class="customer-product-detail-body">
+                <div class="detail-img-col">
+                    <img id="cust-modal-img" src="" alt="Foto Produk">
+                </div>
+                <div class="detail-info-col">
+                    <span id="cust-modal-category" class="product-category-tag">Umum</span>
+                    <h3 id="cust-modal-name">Nama Produk</h3>
+                    <div class="detail-price-row">
+                        <span id="cust-modal-price" class="detail-price">Rp 0</span>
+                        <span id="cust-modal-stock" class="stock-badge">Stok: 0</span>
+                    </div>
+                    <div class="detail-desc-box">
+                        <label>Deskripsi:</label>
+                        <p id="cust-modal-desc">Tidak ada deskripsi produk.</p>
+                    </div>
+                    <div class="detail-qty-row">
+                        <label>Jumlah Beli:</label>
+                        <div class="qty-stepper">
+                            <button type="button" onclick="adjustCustDetailQty(-1)"><i class="fa-solid fa-minus"></i></button>
+                            <input type="number" id="cust-modal-qty" value="1" min="1" max="999" readonly>
+                            <button type="button" onclick="adjustCustDetailQty(1)"><i class="fa-solid fa-plus"></i></button>
+                        </div>
+                    </div>
+                    <div class="detail-subtotal-row">
+                        <span>Total:</span>
+                        <strong id="cust-modal-subtotal">Rp 0</strong>
+                    </div>
+                    <button type="button" id="btn-cust-add-to-cart" class="btn btn-primary btn-block" onclick="submitCustDetailAddToCart()">
+                        <i class="fa-solid fa-cart-plus"></i> Tambah ke Keranjang
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- MODAL PELANGGAN: KERANJANG BELANJA -->
+    <!-- ================================================================= -->
+    <div id="customer-cart-modal" class="modal-overlay" style="display:none;" onclick="closeCustomerCartModal(event)">
+        <div class="modal-card customer-cart-modal-card" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-cart-shopping"></i> Keranjang Belanja Saya</h3>
+                <button class="close-btn" onclick="closeCustomerCartModal()">&times;</button>
+            </div>
+            <div id="customer-cart-items-container" class="customer-cart-list">
+                <!-- Rendered by JS -->
+            </div>
+            <div class="customer-cart-footer">
+                <div class="cart-summary-row">
+                    <span>Total Belanja:</span>
+                    <strong id="customer-cart-total-price">Rp 0</strong>
+                </div>
+                <div class="cart-modal-actions">
+                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="clearCustomerCart()">
+                        <i class="fa-solid fa-trash-can"></i> Kosongkan
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="closeCustomerCartModal()">Lanjut Belanja</button>
+                    <button type="button" id="btn-proceed-checkout" class="btn btn-primary" onclick="openCustomerCheckoutModal()">
+                        <i class="fa-solid fa-arrow-right"></i> Checkout (<span id="customer-cart-btn-qty">0</span>)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- MODAL PELANGGAN: CHECKOUT PESANAN -->
+    <!-- ================================================================= -->
+    <div id="customer-checkout-modal" class="modal-overlay" style="display:none;" onclick="closeCustomerCheckoutModal(event)">
+        <div class="modal-card customer-checkout-modal-card" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-bag-shopping"></i> Konfirmasi & Checkout Pesanan</h3>
+                <button class="close-btn" onclick="closeCustomerCheckoutModal()">&times;</button>
+            </div>
+            <form id="customer-checkout-form" onsubmit="handleCustomerCheckoutSubmit(event)">
+                <div class="checkout-grid">
+                    <!-- Ringkasan Item -->
+                    <div class="checkout-summary-section">
+                        <h4><i class="fa-solid fa-receipt"></i> Ringkasan Barang</h4>
+                        <div id="checkout-items-preview" class="checkout-items-list">
+                            <!-- Rendered by JS -->
+                        </div>
+                        <div class="checkout-total-box">
+                            <div>Total Pembayaran:</div>
+                            <h3 id="checkout-total-amount">Rp 0</h3>
+                        </div>
+                    </div>
+
+                    <!-- Form Data Pengiriman & Pembayaran -->
+                    <div class="checkout-form-section">
+                        <h4><i class="fa-solid fa-address-card"></i> Data Pembeli & Pengantaran</h4>
+                        <div class="form-group">
+                            <label for="checkout-name">Nama Pemesan *</label>
+                            <input type="text" id="checkout-name" required placeholder="Nama Anda">
+                        </div>
+                        <div class="form-group">
+                            <label for="checkout-phone">No. WhatsApp / HP *</label>
+                            <input type="tel" id="checkout-phone" required placeholder="Contoh: 08123456789">
+                            <small class="form-info">Digunakan untuk konfirmasi & update pesanan.</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Metode Pengambilan *</label>
+                            <div class="delivery-options">
+                                <label class="delivery-option-radio">
+                                    <input type="radio" name="checkout-delivery-type" value="pickup" checked onchange="toggleDeliveryAddress(false)">
+                                    <span><i class="fa-solid fa-store"></i> <strong>Ambil di Toko</strong> (Gratis)</span>
+                                </label>
+                                <label class="delivery-option-radio">
+                                    <input type="radio" name="checkout-delivery-type" value="delivery" onchange="toggleDeliveryAddress(true)">
+                                    <span><i class="fa-solid fa-motorcycle"></i> <strong>Antar ke Alamat</strong></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div id="checkout-address-group" class="form-group" style="display:none;">
+                            <label for="checkout-address">Alamat Pengantaran Lengkap *</label>
+                            <textarea id="checkout-address" rows="2" placeholder="Nama jalan, nomor rumah, RT/RW, patokan"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="checkout-notes">Catatan Pesanan (Opsional)</label>
+                            <input type="text" id="checkout-notes" placeholder="Contoh: Tolong pilih yang tanggal kadaluarsanya masih lama">
+                        </div>
+
+                        <h4><i class="fa-solid fa-wallet"></i> Metode Pembayaran</h4>
+                        <div class="payment-method-radios">
+                            <label class="payment-radio-label">
+                                <input type="radio" name="checkout-payment-method" value="tunai" checked>
+                                <span><i class="fa-solid fa-money-bill-wave"></i> Bayar Tunai (Saat Ambil / COD)</span>
+                            </label>
+                            <label class="payment-radio-label">
+                                <input type="radio" name="checkout-payment-method" value="qris">
+                                <span><i class="fa-solid fa-qrcode"></i> QRIS (Scan saat terima / via konfirmasi)</span>
+                            </label>
+                            <label class="payment-radio-label">
+                                <input type="radio" name="checkout-payment-method" value="transfer">
+                                <span><i class="fa-solid fa-building-columns"></i> Transfer Bank</span>
+                            </label>
+                            <label class="payment-radio-label">
+                                <input type="radio" name="checkout-payment-method" value="ewallet">
+                                <span><i class="fa-solid fa-mobile-screen"></i> E-Wallet (GoPay/OVO/Dana)</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="checkout-footer-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeCustomerCheckoutModal()">Batal</button>
+                    <button type="submit" class="btn btn-primary btn-lg" id="btn-submit-order">
+                        <i class="fa-solid fa-paper-plane"></i> Buat Pesanan Sekarang
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- MODAL PELANGGAN: DETAIL STATUS PESANAN -->
+    <!-- ================================================================= -->
+    <div id="customer-order-detail-modal" class="modal-overlay" style="display:none;" onclick="closeCustomerOrderDetail(event)">
+        <div class="modal-card order-detail-modal-card" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-receipt"></i> Detail Pesanan Saya</h3>
+                <button class="close-btn" onclick="closeCustomerOrderDetail()">&times;</button>
+            </div>
+            <div id="customer-order-detail-body" class="order-detail-modal-body">
+                <!-- Rendered by JS -->
+            </div>
+            <div class="modal-actions" style="margin-top:1rem;">
+                <button type="button" class="btn btn-secondary btn-block" onclick="closeCustomerOrderDetail()">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- MODAL ADMIN & KASIR: DETAIL & UPDATE STATUS PESANAN MASUK -->
+    <!-- ================================================================= -->
+    <div id="order-status-modal" class="modal-overlay" style="display:none;" onclick="closeOrderStatusModal(event)">
+        <div class="modal-card order-status-modal-card" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-clipboard-check"></i> Kelola Status Pesanan Masuk</h3>
+                <button class="close-btn" onclick="closeOrderStatusModal()">&times;</button>
+            </div>
+            <div id="order-status-modal-content">
+                <!-- Rendered by JS -->
+            </div>
+            <div style="margin-top:1.25rem; border-top:1px solid #e0e0e0; padding-top:1rem;">
+                <div class="form-group">
+                    <label for="update-order-status-select"><strong>Ubah Status Pesanan:</strong></label>
+                    <select id="update-order-status-select" class="form-control" style="font-weight:600;">
+                        <option value="Menunggu Konfirmasi">⏳ Menunggu Konfirmasi</option>
+                        <option value="Diproses">⚙️ Sedang Diproses / Disiapkan</option>
+                        <option value="Siap Diambil">📦 Siap Diambil / Siap Antar</option>
+                        <option value="Selesai">✅ Selesai</option>
+                        <option value="Dibatalkan">❌ Batalkan Pesanan</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="update-order-note">Catatan Toko / No Resi / Pesan ke Pelanggan:</label>
+                    <input type="text" id="update-order-note" placeholder="Contoh: Pesanan telah dibungkus rapi, silakan diambil di meja kasir.">
+                </div>
+                <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="printOrderSlip()">
+                        <i class="fa-solid fa-print"></i> Cetak Struk Pesanan
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="closeOrderStatusModal()">Tutup</button>
+                    <button type="button" class="btn btn-primary" onclick="submitUpdateOrderStatus()">
+                        <i class="fa-solid fa-floppy-disk"></i> Simpan Status
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- MODAL KASIR: TAMBAH / EDIT PRODUK (HAK AKSES TERBATAS) -->
+    <!-- ================================================================= -->
+    <div id="kasir-product-modal" class="modal-overlay" style="display:none;" onclick="closeKasirProductModal(event)">
+        <div class="modal-card kasir-product-modal-card" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 id="kasir-modal-title"><i class="fa-solid fa-box-open"></i> Tambah / Edit Produk (Kasir)</h3>
+                <button class="close-btn" onclick="closeKasirProductModal()">&times;</button>
+            </div>
+            <form id="form-barang-kasir" onsubmit="handleSaveProductKasir(event)">
+                <input type="hidden" id="kasir-edit-index" value="-1">
+                <div class="form-group">
+                    <label for="kasir-nama-barang">Nama Barang *</label>
+                    <input type="text" id="kasir-nama-barang" required placeholder="Contoh: Minyak Goreng 1L">
+                </div>
+                <div class="form-row">
+                    <div class="form-group" style="flex:1;">
+                        <label for="kasir-kategori-barang">Kategori</label>
+                        <select id="kasir-kategori-barang">
+                            <option value="Umum">Umum</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label for="kasir-harga-barang">Harga Jual (Rp) *</label>
+                        <input type="number" id="kasir-harga-barang" min="0" required placeholder="Contoh: 15000">
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label for="kasir-stok-barang">Stok Barang *</label>
+                        <input type="number" id="kasir-stok-barang" min="0" required placeholder="Contoh: 20">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="kasir-deskripsi-barang">Deskripsi Produk (Opsional)</label>
+                    <input type="text" id="kasir-deskripsi-barang" placeholder="Keterangan singkat produk...">
+                </div>
+                <div class="form-group">
+                    <label>Foto Produk (Opsional)</label>
+                    <div style="display:flex; gap:0.5rem; align-items:center;">
+                        <input type="text" id="kasir-gambar-url" placeholder="https://example.com/foto.jpg" style="flex:1;">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('kasir-gambar-file').click()">
+                            <i class="fa-solid fa-upload"></i> Upload
+                        </button>
+                        <input type="file" id="kasir-gambar-file" accept="image/*" style="display:none;" onchange="handleKasirImageUpload(event)">
+                    </div>
+                </div>
+                <div class="form-info" style="margin-bottom:1rem; color:#666;">
+                    <i class="fa-solid fa-shield-halved"></i> <em>Catatan Kasir: Penambahan & perubahan produk oleh Kasir akan otomatis tercatat di log aktivitas toko.</em>
+                </div>
+                <div style="display:flex; gap:0.75rem; justify-content:flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="closeKasirProductModal()">Batal</button>
+                    <button type="submit" class="btn btn-primary" id="btn-save-kasir-prod">
+                        <i class="fa-solid fa-floppy-disk"></i> Simpan Produk
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- MODAL KASIR: GANTI PASSWORD KASIR -->
+    <!-- ================================================================= -->
+    <div id="kasir-password-modal" class="modal-overlay" style="display:none;" onclick="closeKasirPasswordModal(event)">
+        <div class="modal-card kasir-pass-modal-card" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-key"></i> Ganti Password Kasir</h3>
+                <button class="close-btn" onclick="closeKasirPasswordModal()">&times;</button>
+            </div>
+            <form id="form-kasir-change-pass" onsubmit="handleKasirChangePassword(event)">
+                <div class="form-group">
+                    <label for="kasir-old-password">Password Saat Ini *</label>
+                    <input type="password" id="kasir-old-password" required autocomplete="current-password" placeholder="Masukkan password lama">
+                </div>
+                <div class="form-group">
+                    <label for="kasir-new-password">Password Baru *</label>
+                    <input type="password" id="kasir-new-password" required minlength="4" autocomplete="new-password" placeholder="Minimal 4 karakter">
+                </div>
+                <div class="form-group">
+                    <label for="kasir-confirm-password">Ulangi Password Baru *</label>
+                    <input type="password" id="kasir-confirm-password" required minlength="4" autocomplete="new-password" placeholder="Ulangi password baru">
+                </div>
+                <div style="display:flex; gap:0.75rem; justify-content:flex-end; margin-top:1.5rem;">
+                    <button type="button" class="btn btn-secondary" onclick="closeKasirPasswordModal()">Batal</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-rotate"></i> Perbarui Password
+                    </button>
                 </div>
             </form>
         </div>
