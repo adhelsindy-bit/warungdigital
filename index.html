@@ -23,7 +23,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=3">
     <!-- Font Awesome Icons for clean UI icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=22">
+    <link rel="stylesheet" href="style.css?v=23">
 </head>
 <body class="logged-out">
 
@@ -1114,7 +1114,8 @@
                     <div class="sort-box">
                         <label for="sort-pelanggan-store"><i class="fa-solid fa-arrow-down-short-wide"></i> Urutkan:</label>
                         <select id="sort-pelanggan-store" onchange="renderCustomerStorefront()">
-                            <option value="default">Rekomendasi</option>
+                            <option value="default">Paling Sesuai (Rekomendasi)</option>
+                            <option value="best-seller">🔥 Produk Terlaris</option>
                             <option value="price-asc">Harga Terendah</option>
                             <option value="price-desc">Harga Tertinggi</option>
                             <option value="name-asc">Nama A &rarr; Z</option>
@@ -1361,7 +1362,7 @@
             console.warn("Firebase initialization error, fallback to localStorage:", e);
         }
     </script>
-    <script src="script.js?v=22"></script>
+    <script src="script.js?v=23"></script>
 
     <!-- MODAL SCANNER BARCODE & QR CODE -->
     <div id="scanner-modal-overlay" class="scanner-modal-overlay">

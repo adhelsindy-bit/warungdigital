@@ -4017,3 +4017,266 @@ html[data-theme="dark"] .payment-radio-label {
         grid-template-columns: 1fr;
     }
 }
+
+/* ==========================================================================
+   BADGE PRODUK TERLARIS, REKOMENDASI & STOK TERBATAS
+   ========================================================================== */
+.product-badge-flag {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    z-index: 2;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    pointer-events: none;
+}
+
+.product-badge-flag.badge-terlaris {
+    background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
+    color: #ffffff;
+}
+
+.product-badge-flag.badge-rekomendasi {
+    background: linear-gradient(135deg, #f59e0b 0%, #eab308 100%);
+    color: #ffffff;
+}
+
+.product-badge-flag.badge-promo {
+    background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+    color: #ffffff;
+}
+
+.product-badge-flag.badge-limited {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    color: #ffffff;
+    animation: badgePulse 2s infinite ease-in-out;
+}
+
+@keyframes badgePulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.06); }
+}
+
+/* ==========================================================================
+   TIMELINE PELACAKAN STATUS PESANAN (ORDER TRACKING STEPPER)
+   ========================================================================== */
+.order-timeline-wrapper {
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 1rem 0.75rem 0.75rem 0.75rem;
+    margin: 0.75rem 0;
+    border: 1px solid #e2e8f0;
+}
+
+.order-timeline-stepper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.stepper-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+    flex: 0 0 68px;
+}
+
+.stepper-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: 700;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.stepper-label {
+    margin-top: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.stepper-title {
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: #64748b;
+    white-space: nowrap;
+}
+
+.stepper-sub {
+    font-size: 0.68rem;
+    color: #94a3b8;
+    margin-top: 1px;
+}
+
+.stepper-bar {
+    flex: 1;
+    height: 4px;
+    background: #e2e8f0;
+    margin: 0 -4px 22px -4px;
+    position: relative;
+    z-index: 1;
+    border-radius: 2px;
+    transition: background 0.3s ease;
+}
+
+/* Step States */
+.stepper-step.completed .stepper-circle {
+    background: #10b981;
+    color: #ffffff;
+}
+
+.stepper-step.completed .stepper-title {
+    color: #10b981;
+}
+
+.stepper-bar.completed {
+    background: #10b981;
+}
+
+.stepper-step.active .stepper-circle {
+    background: var(--primary-color, #c2410c);
+    color: #ffffff;
+    box-shadow: 0 0 0 4px rgba(194, 65, 12, 0.2);
+    animation: activeStepGlow 2s infinite ease-in-out;
+}
+
+.stepper-step.active .stepper-title {
+    color: var(--primary-color, #c2410c);
+    font-weight: 700;
+}
+
+@keyframes activeStepGlow {
+    0%, 100% { box-shadow: 0 0 0 4px rgba(194, 65, 12, 0.2); }
+    50% { box-shadow: 0 0 0 8px rgba(194, 65, 12, 0.35); }
+}
+
+/* Order Status Banner */
+.order-status-eta-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    margin-bottom: 0.85rem;
+    line-height: 1.45;
+}
+
+.order-status-eta-banner.pending {
+    background: #fef3c7;
+    color: #92400e;
+    border-left: 4px solid #f59e0b;
+}
+
+.order-status-eta-banner.processing {
+    background: #dbeafe;
+    color: #1e40af;
+    border-left: 4px solid #3b82f6;
+}
+
+.order-status-eta-banner.ready {
+    background: #f3e8ff;
+    color: #6b21a8;
+    border-left: 4px solid #a855f7;
+}
+
+.order-status-eta-banner.completed {
+    background: #dcfce7;
+    color: #166534;
+    border-left: 4px solid #22c55e;
+}
+
+.order-cancelled-banner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: #fee2e2;
+    border-left: 4px solid #ef4444;
+    color: #991b1b;
+    border-radius: 8px;
+    margin: 0.75rem 0;
+    font-size: 0.9rem;
+}
+
+.btn-whatsapp {
+    background: #25d366;
+    color: #ffffff !important;
+    border: none;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 0.82rem;
+    transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.btn-whatsapp:hover {
+    background: #1eb857;
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+/* Dark mode adaptations */
+html[data-theme="dark"] .order-timeline-wrapper {
+    background: #0f172a;
+    border-color: #334155;
+}
+
+html[data-theme="dark"] .stepper-circle {
+    background: #334155;
+    color: #94a3b8;
+}
+
+html[data-theme="dark"] .stepper-bar {
+    background: #334155;
+}
+
+html[data-theme="dark"] .stepper-title {
+    color: #94a3b8;
+}
+
+@media (max-width: 480px) {
+    .order-timeline-stepper {
+        padding: 0;
+    }
+    .stepper-step {
+        flex: 0 0 52px;
+    }
+    .stepper-circle {
+        width: 30px;
+        height: 30px;
+        font-size: 0.8rem;
+    }
+    .stepper-title {
+        font-size: 0.68rem;
+    }
+    .stepper-sub {
+        display: none;
+    }
+}

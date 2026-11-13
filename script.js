@@ -5357,6 +5357,63 @@ function updateCustomerCartBadge() {
     });
 }
 
+// Menghitung daftar produk paling laku berdasarkan transaksi & pesanan
+function getTopSellingProductCodes() {
+    const salesCount = {};
+    if (Array.isArray(transactions)) {
+        transactions.forEach(t => {
+            if (Array.isArray(t.items)) {
+                t.items.forEach(item => {
+                    if (item && item.kode) {
+                        salesCount[item.kode] = (salesCount[item.kode] || 0) + (item.jumlah || 1);
+                    }
+                });
+            }
+        });
+    }
+    if (Array.isArray(orders)) {
+        orders.forEach(o => {
+            if (Array.isArray(o.items)) {
+                o.items.forEach(item => {
+                    if (item && item.kode) {
+                        salesCount[item.kode] = (salesCount[item.kode] || 0) + (item.qty || 1);
+                    }
+                });
+            }
+        });
+    }
+
+    // Default produk kebutuhan pokok favorit jika transaksi masih baru
+    const defaultTop = ['BRG001', 'BRG002', 'BRG004', 'BRG005', 'BRG006', 'BRG016', 'BRG017', 'BRG026', 'BRG028'];
+    defaultTop.forEach((kode, idx) => {
+        salesCount[kode] = (salesCount[kode] || 0) + (15 - idx);
+    });
+
+    const sortedCodes = Object.keys(salesCount).sort((a, b) => salesCount[b] - salesCount[a]);
+    return new Set(sortedCodes.slice(0, 10));
+}
+
+// Menghasilkan badge visual menarik (Terlaris, Pilihan, Stok Terbatas)
+function getProductBadgeHtml(p, topSellingSet) {
+    if (!p) return '';
+    if (p.stok <= 0) return ''; // Sudah memiliki overlay Stok Habis
+
+    if (p.stok > 0 && p.stok <= 5) {
+        return `<span class="product-badge-flag badge-limited"><i class="fa-solid fa-bolt"></i> Sisa ${p.stok}!</span>`;
+    }
+
+    if (topSellingSet && topSellingSet.has(p.kode)) {
+        return `<span class="product-badge-flag badge-terlaris"><i class="fa-solid fa-fire"></i> Terlaris</span>`;
+    }
+
+    const kat = (p.kategori || '').toLowerCase();
+    if (kat.includes('pokok') || kat.includes('sembako') || p.kode === 'BRG003' || p.kode === 'BRG007' || p.kode === 'BRG008' || p.kode === 'BRG011' || p.kode === 'BRG012') {
+        return `<span class="product-badge-flag badge-rekomendasi"><i class="fa-solid fa-star"></i> Pilihan</span>`;
+    }
+
+    return '';
+}
+
 function renderCustomerStorefront() {
     // 0. Update Store Banner Branding jika ada
     const bannerName = document.getElementById('store-banner-name');
@@ -5368,10 +5425,13 @@ function renderCustomerStorefront() {
         bannerTagline.textContent = displaySettings.shopTagline;
     }
 
+    const topSellingSet = getTopSellingProductCodes();
+
     // 1. Render Category Filter Pills
     const pillsContainer = document.getElementById('customer-category-pills');
     if (pillsContainer) {
         let pillsHtml = `<button type="button" class="cat-pill ${currentCustomerCategoryFilter === 'all' ? 'active' : ''}" onclick="setCustomerCategoryFilter('all', this)"><i class="fa-solid fa-border-all"></i> Semua</button>`;
+        pillsHtml += `<button type="button" class="cat-pill ${currentCustomerCategoryFilter === 'terlaris' ? 'active' : ''}" onclick="setCustomerCategoryFilter('terlaris', this)"><i class="fa-solid fa-fire" style="color:#ef4444;"></i> Terlaris</button>`;
         categories.forEach(cat => {
             const isActive = currentCustomerCategoryFilter.toLowerCase() === cat.name.toLowerCase();
             pillsHtml += `<button type="button" class="cat-pill ${isActive ? 'active' : ''}" onclick="setCustomerCategoryFilter('${escapeHtml(cat.name)}', this)">${escapeHtml(cat.name)}</button>`;
@@ -5388,8 +5448,10 @@ function renderCustomerStorefront() {
 
     let list = [...products];
 
-    // Filter Kategori
-    if (currentCustomerCategoryFilter !== 'all') {
+    // Filter Kategori / Terlaris
+    if (currentCustomerCategoryFilter === 'terlaris') {
+        list = list.filter(p => topSellingSet.has(p.kode));
+    } else if (currentCustomerCategoryFilter !== 'all') {
         list = list.filter(p => (p.kategori || 'Umum').toLowerCase() === currentCustomerCategoryFilter.toLowerCase());
     }
 
@@ -5404,7 +5466,13 @@ function renderCustomerStorefront() {
     }
 
     // Sorting
-    if (sortVal === 'price-low' || sortVal === 'price-asc') {
+    if (sortVal === 'best-seller') {
+        list.sort((a, b) => {
+            const aTop = topSellingSet.has(a.kode) ? 1 : 0;
+            const bTop = topSellingSet.has(b.kode) ? 1 : 0;
+            return bTop - aTop;
+        });
+    } else if (sortVal === 'price-low' || sortVal === 'price-asc') {
         list.sort((a, b) => a.harga - b.harga);
     } else if (sortVal === 'price-high' || sortVal === 'price-desc') {
         list.sort((a, b) => b.harga - a.harga);
@@ -5439,12 +5507,14 @@ function renderCustomerStorefront() {
         const imgUrl = (p.gambar && p.gambar !== DEFAULT_IMAGE && !p.gambar.includes('1588964895597')) 
             ? p.gambar 
             : getProductAutoImage(p);
+        const badgeHtml = getProductBadgeHtml(p, topSellingSet);
 
         return `
             <div class="pelanggan-product-card">
                 <div class="product-card-img" onclick="openCustomerProductDetail('${p.kode}')">
                     <img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(p.nama)}" onerror="this.onerror=null; this.src='${DEFAULT_IMAGE}'">
                     <span class="product-card-category">${escapeHtml(p.kategori || 'Umum')}</span>
+                    ${badgeHtml}
                     ${isOutOfStock ? '<div class="product-out-overlay">Stok Habis</div>' : ''}
                 </div>
                 <div class="product-card-body">
@@ -5498,7 +5568,12 @@ function openCustomerProductDetail(kode) {
         : getProductAutoImage(product);
     document.getElementById('cust-modal-img').src = modalImg;
     document.getElementById('cust-modal-name').textContent = product.nama;
-    document.getElementById('cust-modal-category').textContent = product.kategori || 'Umum';
+    const topSellingSet = getTopSellingProductCodes();
+    const badgeHtml = getProductBadgeHtml(product, topSellingSet);
+    const catEl = document.getElementById('cust-modal-category');
+    if (catEl) {
+        catEl.innerHTML = `${escapeHtml(product.kategori || 'Umum')} ${badgeHtml ? `<span style="position:static; margin-left:8px; vertical-align:middle; display:inline-flex;">${badgeHtml}</span>` : ''}`;
+    }
     document.getElementById('cust-modal-price').textContent = formatRupiah(product.harga);
     document.getElementById('cust-modal-desc').textContent = product.deskripsi || 'Tidak ada keterangan khusus.';
 
@@ -5962,6 +6037,152 @@ function updateAdminOrdersBadge() {
     }
 }
 
+// Dapatkan nomor WhatsApp resmi toko untuk komunikasi pelanggan
+function getShopWhatsAppNumber() {
+    if (paymentSettings && paymentSettings.ewalletNumber && /^[0-9+]+$/.test(paymentSettings.ewalletNumber.trim())) {
+        let n = paymentSettings.ewalletNumber.trim().replace(/\D/g, '');
+        if (n.startsWith('0')) n = '62' + n.slice(1);
+        return n;
+    }
+    const adminUser = getUsers().find(u => u.role === 'Administrator');
+    if (adminUser && adminUser.phone) {
+        let n = adminUser.phone.trim().replace(/\D/g, '');
+        if (n.startsWith('0')) n = '62' + n.slice(1);
+        return n;
+    }
+    return '6281234567890';
+}
+
+// Menghasilkan HTML Timeline Pelacakan Pesanan Interaktif (Stepper 4 Langkah)
+function renderOrderTimelineHtml(o) {
+    if (!o) return '';
+
+    const status = o.status || 'Menunggu Konfirmasi';
+    if (status === 'Dibatalkan') {
+        return `
+            <div class="order-cancelled-banner">
+                <i class="fa-solid fa-circle-xmark" style="font-size:1.4rem;"></i>
+                <div>
+                    <strong>Pesanan Dibatalkan</strong>
+                    <div style="font-size:0.8rem; margin-top:2px;">${escapeHtml(o.storeNote || 'Pesanan dibatalkan oleh pihak toko / pembeli.')}</div>
+                </div>
+            </div>
+        `;
+    }
+
+    const isDelivery = o.deliveryType === 'delivery';
+
+    // Tahapan:
+    // 0: Menunggu Konfirmasi (Dipesan)
+    // 1: Diproses (Disiapkan)
+    // 2: Siap Diambil / Diantar
+    // 3: Selesai
+    let currentIdx = 0;
+    if (status === 'Diproses') currentIdx = 1;
+    else if (status === 'Siap Diambil' || status === 'Siap Diambil / Diantar' || status === 'Dikirim') currentIdx = 2;
+    else if (status === 'Selesai') currentIdx = 3;
+
+    const s0Done = currentIdx > 0;
+    const s0Active = currentIdx === 0;
+    const s0Class = s0Done ? 'completed' : (s0Active ? 'active' : '');
+
+    const bar1Class = currentIdx >= 1 ? 'completed' : '';
+    const s1Done = currentIdx > 1;
+    const s1Active = currentIdx === 1;
+    const s1Class = s1Done ? 'completed' : (s1Active ? 'active' : '');
+
+    const bar2Class = currentIdx >= 2 ? 'completed' : '';
+    const s2Done = currentIdx > 2;
+    const s2Active = currentIdx === 2;
+    const s2Class = s2Done ? 'completed' : (s2Active ? 'active' : '');
+
+    const bar3Class = currentIdx >= 3 ? 'completed' : '';
+    const s3Done = currentIdx >= 3;
+    const s3Active = currentIdx === 3;
+    const s3Class = s3Done ? 'completed' : (s3Active ? 'active' : '');
+
+    const timeOnly = o.timestamp ? (o.timestamp.includes(',') ? o.timestamp.split(',')[1].trim() : o.timestamp) : '';
+
+    return `
+        <div class="order-timeline-wrapper">
+            <div class="order-timeline-stepper">
+                <!-- Langkah 1: Dipesan -->
+                <div class="stepper-step ${s0Class}">
+                    <div class="stepper-circle">
+                        <i class="fa-solid ${s0Done ? 'fa-check' : 'fa-receipt'}"></i>
+                    </div>
+                    <div class="stepper-label">
+                        <span class="stepper-title">Dipesan</span>
+                        <span class="stepper-sub">${escapeHtml(timeOnly)}</span>
+                    </div>
+                </div>
+
+                <div class="stepper-bar ${bar1Class}"></div>
+
+                <!-- Langkah 2: Disiapkan -->
+                <div class="stepper-step ${s1Class}">
+                    <div class="stepper-circle">
+                        <i class="fa-solid ${s1Done ? 'fa-check' : 'fa-boxes-packing'}"></i>
+                    </div>
+                    <div class="stepper-label">
+                        <span class="stepper-title">Disiapkan</span>
+                        <span class="stepper-sub">${s1Active ? 'Packing' : ''}</span>
+                    </div>
+                </div>
+
+                <div class="stepper-bar ${bar2Class}"></div>
+
+                <!-- Langkah 3: Siap / Diantar -->
+                <div class="stepper-step ${s2Class}">
+                    <div class="stepper-circle">
+                        <i class="fa-solid ${s2Done ? 'fa-check' : (isDelivery ? 'fa-motorcycle' : 'fa-store')}"></i>
+                    </div>
+                    <div class="stepper-label">
+                        <span class="stepper-title">${isDelivery ? 'Diantar' : 'Siap Ambil'}</span>
+                        <span class="stepper-sub">${s2Active ? (isDelivery ? 'Di jalan' : 'Di kasir') : ''}</span>
+                    </div>
+                </div>
+
+                <div class="stepper-bar ${bar3Class}"></div>
+
+                <!-- Langkah 4: Selesai -->
+                <div class="stepper-step ${s3Class}">
+                    <div class="stepper-circle">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <div class="stepper-label">
+                        <span class="stepper-title">Selesai</span>
+                        <span class="stepper-sub">${s3Done ? 'Diterima' : ''}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Menghasilkan banner status ramah pelanggan
+function getOrderEtaBannerHtml(o) {
+    if (!o) return '';
+    const status = o.status || 'Menunggu Konfirmasi';
+    const isDelivery = o.deliveryType === 'delivery';
+
+    if (status === 'Menunggu Konfirmasi') {
+        return `<div class="order-status-eta-banner pending"><i class="fa-solid fa-clock"></i> <div><strong>Pesanan Diterima:</strong> Toko sedang memeriksa pesanan Anda. Mohon tunggu konfirmasi.</div></div>`;
+    } else if (status === 'Diproses') {
+        return `<div class="order-status-eta-banner processing"><i class="fa-solid fa-boxes-packing"></i> <div><strong>Sedang Disiapkan:</strong> Barang belanjaan Anda sedang dikemas dengan rapi oleh tim warung.</div></div>`;
+    } else if (status === 'Siap Diambil' || status === 'Siap Diambil / Diantar' || status === 'Dikirim') {
+        if (isDelivery) {
+            return `<div class="order-status-eta-banner ready"><i class="fa-solid fa-motorcycle"></i> <div><strong>Sedang Diantar:</strong> Kurir sedang menuju ke alamat domisili Anda. Pastikan HP Anda aktif!</div></div>`;
+        }
+        return `<div class="order-status-eta-banner ready"><i class="fa-solid fa-store"></i> <div><strong>Siap Diambil:</strong> Belanjaan Anda sudah siap di kasir. Silakan datang ke warung untuk mengambil!</div></div>`;
+    } else if (status === 'Selesai') {
+        return `<div class="order-status-eta-banner completed"><i class="fa-solid fa-circle-check"></i> <div><strong>Pesanan Selesai:</strong> Terima kasih telah mempercayai & berbelanja di Delsi Shop!</div></div>`;
+    } else if (status === 'Dibatalkan') {
+        return `<div class="order-cancelled-banner"><i class="fa-solid fa-circle-xmark"></i> <div><strong>Pesanan Dibatalkan:</strong> Hubungi toko jika membutuhkan informasi pengembalian atau penggantian.</div></div>`;
+    }
+    return '';
+}
+
 // 16a. Render Pesanan Pelanggan (Riwayat Saya)
 function renderCustomerOrders() {
     const container = document.getElementById('customer-orders-container') || document.getElementById('customer-orders-list');
@@ -5983,9 +6204,14 @@ function renderCustomerOrders() {
         return;
     }
 
+    const shopWa = getShopWhatsAppNumber();
+    const shopName = (displaySettings && displaySettings.shopName) || 'Delsi Shop';
+
     container.innerHTML = myOrders.map(o => {
         const statusBadge = getOrderStatusBadge(o.status);
         const deliveryText = o.deliveryType === 'delivery' ? '🛵 Antar ke Alamat' : '🏬 Ambil di Toko';
+        const timelineHtml = renderOrderTimelineHtml(o);
+        const waText = encodeURIComponent(`Halo ${shopName}, saya ingin menanyakan status pesanan #${o.id} atas nama ${o.customerName || 'Pelanggan'}. Terima kasih.`);
 
         return `
             <div class="order-card">
@@ -5996,20 +6222,28 @@ function renderCustomerOrders() {
                     </div>
                     <div>${statusBadge}</div>
                 </div>
+
+                ${timelineHtml}
+
                 <div class="order-card-body">
                     <div style="margin-bottom:0.5rem; color:#555;">
                         <span><i class="fa-solid fa-truck"></i> ${deliveryText}</span> | 
                         <span><i class="fa-solid fa-wallet"></i> ${escapeHtml(o.paymentMethod)}</span>
                     </div>
                     <div class="order-items-summary" style="font-size:0.9rem; margin-bottom:0.75rem;">
-                        ${o.items.map(i => `<div>&bull; ${escapeHtml(i.nama)} &times; ${i.qty}</div>`).join('')}
+                        ${o.items.map(i => `<div>&bull; ${escapeHtml(i.nama)} &times; ${i.qty} (${formatRupiah(i.subtotal)})</div>`).join('')}
                     </div>
                     ${o.storeNote ? `<div style="background:#fef3c7; color:#92400e; padding:6px 10px; border-radius:6px; font-size:0.85rem; margin-bottom:0.5rem;"><strong>Catatan Toko:</strong> ${escapeHtml(o.storeNote)}</div>` : ''}
-                    <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #e0e0e0; padding-top:0.75rem;">
-                        <div>Total: <strong style="color:var(--primary-color); font-size:1.1rem;">${formatRupiah(o.total)}</strong></div>
-                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="openCustomerOrderDetail('${o.id}')">
-                            <i class="fa-solid fa-eye"></i> Detail Pesanan
-                        </button>
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #e0e0e0; padding-top:0.75rem; flex-wrap:wrap; gap:0.5rem;">
+                        <div>Total: <strong style="color:var(--primary-color); font-size:1.15rem;">${formatRupiah(o.total)}</strong></div>
+                        <div style="display:flex; gap:0.5rem; align-items:center;">
+                            <a href="https://wa.me/${shopWa}?text=${waText}" target="_blank" class="btn btn-whatsapp btn-sm" title="Tanya Status via WhatsApp">
+                                <i class="fa-brands fa-whatsapp"></i> Chat Toko
+                            </a>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="openCustomerOrderDetail('${o.id}')">
+                                <i class="fa-solid fa-eye"></i> Detail
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -6040,8 +6274,12 @@ function openCustomerOrderDetail(orderId) {
     const body = document.getElementById('customer-order-detail-body');
     if (!modal || !body) return;
 
+    const shopWa = getShopWhatsAppNumber();
+    const shopName = (displaySettings && displaySettings.shopName) || 'Delsi Shop';
+    const waText = encodeURIComponent(`Halo ${shopName}, saya ingin menanyakan rincian pesanan #${o.id} atas nama ${o.customerName || 'Pelanggan'}. Terima kasih.`);
+
     body.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; padding-bottom:0.75rem; border-bottom:1px solid #e0e0e0;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; padding-bottom:0.75rem; border-bottom:1px solid #e0e0e0; flex-wrap:wrap; gap:0.5rem;">
             <div>
                 <h4 style="margin:0;">No. Pesanan: #${escapeHtml(o.id)}</h4>
                 <small style="color:#666;">Waktu Pesan: ${escapeHtml(o.timestamp)}</small>
@@ -6049,12 +6287,16 @@ function openCustomerOrderDetail(orderId) {
             <div>${getOrderStatusBadge(o.status)}</div>
         </div>
 
+        ${getOrderEtaBannerHtml(o)}
+
+        ${renderOrderTimelineHtml(o)}
+
         <div style="margin-bottom:1rem;">
             <h5><i class="fa-solid fa-user"></i> Data Pemesan</h5>
             <div style="font-size:0.9rem; line-height:1.6;">
                 <div><strong>Nama:</strong> ${escapeHtml(o.customerName)}</div>
                 <div><strong>WhatsApp:</strong> ${escapeHtml(o.customerPhone)}</div>
-                <div><strong>Opsi:</strong> ${o.deliveryType === 'delivery' ? 'Antar ke Alamat' : 'Ambil di Toko'}</div>
+                <div><strong>Opsi:</strong> ${o.deliveryType === 'delivery' ? '🛵 Antar ke Alamat' : '🏬 Ambil di Toko'}</div>
                 ${o.address ? `<div><strong>Alamat:</strong> ${escapeHtml(o.address)}</div>` : ''}
                 ${o.notes ? `<div><strong>Catatan:</strong> ${escapeHtml(o.notes)}</div>` : ''}
             </div>
@@ -6088,9 +6330,15 @@ function openCustomerOrderDetail(orderId) {
             </div>
         </div>
 
-        <div style="background:#f1f5f9; padding:12px; border-radius:8px; font-size:0.9rem;">
+        <div style="background:#f1f5f9; padding:12px; border-radius:8px; font-size:0.9rem; margin-bottom:1rem;">
             <div><strong>Metode Pembayaran:</strong> ${escapeHtml(o.paymentMethod)} (${escapeHtml(o.paymentStatus || 'Belum Dibayar')})</div>
             ${o.storeNote ? `<div style="margin-top:6px; color:#b45309;"><strong>Pesan Toko:</strong> ${escapeHtml(o.storeNote)}</div>` : ''}
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:0.5rem; flex-wrap:wrap;">
+            <a href="https://wa.me/${shopWa}?text=${waText}" target="_blank" class="btn btn-whatsapp" style="text-decoration:none;">
+                <i class="fa-brands fa-whatsapp"></i> Chat Toko via WhatsApp
+            </a>
         </div>
     `;
 
@@ -6127,9 +6375,29 @@ function renderAdminOrders() {
         return;
     }
 
+    const shopName = (displaySettings && displaySettings.shopName) || 'Delsi Shop';
+
     container.innerHTML = filtered.map(o => {
         const statusBadge = getOrderStatusBadge(o.status);
-        const deliveryText = o.deliveryType === 'delivery' ? '🛵 Antar' : '🏬 Ambil';
+        const deliveryText = o.deliveryType === 'delivery' ? '🛵 Antar ke Alamat' : '🏬 Ambil di Toko';
+        const timelineHtml = renderOrderTimelineHtml(o);
+
+        // Nomor WA Pelanggan yang rapi untuk chat langsung
+        let cleanPhone = (o.customerPhone || '').replace(/\D/g, '');
+        if (cleanPhone.startsWith('0')) cleanPhone = '62' + cleanPhone.slice(1);
+        if (!cleanPhone.startsWith('62') && cleanPhone.length >= 8) cleanPhone = '62' + cleanPhone;
+
+        const waAdminText = encodeURIComponent(`Halo ${o.customerName || 'Kak'}, kami dari ${shopName}. Menginformasikan update pesanan Anda #${o.id} saat ini berstatus '${o.status}'.`);
+
+        // Tombol aksi cepat berdasarkan status saat ini
+        let quickBtnHtml = '';
+        if (o.status === 'Menunggu Konfirmasi') {
+            quickBtnHtml = `<button type="button" class="btn btn-primary btn-sm" onclick="quickUpdateOrderStatus('${o.id}', 'Diproses')"><i class="fa-solid fa-spinner"></i> Proses</button>`;
+        } else if (o.status === 'Diproses') {
+            quickBtnHtml = `<button type="button" class="btn btn-warning btn-sm" onclick="quickUpdateOrderStatus('${o.id}', 'Siap Diambil')"><i class="fa-solid fa-box"></i> Siap Diambil/Antar</button>`;
+        } else if (o.status === 'Siap Diambil') {
+            quickBtnHtml = `<button type="button" class="btn btn-success btn-sm" onclick="quickUpdateOrderStatus('${o.id}', 'Selesai')"><i class="fa-solid fa-check-double"></i> Selesaikan</button>`;
+        }
 
         return `
             <div class="order-card">
@@ -6143,8 +6411,11 @@ function renderAdminOrders() {
                     </div>
                     <div>${statusBadge}</div>
                 </div>
+
+                ${timelineHtml}
+
                 <div class="order-card-body">
-                    <div style="display:flex; gap:1rem; margin-bottom:0.5rem; font-size:0.9rem; color:#555;">
+                    <div style="display:flex; gap:1rem; margin-bottom:0.5rem; font-size:0.9rem; color:#555; flex-wrap:wrap;">
                         <span><strong>Pengiriman:</strong> ${deliveryText}</span>
                         <span><strong>Bayar:</strong> ${escapeHtml(o.paymentMethod)}</span>
                     </div>
@@ -6154,17 +6425,59 @@ function renderAdminOrders() {
                         ${o.items.map(i => `<div style="margin-top:2px;">&bull; ${escapeHtml(i.nama)} &times; ${i.qty} (${formatRupiah(i.subtotal)})</div>`).join('')}
                     </div>
                     ${o.notes ? `<div style="font-size:0.85rem; color:#666; margin-bottom:0.5rem;"><em>Catatan Pembeli: "${escapeHtml(o.notes)}"</em></div>` : ''}
-                    <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #e0e0e0; padding-top:0.75rem;">
+                    ${o.storeNote ? `<div style="background:#fef3c7; color:#92400e; padding:6px 10px; border-radius:6px; font-size:0.85rem; margin-bottom:0.5rem;"><strong>Catatan Toko:</strong> ${escapeHtml(o.storeNote)}</div>` : ''}
+                    
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #e0e0e0; padding-top:0.75rem; flex-wrap:wrap; gap:0.5rem;">
                         <div>Total: <strong style="color:var(--primary-color); font-size:1.15rem;">${formatRupiah(o.total)}</strong></div>
-                        <button type="button" class="btn btn-primary btn-sm" onclick="openOrderStatusModal('${o.id}')">
-                            <i class="fa-solid fa-clipboard-check"></i> Kelola Status
-                        </button>
+                        <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+                            ${cleanPhone ? `
+                                <a href="https://wa.me/${cleanPhone}?text=${waAdminText}" target="_blank" class="btn btn-whatsapp btn-sm" title="Chat WhatsApp Pembeli">
+                                    <i class="fa-brands fa-whatsapp"></i> Chat Pembeli
+                                </a>
+                            ` : ''}
+                            ${quickBtnHtml}
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="openOrderStatusModal('${o.id}')">
+                                <i class="fa-solid fa-clipboard-check"></i> Kelola
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         `;
     }).join('');
 }
+
+// Update status pesanan cepat (1-klik) oleh Kasir/Admin
+function quickUpdateOrderStatus(orderId, newStatus) {
+    if (!requireRole(['Administrator', 'Kasir'], 'mengubah status pesanan')) return;
+    const o = orders.find(item => item.id === orderId);
+    if (!o) return;
+
+    const oldStatus = o.status;
+    o.status = newStatus;
+
+    // Jika dibatalkan, kembalikan stok barang ke sistem
+    if (newStatus === 'Dibatalkan' && oldStatus !== 'Dibatalkan') {
+        o.items.forEach(item => {
+            const p = products.find(prod => prod.kode === item.kode);
+            if (p) p.stok += item.qty;
+        });
+        saveProductsToStorage();
+        renderProducts();
+        renderProductsKasir();
+        populateProductDropdown();
+        renderDashboardStokMenipis();
+    }
+
+    saveOrdersToStorage();
+    renderAdminOrders();
+    updateAdminOrdersBadge();
+
+    const session = getSession();
+    showToast(`Status pesanan #${o.id} diperbarui ke '${newStatus}'!`, 'success');
+    logActivity('update_pesanan', `Status pesanan #${o.id} diperbarui ke '${newStatus}' oleh ${session ? session.username : 'Petugas'}.`, o.id);
+}
+window.quickUpdateOrderStatus = quickUpdateOrderStatus;
 
 function filterAdminOrders(status, btn) {
     currentAdminOrderFilter = status;
