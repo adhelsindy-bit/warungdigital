@@ -1225,7 +1225,31 @@ function initData() {
                     p.gambar = getProductAutoImage(p);
                     updatedImages = true;
                 }
+
+                // Inisialisasi properti diskon produk bila belum ada
+                if (typeof p.diskonTipe === 'undefined') {
+                    p.diskonTipe = (p.diskonPersen > 0 ? 'persen' : (p.diskonNominal > 0 ? 'nominal' : 'none'));
+                    p.diskonPersen = p.diskonPersen || p.diskon || 0;
+                    p.diskonNominal = p.diskonNominal || 0;
+                }
             });
+
+            // Berikan sampel promo aktif pada beberapa produk unggulan
+            const sampleMie = products.find(p => p.kode === 'BRG004');
+            if (sampleMie && (!sampleMie.diskonPersen && !sampleMie.diskonNominal)) {
+                sampleMie.diskonTipe = 'persen';
+                sampleMie.diskonPersen = 15;
+                sampleMie.diskonNominal = Math.round(sampleMie.harga * 0.15);
+                updatedImages = true;
+            }
+            const sampleMinyak = products.find(p => p.kode === 'BRG002');
+            if (sampleMinyak && (!sampleMinyak.diskonPersen && !sampleMinyak.diskonNominal)) {
+                sampleMinyak.diskonTipe = 'nominal';
+                sampleMinyak.diskonNominal = 2000;
+                sampleMinyak.diskonPersen = Math.round((2000 / sampleMinyak.harga) * 100);
+                updatedImages = true;
+            }
+
             if (products.length < 5) {
                 products = [...SAMPLE_PRODUCTS];
                 updatedImages = true;
@@ -2054,8 +2078,135 @@ function exportActivityLogsCsv() {
 }
 
 /* ==========================================================================
-   3. MANAJEMEN BARANG (CRUD) WITH IMAGES - KHUSUS ADMIN
+   3. MANAJEMEN BARANG (CRUD) WITH IMAGES & PROMO - KHUSUS ADMIN
    ========================================================================== */
+
+// Helper kalkulasi harga normal, promo diskon, dan persentase
+function getProductPriceInfo(product) {
+    if (!product) return { hargaNormal: 0, hargaFinal: 0, diskonTipe: 'none', diskonPersen: 0, diskonNominal: 0, hasDiskon: false };
+    const hargaNormal = parseInt(product.harga) || 0;
+    const diskonTipe = product.diskonTipe || 'none';
+    let diskonPersen = 0;
+    let diskonNominal = 0;
+    let hasDiskon = false;
+
+    if (diskonTipe === 'nominal' && Number(product.diskonNominal) > 0) {
+        diskonNominal = Math.min(Number(product.diskonNominal), hargaNormal);
+        diskonPersen = hargaNormal > 0 ? Math.round((diskonNominal / hargaNormal) * 100) : 0;
+        hasDiskon = diskonNominal > 0;
+    } else if (Number(product.diskonPersen) > 0 || Number(product.diskon) > 0 || diskonTipe === 'persen') {
+        const pVal = Number(product.diskonPersen || product.diskon || 0);
+        if (pVal > 0) {
+            diskonPersen = Math.min(100, Math.max(0, pVal));
+            diskonNominal = Math.round(hargaNormal * (diskonPersen / 100));
+            hasDiskon = diskonPersen > 0;
+        }
+    }
+
+    const hargaFinal = hasDiskon ? Math.max(0, hargaNormal - diskonNominal) : hargaNormal;
+
+    return {
+        hargaNormal,
+        hargaFinal,
+        diskonTipe: hasDiskon ? diskonTipe : 'none',
+        diskonPersen,
+        diskonNominal,
+        hasDiskon
+    };
+}
+window.getProductPriceInfo = getProductPriceInfo;
+
+function toggleDiskonInputAdmin() {
+    const tipeSelect = document.getElementById('diskon-tipe-barang');
+    const groupVal = document.getElementById('group-diskon-nilai-admin');
+    const labelVal = document.getElementById('label-diskon-nilai-admin');
+    const inputVal = document.getElementById('diskon-nilai-barang');
+    if (!tipeSelect || !groupVal || !labelVal || !inputVal) return;
+
+    const tipe = tipeSelect.value;
+    if (tipe === 'persen') {
+        groupVal.style.display = 'block';
+        labelVal.innerHTML = 'Diskon (%) *';
+        inputVal.placeholder = 'Contoh: 10';
+        inputVal.max = 100;
+    } else if (tipe === 'nominal') {
+        groupVal.style.display = 'block';
+        labelVal.innerHTML = 'Potongan Harga (Rp) *';
+        inputVal.placeholder = 'Contoh: 2000';
+        inputVal.removeAttribute('max');
+    } else {
+        groupVal.style.display = 'none';
+        inputVal.value = '';
+    }
+    updateLabaPreview();
+}
+window.toggleDiskonInputAdmin = toggleDiskonInputAdmin;
+
+function toggleDiskonInputKasir() {
+    const tipeSelect = document.getElementById('kasir-diskon-tipe');
+    const groupVal = document.getElementById('group-diskon-nilai-kasir');
+    const labelVal = document.getElementById('label-diskon-nilai-kasir');
+    const inputVal = document.getElementById('kasir-diskon-nilai');
+    if (!tipeSelect || !groupVal || !labelVal || !inputVal) return;
+
+    const tipe = tipeSelect.value;
+    if (tipe === 'persen') {
+        groupVal.style.display = 'block';
+        labelVal.innerHTML = 'Diskon (%) *';
+        inputVal.placeholder = 'Contoh: 10';
+        inputVal.max = 100;
+    } else if (tipe === 'nominal') {
+        groupVal.style.display = 'block';
+        labelVal.innerHTML = 'Potongan Harga (Rp) *';
+        inputVal.placeholder = 'Contoh: 2000';
+        inputVal.removeAttribute('max');
+    } else {
+        groupVal.style.display = 'none';
+        inputVal.value = '';
+    }
+    updateKasirDiskonPreview();
+}
+window.toggleDiskonInputKasir = toggleDiskonInputKasir;
+
+function updateKasirDiskonPreview() {
+    const hargaInput = document.getElementById('kasir-harga-barang');
+    const harga = parseInt(hargaInput ? hargaInput.value : 0) || 0;
+    const tipeSelect = document.getElementById('kasir-diskon-tipe');
+    const inputVal = document.getElementById('kasir-diskon-nilai');
+    const previewBox = document.getElementById('preview-diskon-kasir');
+    const textPromo = document.getElementById('text-harga-promo-kasir');
+    const badgeHemat = document.getElementById('badge-hemat-kasir');
+
+    const tipe = tipeSelect ? tipeSelect.value : 'none';
+    const nilai = parseFloat(inputVal ? inputVal.value : 0) || 0;
+
+    let diskonNominal = 0;
+    let diskonPersen = 0;
+    let hasDiskon = false;
+
+    if (tipe === 'persen' && nilai > 0) {
+        diskonPersen = Math.min(100, Math.max(0, nilai));
+        diskonNominal = Math.round(harga * (diskonPersen / 100));
+        hasDiskon = true;
+    } else if (tipe === 'nominal' && nilai > 0) {
+        diskonNominal = Math.min(harga, nilai);
+        diskonPersen = harga > 0 ? Math.round((diskonNominal / harga) * 100) : 0;
+        hasDiskon = true;
+    }
+
+    const hargaPromo = hasDiskon ? Math.max(0, harga - diskonNominal) : harga;
+
+    if (previewBox && textPromo && badgeHemat) {
+        if (hasDiskon && harga > 0) {
+            previewBox.style.display = 'block';
+            textPromo.textContent = formatRupiah(hargaPromo);
+            badgeHemat.textContent = `Hemat ${formatRupiah(diskonNominal)} (-${diskonPersen}%)`;
+        } else {
+            previewBox.style.display = 'none';
+        }
+    }
+}
+window.updateKasirDiskonPreview = updateKasirDiskonPreview;
 
 function renderProducts() {
     const tbody = document.getElementById('tbody-barang');
@@ -2089,8 +2240,17 @@ function renderProducts() {
             ? product.gambar 
             : getProductAutoImage(product);
         const modalVal = product.modal || 0;
-        const labaVal = product.harga - modalVal;
+        const priceInfo = getProductPriceInfo(product);
+        const labaVal = priceInfo.hargaFinal - modalVal;
         const kategoriTag = product.kategori ? `<span style="display:inline-block; font-size:0.75rem; background:#f1f5f9; padding:2px 6px; border-radius:4px; margin-top:3px; color:#475569;">${escapeHtml(product.kategori)}</span>` : '';
+
+        const priceDisplay = priceInfo.hasDiskon ? `
+            <div class="promo-price-wrapper">
+                <span class="promo-price-original">${formatRupiah(priceInfo.hargaNormal)}</span>
+                <span class="promo-price-final">${formatRupiah(priceInfo.hargaFinal)}</span>
+                <span class="badge-diskon-pill"><i class="fa-solid fa-tag"></i> -${priceInfo.diskonPersen}%</span>
+            </div>
+        ` : `<strong>${formatRupiah(product.harga)}</strong>`;
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -2102,7 +2262,7 @@ function renderProducts() {
                 <div>${escapeHtml(product.nama)}</div>
                 ${kategoriTag}
             </td>
-            <td>${formatRupiah(product.harga)}</td>
+            <td>${priceDisplay}</td>
             <td>${formatRupiah(modalVal)}</td>
             <td><span style="color: var(--success-color); font-weight:600;">${formatRupiah(labaVal)}</span></td>
             <td>${stockBadge}</td>
@@ -2169,6 +2329,18 @@ function handleSaveProduct(e) {
 
         const modalInput = parseInt(document.getElementById('modal-barang').value) || 0;
 
+        const diskonTipe = document.getElementById('diskon-tipe-barang') ? document.getElementById('diskon-tipe-barang').value : 'none';
+        const diskonNilai = parseFloat(document.getElementById('diskon-nilai-barang') ? document.getElementById('diskon-nilai-barang').value : 0) || 0;
+        let diskonPersen = 0;
+        let diskonNominal = 0;
+        if (diskonTipe === 'persen' && diskonNilai > 0) {
+            diskonPersen = Math.min(100, Math.max(0, diskonNilai));
+            diskonNominal = Math.round(hargaInput * (diskonPersen / 100));
+        } else if (diskonTipe === 'nominal' && diskonNilai > 0) {
+            diskonNominal = Math.min(hargaInput, diskonNilai);
+            diskonPersen = hargaInput > 0 ? Math.round((diskonNominal / hargaInput) * 100) : 0;
+        }
+
         const productData = {
             kode: kodeInput,
             nama: namaInput,
@@ -2177,6 +2349,9 @@ function handleSaveProduct(e) {
             harga: hargaInput,
             modal: modalInput,
             stok: stokInput,
+            diskonTipe: (diskonPersen > 0 || diskonNominal > 0) ? diskonTipe : 'none',
+            diskonPersen: diskonPersen,
+            diskonNominal: diskonNominal,
             gambar: gambarInput || getProductAutoImage({ kode: kodeInput, nama: namaInput })
         };
 
@@ -2224,6 +2399,15 @@ function editProduct(index) {
     document.getElementById('modal-barang').value = product.modal || '';
     document.getElementById('stok-barang').value = product.stok;
     document.getElementById('gambar-barang').value = product.gambar || '';
+
+    // Isi pengaturan diskon barang
+    const dType = product.diskonTipe || (product.diskonPersen > 0 ? 'persen' : (product.diskonNominal > 0 ? 'nominal' : 'none'));
+    const dVal = dType === 'nominal' ? (product.diskonNominal || '') : (product.diskonPersen || product.diskon || '');
+    const tipeEl = document.getElementById('diskon-tipe-barang');
+    const valEl = document.getElementById('diskon-nilai-barang');
+    if (tipeEl) tipeEl.value = dType;
+    if (valEl) valEl.value = dVal;
+    toggleDiskonInputAdmin();
     updateLabaPreview();
 
     if (product.gambar) {
@@ -2255,6 +2439,13 @@ function resetProductForm() {
     document.getElementById('edit-index').value = -1;
     document.getElementById('gambar-barang').value = '';
     document.getElementById('modal-barang').value = '';
+
+    const tipeEl = document.getElementById('diskon-tipe-barang');
+    const valEl = document.getElementById('diskon-nilai-barang');
+    if (tipeEl) tipeEl.value = 'none';
+    if (valEl) valEl.value = '';
+    toggleDiskonInputAdmin();
+
     document.getElementById('info-laba-item').textContent = 'Laba per item: Rp 0';
     removeUploadedPhoto();
     document.getElementById('form-barang-title').innerHTML = `<i class="fa-solid fa-plus-circle"></i> Tambah Barang`;
@@ -2303,7 +2494,9 @@ function populateProductDropdown() {
     products.forEach(p => {
         const option = document.createElement('option');
         option.value = p.kode;
-        option.textContent = `${p.kode} - ${p.nama} (${formatRupiah(p.harga)})`;
+        const priceInfo = getProductPriceInfo(p);
+        const priceStr = priceInfo.hasDiskon ? `${formatRupiah(priceInfo.hargaFinal)} (PROMO -${priceInfo.diskonPersen}%)` : formatRupiah(p.harga);
+        option.textContent = `${p.kode} - ${p.nama} (${priceStr})`;
         if (p.stok <= 0) {
             option.disabled = true;
             option.textContent += ' [STOK HABIS]';
@@ -2367,7 +2560,10 @@ function updateMaxQtyLabel() {
         if (previewContainer && previewImg && previewNama && previewHarga) {
             previewImg.src = product.gambar || DEFAULT_IMAGE;
             previewNama.textContent = product.nama;
-            previewHarga.textContent = formatRupiah(product.harga);
+            const priceInfo = getProductPriceInfo(product);
+            previewHarga.innerHTML = priceInfo.hasDiskon
+                ? `<del style="color:#888; font-size:0.85em;">${formatRupiah(priceInfo.hargaNormal)}</del> <span style="color:#dc2626; font-weight:700;">${formatRupiah(priceInfo.hargaFinal)}</span>`
+                : formatRupiah(product.harga);
             previewContainer.classList.add('active');
         }
     }
@@ -2403,7 +2599,10 @@ function updateProductPickerButton() {
     img.alt = product.nama;
     img.style.display = 'block';
     text.textContent = `${product.kode} - ${product.nama}`;
-    price.textContent = formatRupiah(product.harga);
+    const pickerPriceInfo = getProductPriceInfo(product);
+    price.innerHTML = pickerPriceInfo.hasDiskon
+        ? `<del style="color:#888; font-size:0.8em;">${formatRupiah(pickerPriceInfo.hargaNormal)}</del> <span style="color:#dc2626;">${formatRupiah(pickerPriceInfo.hargaFinal)}</span>`
+        : formatRupiah(product.harga);
     btn.classList.add('has-value');
 }
 
@@ -2433,6 +2632,11 @@ function renderProductPicker(filterText) {
 
     list.forEach(p => {
         const habis = p.stok <= 0;
+        const priceInfo = getProductPriceInfo(p);
+        const ppPriceHtml = priceInfo.hasDiskon
+            ? `<span style="text-decoration:line-through; font-size:0.75rem; color:#888;">${formatRupiah(priceInfo.hargaNormal)}</span> <strong style="color:#dc2626;">${formatRupiah(priceInfo.hargaFinal)}</strong>`
+            : formatRupiah(p.harga);
+
         const item = document.createElement('button');
         item.type = 'button';
         item.className = 'product-picker-item' + (p.kode === selectedKode ? ' selected' : '');
@@ -2441,7 +2645,7 @@ function renderProductPicker(filterText) {
             <img src="${escapeHtml(p.gambar || DEFAULT_IMAGE)}" alt="${escapeHtml(p.nama)}" loading="lazy">
             <span class="pp-info">
                 <span class="pp-name">${escapeHtml(p.nama)}</span>
-                <span class="pp-price">${formatRupiah(p.harga)}</span>
+                <span class="pp-price">${ppPriceHtml}</span>
                 <span class="pp-stock${habis ? ' habis' : ''}">${habis ? 'Stok habis' : 'Stok: ' + p.stok}</span>
             </span>
         `;
@@ -2537,6 +2741,9 @@ function addToCart(e) {
     const product = products.find(p => p.kode === kode);
     if (!product) return;
 
+    const priceInfo = getProductPriceInfo(product);
+    const itemPrice = priceInfo.hargaFinal;
+
     const cartIndex = cart.findIndex(item => item.kode === kode);
     const currentQtyInCart = cartIndex !== -1 ? cart[cartIndex].jumlah : 0;
     const totalRequestQty = currentQtyInCart + jumlah;
@@ -2553,9 +2760,11 @@ function addToCart(e) {
         cart.push({
             kode: product.kode,
             nama: product.nama,
-            harga: product.harga,
+            harga: itemPrice,
+            hargaNormal: priceInfo.hargaNormal,
+            diskonPersen: priceInfo.diskonPersen,
             jumlah: jumlah,
-            subtotal: product.harga * jumlah,
+            subtotal: itemPrice * jumlah,
             gambar: product.gambar || DEFAULT_IMAGE
         });
     }
@@ -2595,7 +2804,15 @@ function renderCart() {
                 <img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(item.nama)}" class="product-thumb" onerror="this.onerror=null; this.src='${DEFAULT_IMAGE}'">
             </td>
             <td><strong>${escapeHtml(item.nama)}</strong></td>
-            <td>${formatRupiah(item.harga)}</td>
+            <td>
+                ${(item.hargaNormal && item.hargaNormal > item.harga) ? `
+                    <div class="promo-price-wrapper">
+                        <span class="promo-price-original">${formatRupiah(item.hargaNormal)}</span>
+                        <span class="promo-price-final">${formatRupiah(item.harga)}</span>
+                        <span class="badge-diskon-pill"><i class="fa-solid fa-tag"></i> -${item.diskonPersen}%</span>
+                    </div>
+                ` : formatRupiah(item.harga)}
+            </td>
             <td>
                 <div style="display:flex; align-items:center; gap:0.5rem;">
                     <button class="btn btn-secondary btn-sm" onclick="adjustCartQty(${index}, -1)">-</button>
@@ -3905,10 +4122,45 @@ function loadBatchSampleProducts() {
 function updateLabaPreview() {
     const harga = parseInt(document.getElementById('harga-barang').value) || 0;
     const modal = parseInt(document.getElementById('modal-barang').value) || 0;
-    const laba = harga - modal;
+    const tipeSelect = document.getElementById('diskon-tipe-barang');
+    const inputVal = document.getElementById('diskon-nilai-barang');
+    const previewBox = document.getElementById('preview-diskon-admin');
+    const textPromo = document.getElementById('text-harga-promo-admin');
+    const badgeHemat = document.getElementById('badge-hemat-admin');
+
+    const tipe = tipeSelect ? tipeSelect.value : 'none';
+    const nilai = parseFloat(inputVal ? inputVal.value : 0) || 0;
+
+    let diskonNominal = 0;
+    let diskonPersen = 0;
+    let hasDiskon = false;
+
+    if (tipe === 'persen' && nilai > 0) {
+        diskonPersen = Math.min(100, Math.max(0, nilai));
+        diskonNominal = Math.round(harga * (diskonPersen / 100));
+        hasDiskon = true;
+    } else if (tipe === 'nominal' && nilai > 0) {
+        diskonNominal = Math.min(harga, nilai);
+        diskonPersen = harga > 0 ? Math.round((diskonNominal / harga) * 100) : 0;
+        hasDiskon = true;
+    }
+
+    const hargaPromo = hasDiskon ? Math.max(0, harga - diskonNominal) : harga;
+    const laba = hargaPromo - modal;
+
+    if (previewBox && textPromo && badgeHemat) {
+        if (hasDiskon && harga > 0) {
+            previewBox.style.display = 'block';
+            textPromo.textContent = formatRupiah(hargaPromo);
+            badgeHemat.textContent = `Hemat ${formatRupiah(diskonNominal)} (-${diskonPersen}%)`;
+        } else {
+            previewBox.style.display = 'none';
+        }
+    }
+
     const infoEl = document.getElementById('info-laba-item');
     if (infoEl) {
-        infoEl.textContent = `Laba per item: ${formatRupiah(laba)}`;
+        infoEl.textContent = `Laba per item: ${formatRupiah(laba)}${hasDiskon ? ' (Harga Promo)' : ''}`;
         infoEl.style.color = laba >= 0 ? 'var(--success-color)' : 'var(--danger-color)';
     }
 }
@@ -4659,6 +4911,8 @@ function onScanSuccess(decodedText, decodedResult) {
 
         // Cek apakah sudah ada di keranjang
         const existingIndex = cart.findIndex(item => item.kode === found.kode);
+        const priceInfo = getProductPriceInfo(found);
+        const itemPrice = priceInfo.hargaFinal;
 
         if (existingIndex >= 0) {
             if (cart[existingIndex].jumlah >= found.stok) {
@@ -4666,16 +4920,18 @@ function onScanSuccess(decodedText, decodedResult) {
                 return;
             }
             cart[existingIndex].jumlah += 1;
-            cart[existingIndex].subtotal = cart[existingIndex].jumlah * found.harga;
+            cart[existingIndex].subtotal = cart[existingIndex].jumlah * cart[existingIndex].harga;
         } else {
             cart.push({
                 kode: found.kode,
                 nama: found.nama,
-                harga: found.harga,
+                harga: itemPrice,
+                hargaNormal: priceInfo.hargaNormal,
+                diskonPersen: priceInfo.diskonPersen,
                 modal: found.modal || 0,
                 gambar: found.gambar || DEFAULT_IMAGE,
                 jumlah: 1,
-                subtotal: found.harga
+                subtotal: itemPrice
             });
         }
 
@@ -4748,7 +5004,10 @@ function showScanProductPanel(product) {
     // Isi data produk
     img.src = product.gambar || DEFAULT_IMAGE;
     name.textContent = product.nama;
-    price.textContent = 'Rp ' + Number(product.harga).toLocaleString('id-ID');
+    const scanPriceInfo = getProductPriceInfo(product);
+    scanPriceInfo.hasDiskon
+        ? (price.innerHTML = `<del style="font-size:0.8em; color:#888;">${formatRupiah(scanPriceInfo.hargaNormal)}</del> <span style="color:#dc2626; font-weight:700;">${formatRupiah(scanPriceInfo.hargaFinal)}</span>`)
+        : (price.textContent = 'Rp ' + Number(product.harga).toLocaleString('id-ID'));
     stock.textContent = 'Stok: ' + product.stok;
     qty.textContent = '+1 ke keranjang';
 
@@ -5013,6 +5272,15 @@ function renderProductsKasir() {
             stockBadge = `<span class="badge badge-stock-low">Menipis (${p.stok})</span>`;
         }
 
+        const priceInfo = getProductPriceInfo(p);
+        const priceDisplay = priceInfo.hasDiskon ? `
+            <div class="promo-price-wrapper">
+                <span class="promo-price-original">${formatRupiah(priceInfo.hargaNormal)}</span>
+                <span class="promo-price-final">${formatRupiah(priceInfo.hargaFinal)}</span>
+                <span class="badge-diskon-pill"><i class="fa-solid fa-tag"></i> -${priceInfo.diskonPersen}%</span>
+            </div>
+        ` : `<strong>${formatRupiah(p.harga)}</strong>`;
+
         return `
             <tr>
                 <td>
@@ -5024,7 +5292,7 @@ function renderProductsKasir() {
                     <small style="color:#666;">${escapeHtml(p.deskripsi || '-')}</small>
                 </td>
                 <td><span class="product-category-tag">${escapeHtml(p.kategori || 'Umum')}</span></td>
-                <td><strong>${formatRupiah(p.harga)}</strong></td>
+                <td>${priceDisplay}</td>
                 <td>${stockBadge}</td>
                 <td>
                     <div class="action-btns">
@@ -5085,12 +5353,17 @@ function openKasirProductModal(index) {
     const stokInput = document.getElementById('kasir-stok-barang');
     const descInput = document.getElementById('kasir-deskripsi-barang');
     const imgUrlInput = document.getElementById('kasir-gambar-url');
+    const diskonTipeSelect = document.getElementById('kasir-diskon-tipe');
+    const diskonNilaiInput = document.getElementById('kasir-diskon-nilai');
 
     if (index === -1) {
         // Tambah produk baru
         titleEl.innerHTML = `<i class="fa-solid fa-plus-circle"></i> Tambah Produk Baru (Kasir)`;
         idxInput.value = -1;
         document.getElementById('form-barang-kasir').reset();
+        if (diskonTipeSelect) diskonTipeSelect.value = 'none';
+        if (diskonNilaiInput) diskonNilaiInput.value = '';
+        toggleDiskonInputKasir();
     } else {
         // Edit produk yang ada
         const p = products[index];
@@ -5103,6 +5376,12 @@ function openKasirProductModal(index) {
         stokInput.value = p.stok;
         descInput.value = p.deskripsi || '';
         imgUrlInput.value = p.gambar || '';
+
+        const dType = p.diskonTipe || (p.diskonPersen > 0 ? 'persen' : (p.diskonNominal > 0 ? 'nominal' : 'none'));
+        const dVal = dType === 'nominal' ? (p.diskonNominal || '') : (p.diskonPersen || p.diskon || '');
+        if (diskonTipeSelect) diskonTipeSelect.value = dType;
+        if (diskonNilaiInput) diskonNilaiInput.value = dVal;
+        toggleDiskonInputKasir();
     }
 
     modal.style.display = 'flex';
@@ -5158,6 +5437,18 @@ function handleSaveProductKasir(e) {
     let kodeInput;
     let modalVal = 0;
 
+    const diskonTipe = document.getElementById('kasir-diskon-tipe') ? document.getElementById('kasir-diskon-tipe').value : 'none';
+    const diskonNilai = parseFloat(document.getElementById('kasir-diskon-nilai') ? document.getElementById('kasir-diskon-nilai').value : 0) || 0;
+    let diskonPersen = 0;
+    let diskonNominal = 0;
+    if (diskonTipe === 'persen' && diskonNilai > 0) {
+        diskonPersen = Math.min(100, Math.max(0, diskonNilai));
+        diskonNominal = Math.round(harga * (diskonPersen / 100));
+    } else if (diskonTipe === 'nominal' && diskonNilai > 0) {
+        diskonNominal = Math.min(harga, diskonNilai);
+        diskonPersen = harga > 0 ? Math.round((diskonNominal / harga) * 100) : 0;
+    }
+
     if (editIndex === -1) {
         // Produk baru
         kodeInput = generateProductCode();
@@ -5170,6 +5461,9 @@ function handleSaveProductKasir(e) {
             harga: harga,
             modal: modalVal,
             stok: stok,
+            diskonTipe: (diskonPersen > 0 || diskonNominal > 0) ? diskonTipe : 'none',
+            diskonPersen: diskonPersen,
+            diskonNominal: diskonNominal,
             gambar: gambar
         };
         products.push(newProduct);
@@ -5191,6 +5485,9 @@ function handleSaveProductKasir(e) {
         existing.deskripsi = deskripsi;
         existing.harga = harga;
         existing.stok = stok;
+        existing.diskonTipe = (diskonPersen > 0 || diskonNominal > 0) ? diskonTipe : 'none';
+        existing.diskonPersen = diskonPersen;
+        existing.diskonNominal = diskonNominal;
         existing.gambar = gambar;
 
         showToast(`Info produk '${nama}' berhasil diperbarui!`, 'success');
@@ -5393,10 +5690,15 @@ function getTopSellingProductCodes() {
     return new Set(sortedCodes.slice(0, 10));
 }
 
-// Menghasilkan badge visual menarik (Terlaris, Pilihan, Stok Terbatas)
+// Menghasilkan badge visual menarik (Terlaris, Pilihan, Stok Terbatas, Promo Diskon)
 function getProductBadgeHtml(p, topSellingSet) {
     if (!p) return '';
     if (p.stok <= 0) return ''; // Sudah memiliki overlay Stok Habis
+
+    const priceInfo = getProductPriceInfo(p);
+    if (priceInfo.hasDiskon) {
+        return `<span class="product-badge-flag badge-promo"><i class="fa-solid fa-tag"></i> Diskon ${priceInfo.diskonPersen}%</span>`;
+    }
 
     if (p.stok > 0 && p.stok <= 5) {
         return `<span class="product-badge-flag badge-limited"><i class="fa-solid fa-bolt"></i> Sisa ${p.stok}!</span>`;
@@ -5431,6 +5733,7 @@ function renderCustomerStorefront() {
     const pillsContainer = document.getElementById('customer-category-pills');
     if (pillsContainer) {
         let pillsHtml = `<button type="button" class="cat-pill ${currentCustomerCategoryFilter === 'all' ? 'active' : ''}" onclick="setCustomerCategoryFilter('all', this)"><i class="fa-solid fa-border-all"></i> Semua</button>`;
+        pillsHtml += `<button type="button" class="cat-pill ${currentCustomerCategoryFilter === 'promo' ? 'active' : ''}" onclick="setCustomerCategoryFilter('promo', this)"><i class="fa-solid fa-tags" style="color:#ec4899;"></i> Promo Diskon</button>`;
         pillsHtml += `<button type="button" class="cat-pill ${currentCustomerCategoryFilter === 'terlaris' ? 'active' : ''}" onclick="setCustomerCategoryFilter('terlaris', this)"><i class="fa-solid fa-fire" style="color:#ef4444;"></i> Terlaris</button>`;
         categories.forEach(cat => {
             const isActive = currentCustomerCategoryFilter.toLowerCase() === cat.name.toLowerCase();
@@ -5448,9 +5751,11 @@ function renderCustomerStorefront() {
 
     let list = [...products];
 
-    // Filter Kategori / Terlaris
+    // Filter Kategori / Terlaris / Promo
     if (currentCustomerCategoryFilter === 'terlaris') {
         list = list.filter(p => topSellingSet.has(p.kode));
+    } else if (currentCustomerCategoryFilter === 'promo') {
+        list = list.filter(p => getProductPriceInfo(p).hasDiskon);
     } else if (currentCustomerCategoryFilter !== 'all') {
         list = list.filter(p => (p.kategori || 'Umum').toLowerCase() === currentCustomerCategoryFilter.toLowerCase());
     }
@@ -5472,10 +5777,24 @@ function renderCustomerStorefront() {
             const bTop = topSellingSet.has(b.kode) ? 1 : 0;
             return bTop - aTop;
         });
+    } else if (sortVal === 'promo') {
+        list.sort((a, b) => {
+            const da = getProductPriceInfo(a).diskonPersen;
+            const db = getProductPriceInfo(b).diskonPersen;
+            return db - da;
+        });
     } else if (sortVal === 'price-low' || sortVal === 'price-asc') {
-        list.sort((a, b) => a.harga - b.harga);
+        list.sort((a, b) => {
+            const pa = getProductPriceInfo(a).hargaFinal;
+            const pb = getProductPriceInfo(b).hargaFinal;
+            return pa - pb;
+        });
     } else if (sortVal === 'price-high' || sortVal === 'price-desc') {
-        list.sort((a, b) => b.harga - a.harga);
+        list.sort((a, b) => {
+            const pa = getProductPriceInfo(a).hargaFinal;
+            const pb = getProductPriceInfo(b).hargaFinal;
+            return pb - pa;
+        });
     } else if (sortVal === 'name-az' || sortVal === 'name-asc') {
         list.sort((a, b) => a.nama.localeCompare(b.nama));
     } else if (sortVal === 'stock-desc') {
@@ -5508,6 +5827,14 @@ function renderCustomerStorefront() {
             ? p.gambar 
             : getProductAutoImage(p);
         const badgeHtml = getProductBadgeHtml(p, topSellingSet);
+        const priceInfo = getProductPriceInfo(p);
+
+        const priceHtml = priceInfo.hasDiskon ? `
+            <div style="display:flex; flex-direction:column; align-items:flex-start; line-height:1.2;">
+                <span style="font-size:0.75rem; color:#94a3b8; text-decoration:line-through;">${formatRupiah(priceInfo.hargaNormal)}</span>
+                <span class="product-card-price" style="color:#dc2626;">${formatRupiah(priceInfo.hargaFinal)}</span>
+            </div>
+        ` : `<span class="product-card-price">${formatRupiah(p.harga)}</span>`;
 
         return `
             <div class="pelanggan-product-card">
@@ -5521,7 +5848,7 @@ function renderCustomerStorefront() {
                     <h4 class="product-card-title" onclick="openCustomerProductDetail('${p.kode}')" title="${escapeHtml(p.nama)}">${escapeHtml(p.nama)}</h4>
                     <p class="product-card-desc">${escapeHtml(p.deskripsi || 'Produk berkualitas pilihan warung digital.')}</p>
                     <div class="product-card-price-row">
-                        <span class="product-card-price">${formatRupiah(p.harga)}</span>
+                        ${priceHtml}
                         <span class="product-card-stock">${isOutOfStock ? 'Habis' : 'Stok: ' + p.stok}</span>
                     </div>
                     <div class="product-card-actions">
@@ -5574,7 +5901,20 @@ function openCustomerProductDetail(kode) {
     if (catEl) {
         catEl.innerHTML = `${escapeHtml(product.kategori || 'Umum')} ${badgeHtml ? `<span style="position:static; margin-left:8px; vertical-align:middle; display:inline-flex;">${badgeHtml}</span>` : ''}`;
     }
-    document.getElementById('cust-modal-price').textContent = formatRupiah(product.harga);
+    const priceInfo = getProductPriceInfo(product);
+    const priceEl = document.getElementById('cust-modal-price');
+    if (priceEl) {
+        if (priceInfo.hasDiskon) {
+            priceEl.innerHTML = `
+                <div style="display:inline-flex; flex-direction:column; align-items:flex-start; line-height:1.2;">
+                    <span style="font-size:0.85rem; color:#94a3b8; text-decoration:line-through;">${formatRupiah(priceInfo.hargaNormal)}</span>
+                    <span style="color:#dc2626; font-weight:700; font-size:1.25rem;">${formatRupiah(priceInfo.hargaFinal)} <span class="badge" style="background:#fee2e2; color:#dc2626; font-size:0.75rem; vertical-align:middle;">Hemat ${formatRupiah(priceInfo.diskonNominal)} (-${priceInfo.diskonPersen}%)</span></span>
+                </div>
+            `;
+        } else {
+            priceEl.textContent = formatRupiah(product.harga);
+        }
+    }
     document.getElementById('cust-modal-desc').textContent = product.deskripsi || 'Tidak ada keterangan khusus.';
 
     const stockBadge = document.getElementById('cust-modal-stock');
@@ -5631,7 +5971,8 @@ function updateCustDetailSubtotal() {
     const qty = parseInt(input ? input.value : 1) || 1;
     const subtotalEl = document.getElementById('cust-modal-subtotal');
     if (subtotalEl) {
-        subtotalEl.textContent = formatRupiah(currentCustomerDetailProduct.harga * qty);
+        const priceInfo = getProductPriceInfo(currentCustomerDetailProduct);
+        subtotalEl.textContent = formatRupiah(priceInfo.hargaFinal * qty);
     }
 }
 
@@ -5656,6 +5997,9 @@ function addCustomerItemToCart(product, qty) {
         return;
     }
 
+    const priceInfo = getProductPriceInfo(product);
+    const finalPrice = priceInfo.hargaFinal;
+
     const existing = customerCart.find(i => i.kode === product.kode);
     const currentQtyInCart = existing ? existing.qty : 0;
 
@@ -5666,7 +6010,10 @@ function addCustomerItemToCart(product, qty) {
 
     if (existing) {
         existing.qty += qty;
-        existing.subtotal = existing.qty * existing.harga;
+        existing.harga = finalPrice;
+        existing.hargaNormal = priceInfo.hargaNormal;
+        existing.diskonPersen = priceInfo.diskonPersen;
+        existing.subtotal = existing.qty * finalPrice;
     } else {
         const itemImg = (product.gambar && product.gambar !== DEFAULT_IMAGE && !product.gambar.includes('1588964895597')) 
             ? product.gambar 
@@ -5674,10 +6021,12 @@ function addCustomerItemToCart(product, qty) {
         customerCart.push({
             kode: product.kode,
             nama: product.nama,
-            harga: product.harga,
+            harga: finalPrice,
+            hargaNormal: priceInfo.hargaNormal,
+            diskonPersen: priceInfo.diskonPersen,
             gambar: itemImg,
             qty: qty,
-            subtotal: product.harga * qty
+            subtotal: finalPrice * qty
         });
     }
 
@@ -5735,7 +6084,13 @@ function renderCustomerCart() {
                 <img src="${escapeHtml(cartImg)}" alt="${escapeHtml(item.nama)}" class="cart-item-thumb" onerror="this.onerror=null; this.src='${DEFAULT_IMAGE}'">
                 <div class="cart-item-info">
                     <strong>${escapeHtml(item.nama)}</strong>
-                    <div style="color:var(--primary-color); font-size:0.9rem;">${formatRupiah(item.harga)}</div>
+                    <div style="font-size:0.9rem;">
+                        ${(item.hargaNormal && item.hargaNormal > item.harga) ? `
+                            <span style="font-size:0.75rem; color:#888; text-decoration:line-through;">${formatRupiah(item.hargaNormal)}</span>
+                            <strong style="color:#dc2626;">${formatRupiah(item.harga)}</strong>
+                            <span class="badge" style="background:#fee2e2; color:#dc2626; font-size:0.7rem;">-${item.diskonPersen}%</span>
+                        ` : `<strong style="color:var(--primary-color);">${formatRupiah(item.harga)}</strong>`}
+                    </div>
                 </div>
                 <div class="qty-stepper">
                     <button type="button" onclick="changeCustomerCartQty('${item.kode}', -1)"><i class="fa-solid fa-minus"></i></button>

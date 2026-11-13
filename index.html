@@ -23,7 +23,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=3">
     <!-- Font Awesome Icons for clean UI icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=23">
+    <link rel="stylesheet" href="style.css?v=24">
 </head>
 <body class="logged-out">
 
@@ -382,6 +382,28 @@
                                 </div>
                             </div>
                             <small id="info-laba-item" class="form-info" style="margin-bottom:0.75rem; display:block;">Laba per item: Rp 0</small>
+
+                            <!-- Pengaturan Diskon & Promo (Admin) -->
+                            <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px; margin-bottom:0.75rem;">
+                                <div class="form-group" style="margin-bottom:0;">
+                                    <label for="diskon-tipe-barang"><i class="fa-solid fa-tags" style="color:#ec4899;"></i> Promo / Diskon</label>
+                                    <select id="diskon-tipe-barang" class="form-control" onchange="toggleDiskonInputAdmin()">
+                                        <option value="none">Tidak Ada Promo</option>
+                                        <option value="persen">Diskon Persen (%)</option>
+                                        <option value="nominal">Potongan Harga (Rp)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" id="group-diskon-nilai-admin" style="display:none; margin-bottom:0;">
+                                    <label for="diskon-nilai-barang" id="label-diskon-nilai-admin">Nilai Diskon</label>
+                                    <input type="number" id="diskon-nilai-barang" min="0" placeholder="0" oninput="updateLabaPreview()">
+                                </div>
+                                <div id="preview-diskon-admin" style="grid-column: 1 / -1; display:none; background:#ecfdf5; border:1px solid #a7f3d0; border-radius:6px; padding:6px 10px; font-size:0.85rem; margin-top:4px;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <span><strong>Harga Promo:</strong> <span id="text-harga-promo-admin" style="color:#059669; font-weight:700; font-size:0.95rem;">Rp 0</span></span>
+                                        <span id="badge-hemat-admin" class="badge" style="background:#fee2e2; color:#dc2626; font-size:0.75rem;">Hemat Rp 0</span>
+                                    </div>
+                                </div>
+                            </div>
 
                             <div class="form-group">
                                 <label for="stok-barang">Stok Barang *</label>
@@ -1116,6 +1138,7 @@
                         <select id="sort-pelanggan-store" onchange="renderCustomerStorefront()">
                             <option value="default">Paling Sesuai (Rekomendasi)</option>
                             <option value="best-seller">🔥 Produk Terlaris</option>
+                            <option value="promo">🏷️ Promo & Diskon Terbesar</option>
                             <option value="price-asc">Harga Terendah</option>
                             <option value="price-desc">Harga Tertinggi</option>
                             <option value="name-asc">Nama A &rarr; Z</option>
@@ -1362,7 +1385,7 @@
             console.warn("Firebase initialization error, fallback to localStorage:", e);
         }
     </script>
-    <script src="script.js?v=23"></script>
+    <script src="script.js?v=24"></script>
 
     <!-- MODAL SCANNER BARCODE & QR CODE -->
     <div id="scanner-modal-overlay" class="scanner-modal-overlay">
@@ -2001,11 +2024,33 @@
                     </div>
                     <div class="form-group" style="flex:1;">
                         <label for="kasir-harga-barang">Harga Jual (Rp) *</label>
-                        <input type="number" id="kasir-harga-barang" min="0" required placeholder="Contoh: 15000">
+                        <input type="number" id="kasir-harga-barang" min="0" required placeholder="Contoh: 15000" oninput="updateKasirDiskonPreview()">
                     </div>
                     <div class="form-group" style="flex:1;">
                         <label for="kasir-stok-barang">Stok Barang *</label>
                         <input type="number" id="kasir-stok-barang" min="0" required placeholder="Contoh: 20">
+                    </div>
+                </div>
+
+                <!-- Pengaturan Diskon & Promo (Kasir) -->
+                <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px; margin-bottom:1rem;">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label for="kasir-diskon-tipe"><i class="fa-solid fa-tags" style="color:#ec4899;"></i> Promo / Diskon</label>
+                        <select id="kasir-diskon-tipe" onchange="toggleDiskonInputKasir()">
+                            <option value="none">Tidak Ada Promo</option>
+                            <option value="persen">Diskon Persen (%)</option>
+                            <option value="nominal">Potongan Harga (Rp)</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="group-diskon-nilai-kasir" style="display:none; margin-bottom:0;">
+                        <label for="kasir-diskon-nilai" id="label-diskon-nilai-kasir">Nilai Diskon</label>
+                        <input type="number" id="kasir-diskon-nilai" min="0" placeholder="0" oninput="updateKasirDiskonPreview()">
+                    </div>
+                    <div id="preview-diskon-kasir" style="grid-column: 1 / -1; display:none; background:#ecfdf5; border:1px solid #a7f3d0; border-radius:6px; padding:6px 10px; font-size:0.85rem; margin-top:4px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span><strong>Harga Promo:</strong> <span id="text-harga-promo-kasir" style="color:#059669; font-weight:700; font-size:0.95rem;">Rp 0</span></span>
+                            <span id="badge-hemat-kasir" class="badge" style="background:#fee2e2; color:#dc2626; font-size:0.75rem;">Hemat Rp 0</span>
+                        </div>
                     </div>
                 </div>
                 <div class="form-group">
