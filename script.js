@@ -243,7 +243,6 @@ document.addEventListener('DOMContentLoaded', () => {
     renderProducts();
     populateProductDropdown();
     renderCart();
-    renderReports();
     renderDashboardStats();
     renderDashboardStokMenipis();
     renderDashboardOmzet();
@@ -1458,7 +1457,8 @@ function initFirebaseSync() {
 
         transactions = remoteTransactions;
         saveTransactionsToStorage();
-        renderReports();
+        const sectionLaporanFs = document.getElementById('section-laporan');
+        if (sectionLaporanFs && sectionLaporanFs.classList.contains('active')) renderReports();
         renderDashboardOmzet();
         renderDashboardStats();
     }, err => console.warn("Gagal mendengar data transaksi dari Firebase:", err));
@@ -1566,7 +1566,8 @@ function pullFromFirestore() {
             if (typeof renderCustomerStorefront === 'function') renderCustomerStorefront();
             populateProductDropdown();
             renderCart();
-            renderReports();
+            const sectionLaporanSync = document.getElementById('section-laporan');
+            if (sectionLaporanSync && sectionLaporanSync.classList.contains('active')) renderReports();
             renderDashboardStokMenipis();
             renderDashboardOmzet();
             renderDashboardStats();
@@ -2000,8 +2001,8 @@ function renderActivityLogs() {
     const tbody = document.getElementById('tbody-aktivitas');
     if (!tbody) return;
 
-    const userFilter = document.getElementById('filter-aktivitas-user') ? document.getElementById('filter-aktivitas-user').value : 'all';
-    const searchVal = document.getElementById('search-aktivitas') ? document.getElementById('search-aktivitas').value.toLowerCase().trim() : '';
+    const userFilter = document.getElementById('filter-log-user') ? document.getElementById('filter-log-user').value : 'all';
+    const searchVal = document.getElementById('search-log') ? document.getElementById('search-log').value.toLowerCase().trim() : '';
 
     let filtered = activityLogs;
     if (userFilter !== 'all') {
@@ -2020,7 +2021,8 @@ function renderActivityLogs() {
         return;
     }
 
-    tbody.innerHTML = filtered.map(log => {
+    const visibleFiltered = filtered.slice(0, activityVisibleCount);
+    tbody.innerHTML = visibleFiltered.map(log => {
         let roleBadge = '<span class="role-badge kasir">Kasir</span>';
         if (log.role === 'Administrator') roleBadge = '<span class="role-badge admin">Admin</span>';
         else if (log.role === 'Pelanggan') roleBadge = '<span class="role-badge pelanggan">Pelanggan</span>';
@@ -2035,7 +2037,12 @@ function renderActivityLogs() {
                 <td>${escapeHtml(log.details)}</td>
             </tr>
         `;
-    }).join('');
+    }).join('') + (filtered.length > activityVisibleCount ? `<tr><td colspan="6" style="text-align:center; padding:1rem;"><button class="btn btn-secondary btn-sm" onclick="loadMoreActivityLogs()"><i class="fa-solid fa-chevron-down"></i> Muat lebih banyak (${filtered.length - activityVisibleCount} tersisa)</button></td></tr>` : '');
+}
+
+function loadMoreActivityLogs() {
+    activityVisibleCount += 50;
+    renderActivityLogs();
 }
 
 function clearActivityLogs() {
@@ -3702,7 +3709,8 @@ function processSaveTransaction() {
     renderCart();
     renderProducts();
     populateProductDropdown();
-    renderReports();
+    const sectionLaporanSave = document.getElementById('section-laporan');
+    if (sectionLaporanSave && sectionLaporanSave.classList.contains('active')) renderReports();
     renderDashboardStokMenipis();
     renderDashboardOmzet();
     onMetodeBayarChange();
@@ -3795,6 +3803,7 @@ let currentReportMetodeFilter = 'all';
 
 function setReportMetodeFilter(metode) {
     currentReportMetodeFilter = metode;
+    reportVisibleCount = 50;
     document.querySelectorAll('.payment-filter-bar .filter-btn').forEach(btn => {
         btn.classList.toggle('active', btn.getAttribute('data-metode') === metode);
     });
@@ -3874,7 +3883,9 @@ function renderReports() {
         return;
     }
 
-    filtered.forEach((trx) => {
+    const visibleFiltered = filtered.slice(0, reportVisibleCount);
+
+    visibleFiltered.forEach((trx) => {
         const realIndex = transactions.indexOf(trx);
         const trxModal = (trx.items || []).reduce((s, item) => {
             const p = products.find(pp => pp.kode === item.kode);
@@ -3904,6 +3915,21 @@ function renderReports() {
         `;
         tbody.appendChild(tr);
     });
+
+    if (filtered.length > reportVisibleCount) {
+        const moreRow = document.createElement('tr');
+        moreRow.innerHTML = `<td colspan="9" style="text-align:center; padding:1rem;">
+            <button class="btn btn-secondary btn-sm" onclick="loadMoreReports()">
+                <i class="fa-solid fa-chevron-down"></i> Muat lebih banyak (${filtered.length - reportVisibleCount} tersisa)
+            </button>
+        </td>`;
+        tbody.appendChild(moreRow);
+    }
+}
+
+function loadMoreReports() {
+    reportVisibleCount += 50;
+    renderReports();
 }
 
 function getMetodeBadge(metode) {
@@ -3954,7 +3980,8 @@ function deleteSingleReport(index) {
             db.collection('transactions').doc(deletedId).delete().catch(() => {});
         }
 
-        renderReports();
+        const sectionLaporanDel = document.getElementById('section-laporan');
+        if (sectionLaporanDel && sectionLaporanDel.classList.contains('active')) renderReports();
         showToast('Transaksi berhasil dihapus dari laporan.', 'info');
         logActivity('hapus_transaksi', `Admin menghapus transaksi #${deletedId}`, deletedId);
     }
@@ -3970,7 +3997,8 @@ function clearAllReports() {
         transactions = [];
         saveTransactionsToStorage();
 
-        renderReports();
+        const sectionLaporanClr = document.getElementById('section-laporan');
+        if (sectionLaporanClr && sectionLaporanClr.classList.contains('active')) renderReports();
         showToast('Seluruh laporan transaksi telah dibersihkan.', 'danger');
     }
 }
@@ -4343,7 +4371,8 @@ Lanjutkan?`)) {
             renderProducts();
             populateProductDropdown();
             renderCart();
-            renderReports();
+            const sectionLaporanRest = document.getElementById('section-laporan');
+            if (sectionLaporanRest && sectionLaporanRest.classList.contains('active')) renderReports();
             showToast('Data berhasil direstore dari backup!', 'success');
         } catch (err) {
             showToast('Gagal membaca file backup: ' + err.message, 'danger');
@@ -4500,10 +4529,12 @@ function printReport() {
    ========================================================================== */
 
 let currentReportFilter = 'all';
+let reportVisibleCount = 50;
+let activityVisibleCount = 50;
 
 function setReportFilter(filterType) {
     currentReportFilter = filterType;
-
+    reportVisibleCount = 50;
     // Update active button
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.classList.toggle('active', btn.getAttribute('data-filter') === filterType);
