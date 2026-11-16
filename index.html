@@ -23,7 +23,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=3">
     <!-- Font Awesome Icons for clean UI icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=32">
+    <link rel="stylesheet" href="style.css?v=33">
 </head>
 <body class="logged-out">
 
@@ -1539,7 +1539,7 @@
             console.warn("Firebase initialization error, fallback to localStorage:", e);
         }
     </script>
-    <script src="script.js?v=32"></script>
+    <script src="script.js?v=33"></script>
 
     <!-- MODAL SCANNER BARCODE & QR CODE -->
     <div id="scanner-modal-overlay" class="scanner-modal-overlay">
@@ -1881,6 +1881,17 @@
                         <button type="button" class="color-option" data-color-value="purple" onclick="selectDisplayColor('purple')" title="Ungu">
                             <span style="background:#6a1b9a"></span> Ungu
                         </button>
+                        <button type="button" class="color-option" data-color-value="custom" onclick="selectDisplayColor('custom')" title="Kustom">
+                            <span id="custom-color-swatch" style="background:#d32f2f"></span> Kustom
+                        </button>
+                    </div>
+                    <div class="form-group" id="custom-color-picker-group" style="display:none; margin-top:0.75rem;">
+                        <label for="setting-custom-color">Warna Kustom</label>
+                        <div style="display:flex; gap:0.5rem; align-items:center;">
+                            <input type="color" id="setting-custom-color" value="#d32f2f" oninput="onCustomColorChange(this.value)">
+                            <input type="text" id="setting-custom-color-hex" value="#d32f2f" maxlength="7" placeholder="#RRGGBB" oninput="onCustomColorHexChange(this.value)">
+                        </div>
+                        <small class="form-info">Pilih warna aksen toko Anda sendiri.</small>
                     </div>
                 </div>
 

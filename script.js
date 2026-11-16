@@ -3290,7 +3290,8 @@ const DEFAULT_DISPLAY_SETTINGS = {
     fontSize: 'normal',
     shopName: 'Delsi Shop',
     shopTagline: 'Sistem Kasir & Manajemen Warung Digital',
-    shopLogo: ''
+    shopLogo: '',
+    customColor: '#d32f2f'
 };
 
 let displaySettings = { ...DEFAULT_DISPLAY_SETTINGS };
@@ -3298,6 +3299,7 @@ let tempDisplayTheme = 'light';
 let tempDisplayColor = 'red';
 let tempDisplayFont = 'normal';
 let tempDisplayLogo = '';
+let tempCustomColor = '#d32f2f';
 
 function initDisplaySettings() {
     try {
@@ -3332,6 +3334,24 @@ function isDisplaySettingsModalOpen() {
     return !!(overlay && overlay.classList.contains('active'));
 }
 
+// Helper: terang/gelapkan hex color
+function shadeColor(hex, percent) {
+    try {
+        let h = hex.replace('#', '');
+        if (h.length === 3) h = h.split('').map(c => c + c).join('');
+        const num = parseInt(h, 16);
+        let r = (num >> 16) + percent;
+        let g = ((num >> 8) & 0x00FF) + percent;
+        let b = (num & 0x0000FF) + percent;
+        r = Math.max(0, Math.min(255, r));
+        g = Math.max(0, Math.min(255, g));
+        b = Math.max(0, Math.min(255, b));
+        return '#' + (b | (g << 8) | (r << 16)).toString(16).padStart(6, '0');
+    } catch (e) {
+        return hex;
+    }
+}
+
 function applyDisplaySettings(settings) {
     if (!settings) settings = displaySettings;
     const s = settings;
@@ -3345,10 +3365,23 @@ function applyDisplaySettings(settings) {
     }
 
     // 2. Aksen warna
-    if (s.color && s.color !== 'red') {
-        root.setAttribute('data-color', s.color);
-    } else {
+    if (s.color === 'custom' && s.customColor) {
         root.removeAttribute('data-color');
+        const hex = s.customColor;
+        root.style.setProperty('--primary-color', hex);
+        root.style.setProperty('--primary-dark', shadeColor(hex, -25));
+        root.style.setProperty('--primary-light', shadeColor(hex, 40));
+        root.style.setProperty('--accent-color', hex);
+    } else {
+        root.style.removeProperty('--primary-color');
+        root.style.removeProperty('--primary-dark');
+        root.style.removeProperty('--primary-light');
+        root.style.removeProperty('--accent-color');
+        if (s.color && s.color !== 'red') {
+            root.setAttribute('data-color', s.color);
+        } else {
+            root.removeAttribute('data-color');
+        }
     }
 
     // 3. Ukuran font
@@ -3424,6 +3457,7 @@ function openDisplaySettingsModal() {
     tempDisplayColor = displaySettings.color || 'red';
     tempDisplayFont = displaySettings.fontSize || 'normal';
     tempDisplayLogo = displaySettings.shopLogo || '';
+    tempCustomColor = displaySettings.customColor || '#d32f2f';
 
     const nameInput = document.getElementById('setting-shop-name');
     if (nameInput) nameInput.value = displaySettings.shopName || 'Delsi Shop';
@@ -3441,6 +3475,15 @@ function openDisplaySettingsModal() {
     if (btnRemove) btnRemove.style.display = tempDisplayLogo ? 'inline-block' : 'none';
 
     updateDisplaySettingsModalUI();
+
+    const group = document.getElementById('custom-color-picker-group');
+    if (group) group.style.display = (tempDisplayColor === 'custom') ? 'block' : 'none';
+    const swatch = document.getElementById('custom-color-swatch');
+    if (swatch) swatch.style.background = tempCustomColor;
+    const picker = document.getElementById('setting-custom-color');
+    if (picker) picker.value = tempCustomColor;
+    const hexInput = document.getElementById('setting-custom-color-hex');
+    if (hexInput) hexInput.value = tempCustomColor;
 
     const overlay = document.getElementById('display-settings-modal-overlay');
     if (overlay) overlay.classList.add('active');
@@ -3468,8 +3511,40 @@ function selectDisplayTheme(theme) {
 
 function selectDisplayColor(color) {
     tempDisplayColor = color;
+    const group = document.getElementById('custom-color-picker-group');
+    if (group) group.style.display = (color === 'custom') ? 'block' : 'none';
+    if (color === 'custom') {
+        // sync swatch
+        const swatch = document.getElementById('custom-color-swatch');
+        if (swatch) swatch.style.background = tempCustomColor;
+        const picker = document.getElementById('setting-custom-color');
+        if (picker) picker.value = tempCustomColor;
+        const hexInput = document.getElementById('setting-custom-color-hex');
+        if (hexInput) hexInput.value = tempCustomColor;
+    }
     updateDisplaySettingsModalUI();
     previewTempDisplaySettings();
+}
+
+function onCustomColorChange(hex) {
+    if (!hex) return;
+    if (!hex.startsWith('#')) hex = '#' + hex;
+    tempCustomColor = hex;
+    const swatch = document.getElementById('custom-color-swatch');
+    if (swatch) swatch.style.background = hex;
+    const hexInput = document.getElementById('setting-custom-color-hex');
+    if (hexInput && hexInput.value !== hex) hexInput.value = hex;
+    const picker = document.getElementById('setting-custom-color');
+    if (picker && picker.value !== hex) picker.value = hex;
+    previewTempDisplaySettings();
+}
+
+function onCustomColorHexChange(val) {
+    let hex = val.trim();
+    if (!hex.startsWith('#')) hex = '#' + hex;
+    if (/^#[0-9a-fA-F]{6}$/.test(hex)) {
+        onCustomColorChange(hex);
+    }
 }
 
 function selectDisplayFont(font) {
@@ -3484,6 +3559,7 @@ function previewTempDisplaySettings() {
     applyDisplaySettings({
         theme: tempDisplayTheme,
         color: tempDisplayColor,
+        customColor: tempCustomColor,
         fontSize: tempDisplayFont,
         shopName: (nameInput && nameInput.value.trim()) || 'Delsi Shop',
         shopTagline: (taglineInput && taglineInput.value.trim()) || 'Sistem Kasir & Manajemen Warung Digital',
@@ -3587,6 +3663,7 @@ function handleSaveDisplaySettings(event) {
 
     displaySettings.theme = tempDisplayTheme;
     displaySettings.color = tempDisplayColor;
+    displaySettings.customColor = tempCustomColor;
     displaySettings.fontSize = tempDisplayFont;
     displaySettings.shopName = (nameInput && nameInput.value.trim()) || 'Delsi Shop';
     displaySettings.shopTagline = (taglineInput && taglineInput.value.trim()) || 'Sistem Kasir & Manajemen Warung Digital';
