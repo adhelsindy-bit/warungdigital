@@ -378,6 +378,7 @@ function initAuth() {
         } else if (role === 'Pelanggan') {
             switchTab('pelanggan-store');
         }
+        if (typeof initGlobalPromoBanner === 'function') initGlobalPromoBanner();
     } else {
         document.body.classList.add('logged-out');
     }
@@ -733,6 +734,8 @@ async function handleLogin(e) {
     } else if (session.role === 'Pelanggan') {
         switchTab('pelanggan-store');
     }
+
+    if (typeof initGlobalPromoBanner === 'function') initGlobalPromoBanner();
 
     showToast(`Selamat datang, ${user.fullName || user.username}! (${session.role})`, 'success');
     logActivity('login', `Pengguna '${user.username}' (${session.role}) berhasil login.`, user.username);
@@ -7190,6 +7193,66 @@ function renderDashboardStats() {
     // 6. Stok Menipis
     const menipis = products.filter(p => p.stok <= 5);
     if (statMenipis) statMenipis.textContent = `${menipis.length} Produk`;
+}
+
+/* ==========================================================================
+   GLOBAL PROMO BANNER (SEMUA ROLE)
+   ========================================================================== */
+const GLOBAL_PROMO_MESSAGES = [
+    '🔥 Promo hari ini: diskon hingga 20% untuk produk pilihan!',
+    '🚚 Gratis ongkir untuk pesanan di atas Rp 100.000',
+    '⭐ Produk terlaris minggu ini sedang diskon!',
+    '🏷️ Belanja lebih hemat dengan voucher promo terbaru!'
+];
+let globalPromoIndex = 0;
+let globalPromoTimer = null;
+
+function getGlobalPromoMessages() {
+    const msgs = GLOBAL_PROMO_MESSAGES.slice();
+    if (typeof products !== 'undefined' && typeof getProductPriceInfo === 'function') {
+        const promos = products.filter(function(p) {
+            const info = getProductPriceInfo(p);
+            return info.hasDiskon && (p.stok || 0) > 0;
+        });
+        if (promos.length > 0) {
+            const p = promos[Math.floor(Math.random() * promos.length)];
+            const info = getProductPriceInfo(p);
+            msgs.unshift('🏷️ ' + p.nama + ' diskon ' + info.diskonPersen + '% hari ini!');
+        }
+    }
+    return msgs;
+}
+
+function initGlobalPromoBanner() {
+    const banner = document.getElementById('global-promo-banner');
+    if (!banner) return;
+    try {
+        if (sessionStorage.getItem('globalPromoClosed') === '1') { banner.style.display = 'none'; return; }
+    } catch (e) {}
+    const session = (typeof getSession === 'function') ? getSession() : null;
+    if (!session) { banner.style.display = 'none'; return; }
+    banner.style.display = 'flex';
+    const msgs = getGlobalPromoMessages();
+    globalPromoIndex = 0;
+    const msgEl = document.getElementById('global-promo-msg');
+    if (msgEl) msgEl.textContent = msgs[0];
+    if (globalPromoTimer) { clearInterval(globalPromoTimer); globalPromoTimer = null; }
+    globalPromoTimer = setInterval(function() {
+        globalPromoIndex = (globalPromoIndex + 1) % msgs.length;
+        if (msgEl) {
+            msgEl.style.animation = 'none';
+            void msgEl.offsetWidth;
+            msgEl.style.animation = '';
+            msgEl.textContent = msgs[globalPromoIndex];
+        }
+    }, 4000);
+}
+
+function closeGlobalPromoBanner() {
+    const banner = document.getElementById('global-promo-banner');
+    if (banner) banner.style.display = 'none';
+    try { sessionStorage.setItem('globalPromoClosed', '1'); } catch (e) {}
+    if (globalPromoTimer) { clearInterval(globalPromoTimer); globalPromoTimer = null; }
 }
 
 /* ==========================================================================

@@ -23,7 +23,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=3">
     <!-- Font Awesome Icons for clean UI icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=28">
+    <link rel="stylesheet" href="style.css?v=29">
 </head>
 <body class="logged-out">
 
@@ -192,6 +192,14 @@
             <p class="tagline" id="header-shop-tagline">Sistem Kasir & Manajemen Warung Digital</p>
         </div>
     </header>
+
+    <!-- Banner Promo Global (semua role) -->
+    <div id="global-promo-banner" class="global-promo-banner" style="display:none;">
+        <div class="global-promo-track" id="global-promo-track">
+            <span class="global-promo-msg" id="global-promo-msg">🔥 Promo hari ini: diskon hingga 20% untuk produk pilihan!</span>
+        </div>
+        <button class="global-promo-close" onclick="closeGlobalPromoBanner()" aria-label="Tutup banner">&times;</button>
+    </div>
 
     <!-- Navigasi Dinamis Berdasarkan Role -->
     <nav class="app-nav">
@@ -1432,7 +1440,7 @@
             console.warn("Firebase initialization error, fallback to localStorage:", e);
         }
     </script>
-    <script src="script.js?v=28"></script>
+    <script src="script.js?v=29"></script>
 
     <!-- MODAL SCANNER BARCODE & QR CODE -->
     <div id="scanner-modal-overlay" class="scanner-modal-overlay">
