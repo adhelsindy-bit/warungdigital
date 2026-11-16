@@ -23,7 +23,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=3">
     <!-- Font Awesome Icons for clean UI icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=27">
+    <link rel="stylesheet" href="style.css?v=28">
 </head>
 <body class="logged-out">
 
@@ -898,7 +898,7 @@
                         <input type="date" id="filter-date" onchange="setReportFilter('date')">
                     </div>
                     <div class="search-box">
-                        <input type="text" id="search-laporan" placeholder="Cari no. transaksi..." oninput="reportVisibleCount=50; renderReports()">
+                        <input type="text" id="search-laporan" placeholder="Cari no. transaksi..." oninput="reportVisibleCount=10; renderReports()">
                     </div>
                 </div>
 
@@ -984,12 +984,12 @@
                 <div class="report-filter-bar" style="margin-bottom:1rem;">
                     <div class="filter-group">
                         <label for="filter-log-user" class="filter-label">Filter Pengguna:</label>
-                        <select id="filter-log-user" class="form-control" style="width:auto;" onchange="activityVisibleCount=50; renderActivityLogs()">
+                        <select id="filter-log-user" class="form-control" style="width:auto;" onchange="activityVisibleCount=10; renderActivityLogs()">
                             <option value="all">Semua Pengguna</option>
                         </select>
                     </div>
                     <div class="search-box">
-                        <input type="text" id="search-log" placeholder="Cari aktivitas atau rincian..." oninput="activityVisibleCount=50; renderActivityLogs()">
+                        <input type="text" id="search-log" placeholder="Cari aktivitas atau rincian..." oninput="activityVisibleCount=10; renderActivityLogs()">
                     </div>
                 </div>
 
@@ -1432,7 +1432,7 @@
             console.warn("Firebase initialization error, fallback to localStorage:", e);
         }
     </script>
-    <script src="script.js?v=27"></script>
+    <script src="script.js?v=28"></script>
 
     <!-- MODAL SCANNER BARCODE & QR CODE -->
     <div id="scanner-modal-overlay" class="scanner-modal-overlay">

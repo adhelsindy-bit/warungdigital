@@ -2041,7 +2041,7 @@ function renderActivityLogs() {
 }
 
 function loadMoreActivityLogs() {
-    activityVisibleCount += 50;
+    activityVisibleCount += 10;
     renderActivityLogs();
 }
 
@@ -3803,7 +3803,7 @@ let currentReportMetodeFilter = 'all';
 
 function setReportMetodeFilter(metode) {
     currentReportMetodeFilter = metode;
-    reportVisibleCount = 50;
+    reportVisibleCount = 10;
     document.querySelectorAll('.payment-filter-bar .filter-btn').forEach(btn => {
         btn.classList.toggle('active', btn.getAttribute('data-metode') === metode);
     });
@@ -3928,7 +3928,7 @@ function renderReports() {
 }
 
 function loadMoreReports() {
-    reportVisibleCount += 50;
+    reportVisibleCount += 10;
     renderReports();
 }
 
@@ -4529,12 +4529,12 @@ function printReport() {
    ========================================================================== */
 
 let currentReportFilter = 'all';
-let reportVisibleCount = 50;
-let activityVisibleCount = 50;
+let reportVisibleCount = 10;
+let activityVisibleCount = 10;
 
 function setReportFilter(filterType) {
     currentReportFilter = filterType;
-    reportVisibleCount = 50;
+    reportVisibleCount = 10;
     // Update active button
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.classList.toggle('active', btn.getAttribute('data-filter') === filterType);
