@@ -23,7 +23,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=3">
     <!-- Font Awesome Icons for clean UI icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=24">
+    <link rel="stylesheet" href="style.css?v=25">
 </head>
 <body class="logged-out">
 
@@ -1109,20 +1109,67 @@
 
         <!-- SECTION: TOKO BELANJA ONLINE (PELANGGAN) -->
         <section id="section-pelanggan-store" class="tab-content">
-            <!-- Hero Promo Banner Modern -->
-            <div class="pelanggan-hero-banner">
-                <div class="hero-content">
-                    <span class="hero-badge"><i class="fa-solid fa-fire"></i> Belanja Mudah & Cepat</span>
-                    <h2>Selamat Datang di <span id="store-banner-name">Delsi Shop</span></h2>
-                    <p id="store-banner-tagline">Temukan kebutuhan sembako, makanan, minuman, dan perlengkapan rumah tangga dengan harga terbaik dan terpercaya!</p>
-                    <div class="hero-features">
-                        <span><i class="fa-solid fa-bolt"></i> Stok Real-Time</span>
-                        <span><i class="fa-solid fa-qrcode"></i> Bayar QRIS & Transfer</span>
-                        <span><i class="fa-solid fa-store"></i> Ambil di Toko / Antar</span>
+            <!-- PROMO SLIDER CAROUSEL -->
+            <div class="promo-slider-wrapper" id="promo-slider-wrapper">
+                <div class="promo-slider-track" id="promo-slider-track">
+
+                    <!-- Slide 1: Selamat Datang -->
+                    <div class="promo-slide slide-welcome">
+                        <div class="slide-content">
+                            <span class="slide-eyebrow"><i class="fa-solid fa-store"></i> Warung Digital</span>
+                            <h2 class="slide-title">Selamat Datang di <span id="store-banner-name">Delsi Shop</span>!</h2>
+                            <p class="slide-desc" id="store-banner-tagline">Temukan sembako, makanan, minuman & perlengkapan rumah dengan harga terbaik.</p>
+                            <div class="slide-pills">
+                                <span><i class="fa-solid fa-bolt"></i> Stok Real-Time</span>
+                                <span><i class="fa-solid fa-qrcode"></i> QRIS & Transfer</span>
+                                <span><i class="fa-solid fa-motorcycle"></i> Antar ke Rumah</span>
+                            </div>
+                        </div>
+                        <div class="slide-visual">
+                            <i class="fa-solid fa-bag-shopping"></i>
+                        </div>
                     </div>
+
+                    <!-- Slide 2: Promo Diskon (dinamis via JS) -->
+                    <div class="promo-slide slide-promo" id="slide-promo-dynamic">
+                        <div class="slide-content">
+                            <span class="slide-eyebrow"><i class="fa-solid fa-tags"></i> Penawaran Spesial</span>
+                            <h2 class="slide-title">🏷️ Promo & Diskon Hari Ini!</h2>
+                            <p class="slide-desc" id="slide-promo-desc">Ada produk diskon spesial menunggu kamu hari ini!</p>
+                            <div class="slide-promo-product" id="slide-promo-product"></div>
+                        </div>
+                        <div class="slide-visual">
+                            <i class="fa-solid fa-percent"></i>
+                        </div>
+                    </div>
+
+                    <!-- Slide 3: Produk Terlaris -->
+                    <div class="promo-slide slide-terlaris">
+                        <div class="slide-content">
+                            <span class="slide-eyebrow"><i class="fa-solid fa-fire"></i> Paling Diminati</span>
+                            <h2 class="slide-title">🔥 Produk Terlaris Minggu Ini!</h2>
+                            <p class="slide-desc">Belanja produk favorit pelanggan kami — stok terbatas!</p>
+                            <div class="slide-pills">
+                                <span><i class="fa-solid fa-trophy"></i> Best Seller</span>
+                                <span><i class="fa-solid fa-star"></i> Top Rated</span>
+                            </div>
+                        </div>
+                        <div class="slide-visual">
+                            <i class="fa-solid fa-fire-flame-curved"></i>
+                        </div>
+                    </div>
+
                 </div>
-                <div class="hero-illustration">
-                    <i class="fa-solid fa-bag-shopping"></i>
+
+                <!-- Navigasi Slider -->
+                <button class="slider-nav-btn slider-prev" onclick="prevPromoSlide()" aria-label="Sebelumnya"><i class="fa-solid fa-chevron-left"></i></button>
+                <button class="slider-nav-btn slider-next" onclick="nextPromoSlide()" aria-label="Berikutnya"><i class="fa-solid fa-chevron-right"></i></button>
+
+                <!-- Dot Indicator -->
+                <div class="slider-dots" id="slider-dots">
+                    <button class="slider-dot active" onclick="goToPromoSlide(0)" aria-label="Slide 1"></button>
+                    <button class="slider-dot" onclick="goToPromoSlide(1)" aria-label="Slide 2"></button>
+                    <button class="slider-dot" onclick="goToPromoSlide(2)" aria-label="Slide 3"></button>
                 </div>
             </div>
 
@@ -1385,7 +1432,7 @@
             console.warn("Firebase initialization error, fallback to localStorage:", e);
         }
     </script>
-    <script src="script.js?v=24"></script>
+    <script src="script.js?v=25"></script>
 
     <!-- MODAL SCANNER BARCODE & QR CODE -->
     <div id="scanner-modal-overlay" class="scanner-modal-overlay">
@@ -1818,6 +1865,38 @@
                     <button type="button" id="btn-cust-add-to-cart" class="btn btn-primary btn-block" onclick="submitCustDetailAddToCart()">
                         <i class="fa-solid fa-cart-plus"></i> Tambah ke Keranjang
                     </button>
+                </div>
+            </div>
+
+            <!-- SECTION: ULASAN & RATING PRODUK -->
+            <div class="review-section" id="cust-review-section">
+                <div class="review-section-header">
+                    <h4><i class="fa-solid fa-star"></i> Ulasan Pembeli</h4>
+                    <div class="review-avg-block" id="cust-review-avg-block">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+
+                <!-- Form Tulis Ulasan (hanya muncul jika eligible) -->
+                <div class="review-form-box" id="cust-review-form-box" style="display:none;">
+                    <h5><i class="fa-solid fa-pen-to-square"></i> Tulis Ulasan Kamu</h5>
+                    <div class="review-stars-input" id="review-stars-input">
+                        <button type="button" class="star-input-btn" onclick="setRatingBintang(1)" data-star="1" aria-label="1 bintang">★</button>
+                        <button type="button" class="star-input-btn" onclick="setRatingBintang(2)" data-star="2" aria-label="2 bintang">★</button>
+                        <button type="button" class="star-input-btn" onclick="setRatingBintang(3)" data-star="3" aria-label="3 bintang">★</button>
+                        <button type="button" class="star-input-btn" onclick="setRatingBintang(4)" data-star="4" aria-label="4 bintang">★</button>
+                        <button type="button" class="star-input-btn" onclick="setRatingBintang(5)" data-star="5" aria-label="5 bintang">★</button>
+                        <span class="star-rating-label" id="star-rating-label">Belum dinilai</span>
+                    </div>
+                    <textarea id="review-comment-input" class="review-textarea" placeholder="Bagikan pengalamanmu menggunakan produk ini..." rows="3" maxlength="300"></textarea>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="submitUlasan()">
+                        <i class="fa-solid fa-paper-plane"></i> Kirim Ulasan
+                    </button>
+                </div>
+
+                <!-- Daftar Ulasan -->
+                <div class="review-list" id="cust-review-list">
+                    <!-- Rendered by JS -->
                 </div>
             </div>
         </div>

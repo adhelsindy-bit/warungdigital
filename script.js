@@ -238,6 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCustomerCart();
     initDisplaySettings();
     initPaymentSettings();
+    initReviews();
     migrateProductModal();
     renderProducts();
     populateProductDropdown();
@@ -1761,6 +1762,7 @@ function switchTab(tabName) {
         renderActivityLogs();
     } else if (tabName === 'pelanggan-store') {
         renderCustomerStorefront();
+        initPromoSlider();
     } else if (tabName === 'pelanggan-orders') {
         renderCustomerOrders();
     } else if (tabName === 'pelanggan-profile') {
@@ -5726,6 +5728,7 @@ function renderCustomerStorefront() {
     if (bannerTagline && displaySettings && displaySettings.shopTagline) {
         bannerTagline.textContent = displaySettings.shopTagline;
     }
+    updatePromoSlide();
 
     const topSellingSet = getTopSellingProductCodes();
 
@@ -5937,6 +5940,9 @@ function openCustomerProductDetail(kode) {
     }
 
     updateCustDetailSubtotal();
+
+    if (typeof renderUlasan === 'function') renderUlasan(product.kode);
+    if (typeof checkEligibleUlasan === 'function') checkEligibleUlasan(product.kode);
 
     modal.style.display = 'flex';
     requestAnimationFrame(() => modal.classList.add('active'));
@@ -7154,4 +7160,204 @@ function renderDashboardStats() {
     const menipis = products.filter(p => p.stok <= 5);
     if (statMenipis) statMenipis.textContent = `${menipis.length} Produk`;
 }
+
+/* ==========================================================================
+   PROMO SLIDER (PELANGGAN)
+   ========================================================================== */
+let promoSliderIndex = 0;
+let promoSliderTimer = null;
+const PROMO_SLIDE_COUNT = 3;
+
+function initPromoSlider() {
+    const track = document.getElementById('promo-slider-track');
+    if (!track) return;
+    if (promoSliderTimer) { clearInterval(promoSliderTimer); promoSliderTimer = null; }
+    promoSliderIndex = 0;
+    updatePromoSliderUI();
+    promoSliderTimer = setInterval(function() { nextPromoSlide(); }, 4000);
+    if (!track.__touchBound) {
+        track.__touchBound = true;
+        let startX = 0;
+        track.addEventListener('touchstart', function(e) { if (e.touches && e.touches[0]) startX = e.touches[0].clientX; }, { passive: true });
+        track.addEventListener('touchend', function(e) {
+            if (!e.changedTouches || !e.changedTouches[0]) return;
+            const dx = e.changedTouches[0].clientX - startX;
+            if (Math.abs(dx) > 40) { if (dx < 0) nextPromoSlide(); else prevPromoSlide(); }
+        }, { passive: true });
+    }
+}
+
+function updatePromoSliderUI() {
+    const track = document.getElementById('promo-slider-track');
+    if (track) track.style.transform = 'translateX(-' + (promoSliderIndex * 100) + '%)';
+    const dots = document.querySelectorAll('#slider-dots .slider-dot');
+    dots.forEach(function(d, i) { d.classList.toggle('active', i === promoSliderIndex); });
+}
+
+function goToPromoSlide(n) {
+    promoSliderIndex = ((n % PROMO_SLIDE_COUNT) + PROMO_SLIDE_COUNT) % PROMO_SLIDE_COUNT;
+    updatePromoSliderUI();
+    if (promoSliderTimer) { clearInterval(promoSliderTimer); }
+    promoSliderTimer = setInterval(function() { nextPromoSlide(); }, 4000);
+}
+
+function nextPromoSlide() { goToPromoSlide(promoSliderIndex + 1); }
+function prevPromoSlide() { goToPromoSlide(promoSliderIndex - 1); }
+
+function updatePromoSlide() {
+    const desc = document.getElementById('slide-promo-desc');
+    const productEl = document.getElementById('slide-promo-product');
+    if (!productEl) return;
+    const promoProducts = (typeof products !== 'undefined' ? products : []).filter(function(p) {
+        const info = (typeof getProductPriceInfo === 'function') ? getProductPriceInfo(p) : { hasDiskon: false };
+        return info.hasDiskon && (p.stok || 0) > 0;
+    });
+    if (promoProducts.length === 0) {
+        if (desc) desc.textContent = 'Belum ada promo hari ini, pantau terus!';
+        productEl.innerHTML = '';
+        return;
+    }
+    const p = promoProducts[Math.floor(Math.random() * promoProducts.length)];
+    const info = getProductPriceInfo(p);
+    const imgUrl = (p.gambar && p.gambar !== DEFAULT_IMAGE && !(p.gambar || '').includes('1588964895597'))
+        ? p.gambar
+        : (typeof getProductAutoImage === 'function' ? getProductAutoImage(p) : DEFAULT_IMAGE);
+    if (desc) desc.textContent = 'Diskon ' + info.diskonPersen + '% untuk ' + p.nama + '!';
+    productEl.innerHTML = '<div class="promo-product-card" onclick="openCustomerProductDetail(\'' + escapeHtml(p.kode) + '\')">' +
+        '<img src="' + escapeHtml(imgUrl) + '" alt="' + escapeHtml(p.nama) + '" onerror="this.onerror=null; this.src=\'' + DEFAULT_IMAGE + '\'">' +
+        '<div class="promo-product-info">' +
+            '<div class="promo-product-name">' + escapeHtml(p.nama) + '</div>' +
+            '<div class="promo-product-prices">' +
+                '<span class="promo-old-price">' + formatRupiah(info.hargaNormal) + '</span>' +
+                '<span class="promo-new-price">' + formatRupiah(info.hargaFinal) + '</span>' +
+            '</div>' +
+        '</div>' +
+    '</div>';
+}
+
+/* ==========================================================================
+   ULASAN & RATING PRODUK (PELANGGAN)
+   ========================================================================== */
+const STORAGE_REVIEWS_KEY = 'ulasanProduk';
+let reviews = [];
+let currentRatingBintang = 0;
+
+function initReviews() {
+    try {
+        const stored = localStorage.getItem(STORAGE_REVIEWS_KEY);
+        if (stored) reviews = JSON.parse(stored) || [];
+    } catch (e) {
+        reviews = [];
+    }
+}
+
+function saveReviewsToStorage() {
+    try { localStorage.setItem(STORAGE_REVIEWS_KEY, JSON.stringify(reviews)); } catch (e) {}
+}
+
+function loadUlasan(kode) {
+    return (reviews || []).filter(function(r) { return r && r.kode === kode; });
+}
+
+function getAverageRating(kode) {
+    const list = loadUlasan(kode);
+    if (!list.length) return { avg: 0, count: 0 };
+    const sum = list.reduce(function(s, r) { return s + (parseInt(r.bintang) || 0); }, 0);
+    return { avg: sum / list.length, count: list.length };
+}
+
+function renderStars(n, max) {
+    max = max || 5;
+    let html = '';
+    for (let i = 1; i <= max; i++) html += (i <= n) ? '★' : '☆';
+    return html;
+}
+
+function renderUlasan(kode) {
+    const avgBlock = document.getElementById('cust-review-avg-block');
+    const listEl = document.getElementById('cust-review-list');
+    if (!avgBlock || !listEl) return;
+    const info = getAverageRating(kode);
+    const avgRounded = Math.round(info.avg * 10) / 10;
+    const fullStars = Math.round(info.avg);
+    if (info.count === 0) {
+        avgBlock.innerHTML = '<div class="review-avg-empty">Belum ada ulasan</div>';
+    } else {
+        avgBlock.innerHTML = '<div class="review-avg-stars">' + renderStars(fullStars) + '</div>' +
+            '<div class="review-avg-text"><strong>' + avgRounded + '</strong> / 5 · ' + info.count + ' ulasan</div>';
+    }
+    const list = loadUlasan(kode).slice().sort(function(a, b) { return new Date(b.tanggal) - new Date(a.tanggal); }).slice(0, 5);
+    if (list.length === 0) {
+        listEl.innerHTML = '<div class="review-empty">Belum ada ulasan untuk produk ini. Jadilah yang pertama!</div>';
+        return;
+    }
+    listEl.innerHTML = list.map(function(r) {
+        return '<div class="review-card">' +
+            '<div class="review-card-header">' +
+                '<span class="review-author">' + escapeHtml(r.nama || r.uid || 'Pelanggan') + '</span>' +
+                '<span class="review-stars">' + renderStars(parseInt(r.bintang) || 0) + '</span>' +
+            '</div>' +
+            '<div class="review-date">' + (typeof formatDate === 'function' ? formatDate(new Date(r.tanggal)) : new Date(r.tanggal).toLocaleDateString('id-ID')) + '</div>' +
+            '<div class="review-comment">' + escapeHtml(r.komentar || '') + '</div>' +
+        '</div>';
+    }).join('');
+}
+
+function checkEligibleUlasan(kode) {
+    const formBox = document.getElementById('cust-review-form-box');
+    if (!formBox) return;
+    const session = (typeof getSession === 'function') ? getSession() : null;
+    if (!session || session.role !== 'Pelanggan') { formBox.style.display = 'none'; return; }
+    const already = (reviews || []).some(function(r) { return r && r.kode === kode && r.uid === session.username; });
+    if (already) { formBox.style.display = 'none'; return; }
+    const eligible = (typeof orders !== 'undefined' ? orders : []).some(function(o) {
+        return o && o.customerUsername === session.username && o.status === 'Selesai' &&
+            (o.items || []).some(function(it) { return it.kode === kode; });
+    });
+    formBox.style.display = eligible ? 'block' : 'none';
+    if (eligible) {
+        currentRatingBintang = 0;
+        setRatingBintang(0);
+        const ta = document.getElementById('review-comment-input');
+        if (ta) ta.value = '';
+    }
+}
+
+function setRatingBintang(n) {
+    currentRatingBintang = n;
+    const label = document.getElementById('star-rating-label');
+    const labels = ['Belum dinilai', 'Sangat Buruk', 'Buruk', 'Cukup', 'Bagus', 'Sangat Bagus'];
+    if (label) label.textContent = labels[n] || 'Belum dinilai';
+    document.querySelectorAll('#review-stars-input .star-input-btn').forEach(function(btn) {
+        const star = parseInt(btn.getAttribute('data-star')) || 0;
+        btn.classList.toggle('active', star <= n);
+    });
+}
+
+function submitUlasan() {
+    const session = (typeof getSession === 'function') ? getSession() : null;
+    if (!session || session.role !== 'Pelanggan') { showToast('Login sebagai pelanggan untuk memberi ulasan.', 'warning'); return; }
+    if (!currentCustomerDetailProduct) { showToast('Produk tidak ditemukan.', 'warning'); return; }
+    const kode = currentCustomerDetailProduct.kode;
+    const already = (reviews || []).some(function(r) { return r && r.kode === kode && r.uid === session.username; });
+    if (already) { showToast('Anda sudah memberi ulasan untuk produk ini.', 'warning'); return; }
+    if (currentRatingBintang < 1) { showToast('Pilih bintang terlebih dahulu.', 'warning'); return; }
+    const eligible = (typeof orders !== 'undefined' ? orders : []).some(function(o) {
+        return o && o.customerUsername === session.username && o.status === 'Selesai' &&
+            (o.items || []).some(function(it) { return it.kode === kode; });
+    });
+    if (!eligible) { showToast('Anda belum bisa memberi ulasan untuk produk ini.', 'warning'); return; }
+    const ta = document.getElementById('review-comment-input');
+    const komentar = ta ? ta.value.trim() : '';
+    const users = (typeof getUsers === 'function') ? getUsers() : [];
+    const user = users.find(function(u) { return u.username === session.username; });
+    const nama = (user && user.fullName) ? user.fullName : session.username;
+    const newReview = { kode: kode, uid: session.username, nama: nama, bintang: currentRatingBintang, komentar: komentar, tanggal: new Date().toISOString() };
+    reviews.push(newReview);
+    saveReviewsToStorage();
+    showToast('Ulasan berhasil dikirim! Terima kasih.', 'success');
+    renderUlasan(kode);
+    checkEligibleUlasan(kode);
+}
+
 

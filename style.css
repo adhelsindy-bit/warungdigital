@@ -1,4 +1,4 @@
-/* ==========================================================================
+﻿/* ==========================================================================
    WARUNG DIGITAL / KASIR WARUNG - DELSI SHOP
    Stylesheet - CSS Murni
    ========================================================================== */
@@ -145,13 +145,10 @@ body:not(.logged-out) .login-screen {
     width: 88px;
     height: 88px;
     margin: 0 auto 1rem;
-    background: #ffffff;
     border-radius: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 10px;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
 }
 
 .login-logo img {
@@ -1557,9 +1554,6 @@ html[data-theme="dark"] .color-option {
     height: 56px;
     object-fit: contain;
     border-radius: 12px;
-    background: #ffffff;
-    padding: 4px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     vertical-align: middle;
 }
 
@@ -4331,3 +4325,124 @@ html[data-theme="dark"] .badge-diskon-pill {
     color: #fca5a5;
 }
 
+/* ==========================================================================
+   PROMO SLIDER (PELANGGAN)
+   ========================================================================== */
+.promo-slider-wrapper {
+    position: relative;
+    overflow: hidden;
+    border-radius: 16px;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    min-height: 180px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+.promo-slider-track {
+    display: flex;
+    transition: transform 0.5s ease;
+    width: 100%;
+}
+.promo-slide {
+    min-width: 100%;
+    padding: 2rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    color: #fff;
+    box-sizing: border-box;
+}
+.slide-welcome { background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); }
+.slide-promo { background: linear-gradient(135deg, #ec4899, #be185d); }
+.slide-terlaris { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.slide-content { flex: 1; min-width: 0; }
+.slide-eyebrow { display: inline-block; font-size: 0.8rem; opacity: 0.9; margin-bottom: 0.5rem; }
+.slide-title { font-size: 1.4rem; margin: 0.25rem 0; font-weight: 700; }
+.slide-desc { opacity: 0.9; margin: 0.5rem 0 1rem; font-size: 0.95rem; }
+.slide-pills { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.slide-pills span { background: rgba(255,255,255,0.2); padding: 0.25rem 0.6rem; border-radius: 999px; font-size: 0.8rem; }
+.slide-visual { font-size: 4rem; opacity: 0.25; flex-shrink: 0; }
+.slider-nav-btn {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    background: rgba(255,255,255,0.25); border: none; color: #fff;
+    width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 2;
+}
+.slider-nav-btn:hover { background: rgba(255,255,255,0.4); }
+.slider-prev { left: 10px; }
+.slider-next { right: 10px; }
+.slider-dots {
+    position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 6px; z-index: 2;
+}
+.slider-dot {
+    width: 8px; height: 8px; border-radius: 50%; border: none;
+    background: rgba(255,255,255,0.4); cursor: pointer;
+    transition: all 0.3s;
+}
+.slider-dot.active { background: #fff; width: 20px; border-radius: 4px; }
+.slide-promo-product { margin-top: 0.75rem; }
+.promo-product-card {
+    display: flex; align-items: center; gap: 0.75rem; background: rgba(255,255,255,0.15);
+    padding: 0.5rem; border-radius: 10px; cursor: pointer; max-width: 320px;
+}
+.promo-product-card img { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; flex-shrink: 0; }
+.promo-product-name { font-weight: 600; font-size: 0.95rem; }
+.promo-product-prices { display: flex; gap: 0.5rem; align-items: center; }
+.promo-old-price { text-decoration: line-through; opacity: 0.7; font-size: 0.85rem; }
+.promo-new-price { font-weight: 700; }
+
+/* ==========================================================================
+   ULASAN & RATING PRODUK
+   ========================================================================== */
+.review-section {
+    margin-top: 1.5rem;
+    padding: 1rem 1.25rem;
+    background: var(--card-bg);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+.review-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+.review-section-header h4 { margin: 0; }
+.review-avg-block { display: flex; align-items: center; gap: 0.5rem; }
+.review-avg-stars { color: #f59e0b; font-size: 1.2rem; letter-spacing: 2px; }
+.review-avg-text { font-size: 0.9rem; color: var(--text-secondary); }
+.review-avg-empty, .review-empty { color: var(--text-secondary); font-size: 0.9rem; }
+.review-form-box {
+    background: var(--bg-color);
+    padding: 1rem;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-color);
+}
+.review-form-box h5 { margin: 0 0 0.75rem; font-size: 0.95rem; }
+.review-stars-input { display: flex; align-items: center; gap: 0.25rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
+.star-input-btn {
+    background: none; border: none; font-size: 1.6rem; color: #cbd5e1;
+    cursor: pointer; transition: color 0.15s, transform 0.1s; padding: 0;
+}
+.star-input-btn.active, .star-input-btn:hover { color: #f59e0b; transform: scale(1.1); }
+.star-rating-label { margin-left: 0.5rem; font-size: 0.85rem; color: var(--text-secondary); }
+.review-textarea {
+    width: 100%; padding: 0.6rem; border: 1px solid var(--border-color);
+    border-radius: 8px; background: var(--card-bg); color: var(--text-primary);
+    resize: vertical; font-family: inherit; margin-bottom: 0.75rem;
+}
+.review-card { border-bottom: 1px solid var(--border-color); padding: 0.75rem 0; }
+.review-card:last-child { border-bottom: none; }
+.review-card-header { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
+.review-author { font-weight: 600; font-size: 0.9rem; }
+.review-stars { color: #f59e0b; letter-spacing: 1px; }
+.review-date { font-size: 0.75rem; color: var(--text-secondary); margin: 0.25rem 0; }
+.review-comment { font-size: 0.9rem; line-height: 1.4; }
+
+html[data-theme="dark"] .review-form-box { background: #252525; }
+html[data-theme="dark"] .star-input-btn { color: #475569; }
