@@ -23,7 +23,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=3">
     <!-- Font Awesome Icons for clean UI icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=31">
+    <link rel="stylesheet" href="style.css?v=32">
 </head>
 <body class="logged-out">
 
@@ -225,6 +225,52 @@
                 <i class="fa-solid fa-bell fa-shake"></i>
                 <span id="alert-pesanan-text">Ada 0 pesanan online baru dari pelanggan menunggu konfirmasi!</span>
                 <button type="button" class="btn btn-sm btn-primary">Lihat Pesanan &rarr;</button>
+            </div>
+
+            <!-- PROMO SLIDER (Admin) -->
+            <div class="promo-slider-wrapper" id="admin-promo-slider-wrapper">
+                <div class="promo-slider-track" id="admin-promo-slider-track">
+                    <div class="promo-slide slide-welcome">
+                        <div class="slide-content">
+                            <span class="slide-eyebrow"><i class="fa-solid fa-store"></i> Warung Digital</span>
+                            <h2 class="slide-title">Selamat Datang, Admin!</h2>
+                            <p class="slide-desc">Kelola toko dengan mudah dan pantau penjualan hari ini.</p>
+                            <div class="slide-pills">
+                                <span><i class="fa-solid fa-chart-line"></i> Dashboard</span>
+                                <span><i class="fa-solid fa-boxes-stacked"></i> Stok Real-Time</span>
+                            </div>
+                        </div>
+                        <div class="slide-visual"><i class="fa-solid fa-user-shield"></i></div>
+                    </div>
+                    <div class="promo-slide slide-promo" id="admin-slide-promo-dynamic">
+                        <div class="slide-content">
+                            <span class="slide-eyebrow"><i class="fa-solid fa-tags"></i> Penawaran Spesial</span>
+                            <h2 class="slide-title">🏷️ Promo & Diskon Hari Ini!</h2>
+                            <p class="slide-desc" id="admin-slide-promo-desc">Ada produk diskon spesial menunggu pelanggan!</p>
+                            <div class="slide-promo-product" id="admin-slide-promo-product"></div>
+                        </div>
+                        <div class="slide-visual"><i class="fa-solid fa-percent"></i></div>
+                    </div>
+                    <div class="promo-slide slide-terlaris">
+                        <div class="slide-content">
+                            <span class="slide-eyebrow"><i class="fa-solid fa-fire"></i> Paling Diminati</span>
+                            <h2 class="slide-title">🔥 Produk Terlaris Minggu Ini!</h2>
+                            <p class="slide-desc">Pantau produk favorit pelanggan dan stok tersedia.</p>
+                            <div class="slide-pills">
+                                <span><i class="fa-solid fa-trophy"></i> Best Seller</span>
+                                <span><i class="fa-solid fa-star"></i> Top Rated</span>
+                            </div>
+                        </div>
+                        <div class="slide-visual"><i class="fa-solid fa-fire-flame-curved"></i></div>
+                    </div>
+                </div>
+                <button class="slider-nav-btn slider-prev" onclick="prevPromoSlide()" aria-label="Sebelumnya"><i class="fa-solid fa-chevron-left"></i></button>
+                <button class="slider-nav-btn slider-next" onclick="nextPromoSlide()" aria-label="Berikutnya"><i class="fa-solid fa-chevron-right"></i></button>
+                <div class="slider-dots" id="admin-slider-dots">
+                    <button class="slider-dot active" onclick="goToPromoSlide(0)" aria-label="Slide 1"></button>
+                    <button class="slider-dot" onclick="goToPromoSlide(1)" aria-label="Slide 2"></button>
+                    <button class="slider-dot" onclick="goToPromoSlide(2)" aria-label="Slide 3"></button>
+                </div>
             </div>
 
             <!-- Ringkasan Statistik Utama Toko -->
@@ -560,6 +606,52 @@
 
         <!-- SECTION 2: TRANSAKSI KASIR -->
         <section id="section-transaksi" class="tab-content">
+            <!-- PROMO SLIDER (Kasir) -->
+            <div class="promo-slider-wrapper" id="kasir-promo-slider-wrapper">
+                <div class="promo-slider-track" id="kasir-promo-slider-track">
+                    <div class="promo-slide slide-welcome">
+                        <div class="slide-content">
+                            <span class="slide-eyebrow"><i class="fa-solid fa-store"></i> Warung Digital</span>
+                            <h2 class="slide-title">Selamat Datang, Kasir!</h2>
+                            <p class="slide-desc">Proses transaksi dengan cepat dan akurat.</p>
+                            <div class="slide-pills">
+                                <span><i class="fa-solid fa-bolt"></i> Scan Barang</span>
+                                <span><i class="fa-solid fa-qrcode"></i> Multi Pembayaran</span>
+                            </div>
+                        </div>
+                        <div class="slide-visual"><i class="fa-solid fa-cash-register"></i></div>
+                    </div>
+                    <div class="promo-slide slide-promo" id="kasir-slide-promo-dynamic">
+                        <div class="slide-content">
+                            <span class="slide-eyebrow"><i class="fa-solid fa-tags"></i> Penawaran Spesial</span>
+                            <h2 class="slide-title">🏷️ Promo & Diskon Hari Ini!</h2>
+                            <p class="slide-desc" id="kasir-slide-promo-desc">Ada produk diskon spesial untuk pelanggan!</p>
+                            <div class="slide-promo-product" id="kasir-slide-promo-product"></div>
+                        </div>
+                        <div class="slide-visual"><i class="fa-solid fa-percent"></i></div>
+                    </div>
+                    <div class="promo-slide slide-terlaris">
+                        <div class="slide-content">
+                            <span class="slide-eyebrow"><i class="fa-solid fa-fire"></i> Paling Diminati</span>
+                            <h2 class="slide-title">🔥 Produk Terlaris Minggu Ini!</h2>
+                            <p class="slide-desc">Pastikan stok produk favorit selalu tersedia.</p>
+                            <div class="slide-pills">
+                                <span><i class="fa-solid fa-trophy"></i> Best Seller</span>
+                                <span><i class="fa-solid fa-star"></i> Top Rated</span>
+                            </div>
+                        </div>
+                        <div class="slide-visual"><i class="fa-solid fa-fire-flame-curved"></i></div>
+                    </div>
+                </div>
+                <button class="slider-nav-btn slider-prev" onclick="prevPromoSlide()" aria-label="Sebelumnya"><i class="fa-solid fa-chevron-left"></i></button>
+                <button class="slider-nav-btn slider-next" onclick="nextPromoSlide()" aria-label="Berikutnya"><i class="fa-solid fa-chevron-right"></i></button>
+                <div class="slider-dots" id="kasir-slider-dots">
+                    <button class="slider-dot active" onclick="goToPromoSlide(0)" aria-label="Slide 1"></button>
+                    <button class="slider-dot" onclick="goToPromoSlide(1)" aria-label="Slide 2"></button>
+                    <button class="slider-dot" onclick="goToPromoSlide(2)" aria-label="Slide 3"></button>
+                </div>
+            </div>
+
             <div class="grid-layout-transaksi">
                 <!-- Panel Input Transaksi -->
                 <div class="card">
@@ -1447,7 +1539,7 @@
             console.warn("Firebase initialization error, fallback to localStorage:", e);
         }
     </script>
-    <script src="script.js?v=31"></script>
+    <script src="script.js?v=32"></script>
 
     <!-- MODAL SCANNER BARCODE & QR CODE -->
     <div id="scanner-modal-overlay" class="scanner-modal-overlay">

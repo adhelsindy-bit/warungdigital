@@ -1745,6 +1745,8 @@ function switchTab(tabName) {
     if (tabName === 'transaksi') {
         populateProductDropdown();
         updateMaxQtyLabel();
+        currentPromoPrefix = 'kasir';
+        initPromoSlider('kasir');
     } else if (tabName === 'laporan') {
         renderReports();
     } else if (tabName === 'barang') {
@@ -1756,6 +1758,8 @@ function switchTab(tabName) {
         renderDashboardStokMenipis();
         renderDashboardOmzet();
         updateAdminOrdersBadge();
+        currentPromoPrefix = 'admin';
+        initPromoSlider('admin');
     } else if (tabName === 'barang-kasir') {
         renderProductsKasir();
     } else if (tabName === 'pesanan-admin') {
@@ -1765,8 +1769,9 @@ function switchTab(tabName) {
     } else if (tabName === 'aktivitas') {
         renderActivityLogs();
     } else if (tabName === 'pelanggan-store') {
+        currentPromoPrefix = '';
+        initPromoSlider('');
         renderCustomerStorefront();
-        initPromoSlider();
     } else if (tabName === 'pelanggan-orders') {
         renderCustomerOrders();
     } else if (tabName === 'pelanggan-profile') {
@@ -7276,14 +7281,22 @@ function closeGlobalPromoBanner() {
    ========================================================================== */
 let promoSliderIndex = 0;
 let promoSliderTimer = null;
+let currentPromoPrefix = '';
 const PROMO_SLIDE_COUNT = 3;
 
-function initPromoSlider() {
-    const track = document.getElementById('promo-slider-track');
+function promoEl(prefix, id) {
+    return document.getElementById((prefix ? prefix + '-' : '') + id);
+}
+
+function initPromoSlider(prefix) {
+    prefix = prefix || '';
+    currentPromoPrefix = prefix;
+    const track = promoEl(prefix, 'promo-slider-track');
     if (!track) return;
     if (promoSliderTimer) { clearInterval(promoSliderTimer); promoSliderTimer = null; }
     promoSliderIndex = 0;
     updatePromoSliderUI();
+    updatePromoSlide();
     promoSliderTimer = setInterval(function() { nextPromoSlide(); }, 4000);
     if (!track.__touchBound) {
         track.__touchBound = true;
@@ -7298,9 +7311,10 @@ function initPromoSlider() {
 }
 
 function updatePromoSliderUI() {
-    const track = document.getElementById('promo-slider-track');
+    const track = promoEl(currentPromoPrefix, 'promo-slider-track');
     if (track) track.style.transform = 'translateX(-' + (promoSliderIndex * 100) + '%)';
-    const dots = document.querySelectorAll('#slider-dots .slider-dot');
+    const dotsSelector = '#' + (currentPromoPrefix ? currentPromoPrefix + '-' : '') + 'slider-dots .slider-dot';
+    const dots = document.querySelectorAll(dotsSelector);
     dots.forEach(function(d, i) { d.classList.toggle('active', i === promoSliderIndex); });
 }
 
@@ -7315,8 +7329,9 @@ function nextPromoSlide() { goToPromoSlide(promoSliderIndex + 1); }
 function prevPromoSlide() { goToPromoSlide(promoSliderIndex - 1); }
 
 function updatePromoSlide() {
-    const desc = document.getElementById('slide-promo-desc');
-    const productEl = document.getElementById('slide-promo-product');
+    const prefix = currentPromoPrefix;
+    const desc = promoEl(prefix, 'slide-promo-desc');
+    const productEl = promoEl(prefix, 'slide-promo-product');
     if (!productEl) return;
     const promoProducts = (typeof products !== 'undefined' ? products : []).filter(function(p) {
         const info = (typeof getProductPriceInfo === 'function') ? getProductPriceInfo(p) : { hasDiskon: false };
