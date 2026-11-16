@@ -230,8 +230,8 @@ const SAMPLE_PRODUCTS = [
 ];
 
 // --- Inisialisasi Aplikasi Saat DOM Loaded ---
-document.addEventListener('DOMContentLoaded', () => {
-    initData();
+document.addEventListener('DOMContentLoaded', async () => {
+    await initData();
     initCategories();
     initActivityLogs();
     initOrders();
@@ -1204,9 +1204,13 @@ function cleanBrowserStorage(silent = false) {
 /* ==========================================================================
    1. INISIALISASI DATA, LOCALSTORAGE & FIREBASE FIRESTORE
    ========================================================================== */
-function initData() {
+async function initData() {
     // Bersihkan otomatis sampah cache base64 lama yang menumpuk di LocalStorage saat web dibuka
     cleanBrowserStorage(true);
+
+    // Pulihkan foto produk beresolusi tinggi dari IndexedDB SEBELUM render (hindari foto berubah-ubah)
+    let idbProducts = null;
+    try { idbProducts = await getIDB(STORAGE_PRODUCTS_KEY); } catch (e) { idbProducts = null; }
 
     const storedProducts = localStorage.getItem(STORAGE_PRODUCTS_KEY);
     if (!storedProducts) {
@@ -1215,7 +1219,18 @@ function initData() {
         saveProductsToStorage();
     } else {
         try {
-            products = JSON.parse(storedProducts);
+            products = JSON.parse(storedProducts || '[]');
+            // Pulihkan foto base64 dari IndexedDB (versi hemat localStorage tidak punya foto)
+            if (Array.isArray(idbProducts) && idbProducts.length > 0) {
+                const idbMap = new Map(idbProducts.map(p => [p.kode, p.gambar]));
+                products.forEach(p => {
+                    const fullImg = idbMap.get(p.kode);
+                    if (fullImg && typeof fullImg === 'string' && fullImg !== DEFAULT_IMAGE && !fullImg.includes('1588964895597') &&
+                        (!p.gambar || p.gambar === DEFAULT_IMAGE || p.gambar.includes('1588964895597'))) {
+                        p.gambar = fullImg;
+                    }
+                });
+            }
             // Migrasi: deteksi foto kosong atau placeholder generic bag, otomatis ganti dengan foto asli dari katalog
             let updatedImages = false;
             products.forEach(p => {
@@ -1292,26 +1307,6 @@ function initData() {
     });
     if (cleaned) saveTransactionsToStorage();
 
-    // Pulihkan foto produk beresolusi tinggi dari IndexedDB jika localStorage memakai versi hemat
-    getIDB(STORAGE_PRODUCTS_KEY).then(idbProducts => {
-        if (Array.isArray(idbProducts) && idbProducts.length > 0) {
-            const idbMap = new Map(idbProducts.map(p => [p.kode, p.gambar]));
-            let updated = false;
-            products.forEach(p => {
-                if ((!p.gambar || p.gambar === DEFAULT_IMAGE || p.gambar.includes('1588964895597')) && idbMap.has(p.kode)) {
-                    const fullImg = idbMap.get(p.kode);
-                    if (fullImg && fullImg !== DEFAULT_IMAGE && !fullImg.includes('1588964895597')) {
-                        p.gambar = fullImg;
-                        updated = true;
-                    }
-                }
-            });
-            if (updated) {
-                renderProducts();
-                populateProductDropdown();
-            }
-        }
-    }).catch(err => console.warn('Pengecekan IndexedDB awal:', err));
 }
 
 function saveProductsToStorage() {
