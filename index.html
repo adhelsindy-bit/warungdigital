@@ -23,7 +23,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=3">
     <!-- Font Awesome Icons for clean UI icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=29">
+    <link rel="stylesheet" href="style.css?v=30">
 </head>
 <body class="logged-out">
 
@@ -195,8 +195,18 @@
 
     <!-- Banner Promo Global (semua role) -->
     <div id="global-promo-banner" class="global-promo-banner" style="display:none;">
-        <div class="global-promo-track" id="global-promo-track">
-            <span class="global-promo-msg" id="global-promo-msg">🔥 Promo hari ini: diskon hingga 20% untuk produk pilihan!</span>
+        <div class="global-promo-content">
+            <span class="global-promo-eyebrow" id="global-promo-eyebrow">🔥 Promo Spesial</span>
+            <h2 class="global-promo-title" id="global-promo-title">Diskon hingga 20% untuk produk pilihan!</h2>
+            <p class="global-promo-desc" id="global-promo-desc">Belanja sekarang dan nikmati harga terbaik di Warung Delsy.</p>
+            <div class="global-promo-pills" id="global-promo-pills">
+                <span><i class="fa-solid fa-bolt"></i> Stok Real-Time</span>
+                <span><i class="fa-solid fa-qrcode"></i> Bayar QRIS</span>
+                <span><i class="fa-solid fa-motorcycle"></i> Antar ke Rumah</span>
+            </div>
+        </div>
+        <div class="global-promo-visual">
+            <i class="fa-solid fa-tags" id="global-promo-icon"></i>
         </div>
         <button class="global-promo-close" onclick="closeGlobalPromoBanner()" aria-label="Tutup banner">&times;</button>
     </div>
@@ -1440,7 +1450,7 @@
             console.warn("Firebase initialization error, fallback to localStorage:", e);
         }
     </script>
-    <script src="script.js?v=29"></script>
+    <script src="script.js?v=30"></script>
 
     <!-- MODAL SCANNER BARCODE & QR CODE -->
     <div id="scanner-modal-overlay" class="scanner-modal-overlay">

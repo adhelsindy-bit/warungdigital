@@ -7198,17 +7198,17 @@ function renderDashboardStats() {
 /* ==========================================================================
    GLOBAL PROMO BANNER (SEMUA ROLE)
    ========================================================================== */
-const GLOBAL_PROMO_MESSAGES = [
-    '🔥 Promo hari ini: diskon hingga 20% untuk produk pilihan!',
-    '🚚 Gratis ongkir untuk pesanan di atas Rp 100.000',
-    '⭐ Produk terlaris minggu ini sedang diskon!',
-    '🏷️ Belanja lebih hemat dengan voucher promo terbaru!'
+const GLOBAL_PROMO_SLIDES = [
+    { eyebrow: '🔥 Promo Spesial', title: 'Diskon hingga 20% untuk produk pilihan!', desc: 'Belanja sekarang dan nikmati harga terbaik di Warung Delsy.', pills: ['Stok Real-Time', 'Bayar QRIS', 'Antar ke Rumah'], icon: 'fa-tags' },
+    { eyebrow: '🚚 Gratis Ongkir', title: 'Gratis ongkir untuk pesanan di atas Rp 100.000', desc: 'Belanja lebih banyak, hemat lebih banyak.', pills: ['Pengiriman Cepat', 'Aman & Terpercaya'], icon: 'fa-truck-fast' },
+    { eyebrow: '⭐ Terlaris', title: 'Produk terlaris minggu ini sedang diskon!', desc: 'Jangan sampai kehabisan stok favoritmu.', pills: ['Best Seller', 'Top Rated'], icon: 'fa-fire-flame-curved' },
+    { eyebrow: '🏷️ Voucher', title: 'Belanja lebih hemat dengan voucher promo terbaru!', desc: 'Gunakan kode promo saat checkout.', pills: ['Hemat Maksimal', 'Mudah Digunakan'], icon: 'fa-ticket' }
 ];
 let globalPromoIndex = 0;
 let globalPromoTimer = null;
 
-function getGlobalPromoMessages() {
-    const msgs = GLOBAL_PROMO_MESSAGES.slice();
+function getGlobalPromoSlides() {
+    const slides = GLOBAL_PROMO_SLIDES.slice();
     if (typeof products !== 'undefined' && typeof getProductPriceInfo === 'function') {
         const promos = products.filter(function(p) {
             const info = getProductPriceInfo(p);
@@ -7217,10 +7217,32 @@ function getGlobalPromoMessages() {
         if (promos.length > 0) {
             const p = promos[Math.floor(Math.random() * promos.length)];
             const info = getProductPriceInfo(p);
-            msgs.unshift('🏷️ ' + p.nama + ' diskon ' + info.diskonPersen + '% hari ini!');
+            slides.unshift({ eyebrow: '🏷️ Promo Hari Ini', title: p.nama + ' diskon ' + info.diskonPersen + '%!', desc: 'Harga normal ' + formatRupiah(info.hargaNormal) + ', sekarang ' + formatRupiah(info.hargaFinal) + '.', pills: ['Stok Terbatas', 'Harga Spesial'], icon: 'fa-percent' });
         }
     }
-    return msgs;
+    return slides;
+}
+
+function renderGlobalPromoSlide(slide) {
+    const eyebrow = document.getElementById('global-promo-eyebrow');
+    const title = document.getElementById('global-promo-title');
+    const desc = document.getElementById('global-promo-desc');
+    const pills = document.getElementById('global-promo-pills');
+    const icon = document.getElementById('global-promo-icon');
+    if (eyebrow) eyebrow.textContent = slide.eyebrow;
+    if (title) title.textContent = slide.title;
+    if (desc) desc.textContent = slide.desc;
+    if (pills) pills.innerHTML = (slide.pills || []).map(function(t) { return '<span>' + t + '</span>'; }).join('');
+    if (icon) icon.className = 'fa-solid ' + (slide.icon || 'fa-tags');
+    // re-trigger fade animation
+    const content = document.querySelector('.global-promo-content');
+    const visual = document.querySelector('.global-promo-visual');
+    [content, visual].forEach(function(el) {
+        if (!el) return;
+        el.style.animation = 'none';
+        void el.offsetWidth;
+        el.style.animation = '';
+    });
 }
 
 function initGlobalPromoBanner() {
@@ -7231,20 +7253,14 @@ function initGlobalPromoBanner() {
     } catch (e) {}
     const session = (typeof getSession === 'function') ? getSession() : null;
     if (!session) { banner.style.display = 'none'; return; }
+    const slides = getGlobalPromoSlides();
     banner.style.display = 'flex';
-    const msgs = getGlobalPromoMessages();
     globalPromoIndex = 0;
-    const msgEl = document.getElementById('global-promo-msg');
-    if (msgEl) msgEl.textContent = msgs[0];
+    renderGlobalPromoSlide(slides[0]);
     if (globalPromoTimer) { clearInterval(globalPromoTimer); globalPromoTimer = null; }
     globalPromoTimer = setInterval(function() {
-        globalPromoIndex = (globalPromoIndex + 1) % msgs.length;
-        if (msgEl) {
-            msgEl.style.animation = 'none';
-            void msgEl.offsetWidth;
-            msgEl.style.animation = '';
-            msgEl.textContent = msgs[globalPromoIndex];
-        }
+        globalPromoIndex = (globalPromoIndex + 1) % slides.length;
+        renderGlobalPromoSlide(slides[globalPromoIndex]);
     }, 4000);
 }
 

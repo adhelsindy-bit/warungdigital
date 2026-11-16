@@ -4454,33 +4454,71 @@ html[data-theme="dark"] .star-input-btn { color: #475569; }
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.75rem;
-    padding: 0.5rem 1rem;
+    gap: 1.5rem;
+    padding: 1.5rem 2rem;
+    min-height: 160px;
     background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
     color: #ffffff;
-    font-size: 0.9rem;
-    font-weight: 600;
-}
-.global-promo-track {
-    flex: 1;
-    text-align: center;
-    min-width: 0;
+    position: relative;
     overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
 }
-.global-promo-msg { display: inline-block; animation: promoFade 0.4s ease; }
-@keyframes promoFade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+.global-promo-content { flex: 1; min-width: 0; }
+.global-promo-eyebrow {
+    display: inline-block;
+    font-size: 0.85rem;
+    opacity: 0.9;
+    margin-bottom: 0.5rem;
+    background: rgba(255,255,255,0.18);
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+}
+.global-promo-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin: 0.25rem 0 0.5rem;
+    line-height: 1.2;
+}
+.global-promo-desc {
+    opacity: 0.9;
+    margin: 0 0 1rem;
+    font-size: 0.95rem;
+    max-width: 520px;
+}
+.global-promo-pills { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.global-promo-pills span {
+    background: rgba(255,255,255,0.18);
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+}
+.global-promo-visual {
+    font-size: 5rem;
+    opacity: 0.25;
+    flex-shrink: 0;
+}
+.global-promo-visual i { animation: promoPulse 2s ease-in-out infinite; }
+@keyframes promoPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }
 .global-promo-close {
+    position: absolute;
+    top: 10px; right: 10px;
     background: rgba(255,255,255,0.2);
     border: none;
     color: #ffffff;
-    width: 24px; height: 24px;
+    width: 28px; height: 28px;
     border-radius: 50%;
     cursor: pointer;
-    font-size: 1rem;
+    font-size: 1.1rem;
     line-height: 1;
     flex-shrink: 0;
+    z-index: 2;
 }
 .global-promo-close:hover { background: rgba(255,255,255,0.35); }
+.global-promo-content, .global-promo-visual { animation: promoFade 0.4s ease; }
+@keyframes promoFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 body.logged-out .global-promo-banner { display: none !important; }
+@media (max-width: 640px) {
+    .global-promo-banner { padding: 1rem 1.25rem; min-height: 140px; gap: 0.75rem; }
+    .global-promo-title { font-size: 1.25rem; }
+    .global-promo-visual { font-size: 3rem; }
+    .global-promo-desc { display: none; }
+}
