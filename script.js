@@ -1225,8 +1225,8 @@ async function initData() {
                 const idbMap = new Map(idbProducts.map(p => [p.kode, p.gambar]));
                 products.forEach(p => {
                     const fullImg = idbMap.get(p.kode);
-                    if (fullImg && typeof fullImg === 'string' && fullImg !== DEFAULT_IMAGE && !fullImg.includes('1588964895597') &&
-                        (!p.gambar || p.gambar === DEFAULT_IMAGE || p.gambar.includes('1588964895597'))) {
+                    // Pulihkan foto asli dari IndexedDB (base64) jika ada, menimpa URL katalog
+                    if (fullImg && typeof fullImg === 'string' && fullImg.startsWith('data:') && fullImg.length > 100) {
                         p.gambar = fullImg;
                     }
                 });
@@ -1422,8 +1422,8 @@ function initFirebaseSync() {
             // padahal perangkat ini memilikinya, pakai & kirim kembali foto lokal itu.
             const local = localByKode.get(data.kode);
             if (firstProductsSnap && local &&
-                typeof local.gambar === 'string' && local.gambar.startsWith('data:') &&
-                !(typeof data.gambar === 'string' && data.gambar.startsWith('data:'))) {
+                typeof local.gambar === 'string' && local.gambar.startsWith('data:') && local.gambar.length > 100) {
+                // Pulihkan foto asli dari perangkat lokal (base64) ke cloud
                 data.gambar = local.gambar;
                 db.collection('products').doc(data.kode).set(data)
                     .catch(err => console.warn('Gagal perbaiki foto produk:', err));
