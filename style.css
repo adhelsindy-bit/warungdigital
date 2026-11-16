@@ -4453,16 +4453,17 @@ html[data-theme="dark"] .star-input-btn { color: #475569; }
 .global-promo-banner {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     gap: 1.5rem;
     padding: 1.5rem 2rem;
-    min-height: 160px;
+    min-height: 140px;
     background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
     color: #ffffff;
     position: relative;
     overflow: hidden;
+    text-align: center;
 }
-.global-promo-content { flex: 1; min-width: 0; }
+.global-promo-content { flex: 0 1 auto; min-width: 0; max-width: 900px; }
 .global-promo-eyebrow {
     display: inline-block;
     font-size: 0.85rem;
