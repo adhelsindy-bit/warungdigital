@@ -7571,3 +7571,253 @@ function submitUlasan() {
 }
 
 
+
+/* ============================================================
+   HORIZONTAL LAZY LOAD CARD VIEW — ADMIN & KASIR
+   ============================================================ */
+
+// --- State ---
+let adminCurrentView = 'table'; // 'table' | 'card'
+let kasirCurrentView = 'table';
+let _lazyObserver = null; // shared IntersectionObserver for lazy images
+
+// --- IntersectionObserver Singleton ---
+function getLazyObserver() {
+    if (_lazyObserver) return _lazyObserver;
+    _lazyObserver = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+            if (!entry.isIntersecting) return;
+            const img = entry.target;
+            const src = img.dataset.lazySrc;
+            if (!src) return;
+            img.src = src;
+            img.onload = function() {
+                img.classList.remove('lazy-pending');
+                img.classList.add('lazy-loaded');
+                const wrap = img.closest('.hcard-img-wrap');
+                if (wrap) wrap.classList.add('loaded');
+            };
+            img.onerror = function() {
+                img.src = DEFAULT_IMAGE;
+                img.classList.remove('lazy-pending');
+                img.classList.add('lazy-loaded');
+                const wrap = img.closest('.hcard-img-wrap');
+                if (wrap) wrap.classList.add('loaded');
+            };
+            _lazyObserver.unobserve(img);
+        });
+    }, { root: null, rootMargin: '0px 120px 0px 0px', threshold: 0.01 });
+    return _lazyObserver;
+}
+
+// --- Switch View: Admin ---
+function switchAdminView(mode) {
+    adminCurrentView = mode;
+    const tableView = document.getElementById('admin-table-view');
+    const cardView  = document.getElementById('admin-card-view');
+    const btnTable  = document.getElementById('admin-view-table');
+    const btnCard   = document.getElementById('admin-view-card');
+    if (!tableView || !cardView) return;
+
+    if (mode === 'table') {
+        tableView.style.display = '';
+        cardView.style.display  = 'none';
+        if (btnTable) { btnTable.classList.add('active'); }
+        if (btnCard)  { btnCard.classList.remove('active'); }
+        renderProducts();
+    } else {
+        tableView.style.display = 'none';
+        cardView.style.display  = '';
+        if (btnTable) { btnTable.classList.remove('active'); }
+        if (btnCard)  { btnCard.classList.add('active'); }
+        renderAdminCardView();
+    }
+}
+
+// --- Switch View: Kasir ---
+function switchKasirView(mode) {
+    kasirCurrentView = mode;
+    const tableView = document.getElementById('kasir-table-view');
+    const cardView  = document.getElementById('kasir-card-view');
+    const btnTable  = document.getElementById('kasir-view-table');
+    const btnCard   = document.getElementById('kasir-view-card');
+    if (!tableView || !cardView) return;
+
+    if (mode === 'table') {
+        tableView.style.display = '';
+        cardView.style.display  = 'none';
+        if (btnTable) { btnTable.classList.add('active'); }
+        if (btnCard)  { btnCard.classList.remove('active'); }
+        renderProductsKasir();
+    } else {
+        tableView.style.display = 'none';
+        cardView.style.display  = '';
+        if (btnTable) { btnTable.classList.remove('active'); }
+        if (btnCard)  { btnCard.classList.add('active'); }
+        renderKasirCardView();
+    }
+}
+
+// --- Build a horizontal card row HTML ---
+function buildHorizontalCardRow(filteredList, role) {
+    // Group by category
+    const groups = {};
+    filteredList.forEach(function(p) {
+        const cat = p.kategori || 'Umum';
+        if (!groups[cat]) groups[cat] = [];
+        groups[cat].push(p);
+    });
+
+    if (Object.keys(groups).length === 0) {
+        return '<p style="text-align:center;padding:2rem;color:#888;">Tidak ada produk.</p>';
+    }
+
+    const topSellingSet = typeof getTopSellingProductCodes === 'function' ? getTopSellingProductCodes() : new Set();
+
+    let html = '';
+    Object.keys(groups).sort().forEach(function(catName) {
+        const list = groups[catName];
+        html += `
+        <div class="product-category-row">
+            <div class="product-category-row-header">
+                <span class="product-category-row-title">
+                    <i class="fa-solid fa-layer-group"></i> ${escapeHtml(catName)}
+                </span>
+                <span class="product-category-count">${list.length} produk</span>
+            </div>
+            <div class="product-hscroll-strip" data-cat="${escapeHtml(catName)}">
+                ${list.map(function(p) { return buildHCard(p, role, topSellingSet); }).join('')}
+                <div class="hcard-load-sentinel" aria-hidden="true"></div>
+            </div>
+        </div>`;
+    });
+    return html;
+}
+
+// --- Build a single horizontal card ---
+function buildHCard(p, role, topSellingSet) {
+    const imgUrl = (p.gambar && p.gambar !== DEFAULT_IMAGE && !p.gambar.includes('1588964895597'))
+        ? p.gambar
+        : getProductAutoImage(p);
+    const realIdx = products.findIndex(function(x) { return x.kode === p.kode; });
+    const priceInfo = getProductPriceInfo(p);
+
+    // Stock badge
+    let stockBadgeClass = 'badge-stock-ok';
+    let stockBadgeText = p.stok + ' unit';
+    if (p.stok <= 0) { stockBadgeClass = 'badge-stock-out'; stockBadgeText = 'Habis'; }
+    else if (p.stok <= 5) { stockBadgeClass = 'badge-stock-low'; stockBadgeText = 'Sedikit: ' + p.stok; }
+
+    // Price display
+    let priceHtml = '';
+    if (priceInfo.hasDiskon) {
+        priceHtml = `
+            <span class="hcard-price-orig">${formatRupiah(priceInfo.hargaNormal)}</span>
+            <span class="hcard-price-promo">${formatRupiah(priceInfo.hargaFinal)} <span class="hcard-diskon-badge">-${priceInfo.diskonPersen}%</span></span>`;
+    } else {
+        priceHtml = `<span class="hcard-price">${formatRupiah(p.harga)}</span>`;
+    }
+
+    // Action buttons per role
+    let actionsHtml = '';
+    if (role === 'admin') {
+        actionsHtml = `
+            <button class="btn btn-secondary btn-sm" onclick="editProduct(${realIdx})" title="Edit">
+                <i class="fa-solid fa-pen-to-square"></i> Edit
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="deleteProduct(${realIdx})" title="Hapus">
+                <i class="fa-solid fa-trash-can"></i>
+            </button>`;
+    } else if (role === 'kasir') {
+        actionsHtml = `
+            <button class="btn btn-outline-secondary btn-sm" onclick="quickRestockProduct(${realIdx})" title="Restock">
+                <i class="fa-solid fa-plus"></i>
+            </button>
+            <button class="btn btn-primary btn-sm" onclick="openKasirProductModal(${realIdx})" title="Edit">
+                <i class="fa-solid fa-pen-to-square"></i>
+            </button>`;
+    }
+
+    // Terlaris badge indicator
+    const isTerlaris = topSellingSet && topSellingSet.has(p.kode);
+    const terlarisOverlay = isTerlaris ? '<span style="position:absolute;top:6px;left:6px;font-size:0.6rem;background:#ef4444;color:#fff;padding:2px 6px;border-radius:999px;font-weight:700;z-index:2;">🔥 Terlaris</span>' : '';
+
+    return `
+    <div class="hcard">
+        <div class="hcard-img-wrap">
+            <img class="lazy-pending" data-lazy-src="${escapeHtml(imgUrl)}" src="" alt="${escapeHtml(p.nama)}">
+            ${terlarisOverlay}
+            <span class="hcard-stock-badge badge ${escapeHtml(stockBadgeClass)}" style="font-size:0.6rem;">${escapeHtml(stockBadgeText)}</span>
+        </div>
+        <div class="hcard-body">
+            <span class="hcard-code">${escapeHtml(p.kode)}</span>
+            <span class="hcard-name" title="${escapeHtml(p.nama)}">${escapeHtml(p.nama)}</span>
+            <div>${priceHtml}</div>
+        </div>
+        <div class="hcard-actions">${actionsHtml}</div>
+    </div>`;
+}
+
+// --- Attach IntersectionObserver to all lazy images in a container ---
+function attachLazyLoad(container) {
+    const observer = getLazyObserver();
+    container.querySelectorAll('img.lazy-pending[data-lazy-src]').forEach(function(img) {
+        observer.observe(img);
+    });
+}
+
+// --- Render card view: Admin ---
+function renderAdminCardView() {
+    const container = document.getElementById('admin-card-container');
+    if (!container) return;
+
+    const searchVal = (document.getElementById('search-barang') || {}).value || '';
+    const sv = searchVal.toLowerCase().trim();
+
+    let list = products.filter(function(p) {
+        return !sv ||
+            p.nama.toLowerCase().includes(sv) ||
+            p.kode.toLowerCase().includes(sv) ||
+            (p.kategori && p.kategori.toLowerCase().includes(sv));
+    });
+
+    container.innerHTML = buildHorizontalCardRow(list, 'admin');
+    attachLazyLoad(container);
+}
+
+// --- Render card view: Kasir ---
+function renderKasirCardView() {
+    const container = document.getElementById('kasir-card-container');
+    if (!container) return;
+
+    const searchVal = (document.getElementById('search-barang-kasir') || {}).value || '';
+    const sv = searchVal.toLowerCase().trim();
+
+    let list = products.filter(function(p) {
+        return !sv ||
+            p.nama.toLowerCase().includes(sv) ||
+            p.kode.toLowerCase().includes(sv) ||
+            (p.kategori && p.kategori.toLowerCase().includes(sv));
+    });
+
+    container.innerHTML = buildHorizontalCardRow(list, 'kasir');
+    attachLazyLoad(container);
+}
+
+// --- Override renderProducts / renderProductsKasir to also refresh card view if active ---
+(function() {
+    const _origRenderProducts = window.renderProducts;
+    if (typeof _origRenderProducts === 'function') {
+        window.renderProducts = function() {
+            _origRenderProducts.apply(this, arguments);
+            if (adminCurrentView === 'card') renderAdminCardView();
+        };
+    }
+    const _origRenderKasir = window.renderProductsKasir;
+    if (typeof _origRenderKasir === 'function') {
+        window.renderProductsKasir = function() {
+            _origRenderKasir.apply(this, arguments);
+            if (kasirCurrentView === 'card') renderKasirCardView();
+        };
+    }
+})();

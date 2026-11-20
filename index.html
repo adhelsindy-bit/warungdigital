@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -23,7 +23,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=3">
     <!-- Font Awesome Icons for clean UI icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=25">
+    <link rel="stylesheet" href="style.css?v=26">
 </head>
 <body class="logged-out">
 
@@ -525,9 +525,19 @@
                                 <div class="search-box">
                                     <input type="text" id="search-barang" placeholder="Cari nama, kode, kategori..." oninput="renderProducts()">
                                 </div>
+                                <!-- Toggle View -->
+                                <div class="view-toggle-group" id="admin-view-toggle">
+                                    <button type="button" class="view-toggle-btn active" id="admin-view-table" onclick="switchAdminView('table')" title="Tampilan Tabel">
+                                        <i class="fa-solid fa-table-list"></i>
+                                    </button>
+                                    <button type="button" class="view-toggle-btn" id="admin-view-card" onclick="switchAdminView('card')" title="Tampilan Kartu per Kategori">
+                                        <i class="fa-solid fa-grip"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                        <div class="table-responsive">
+                        <!-- Tampilan Tabel (default) -->
+                        <div id="admin-table-view" class="table-responsive">
                             <table class="data-table">
                                 <thead>
                                     <tr>
@@ -546,6 +556,12 @@
                                     <!-- Rendered dynamically by JS -->
                                 </tbody>
                             </table>
+                        </div>
+                        <!-- Tampilan Kartu per Kategori (lazy load horizontal) -->
+                        <div id="admin-card-view" style="display:none;">
+                            <div id="admin-card-container">
+                                <!-- Rendered dynamically by JS -->
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1132,6 +1148,14 @@
                         <div class="search-box">
                             <input type="text" id="search-barang-kasir" placeholder="Cari barang atau kode..." oninput="renderProductsKasir()">
                         </div>
+                        <div class="view-toggle-group" id="kasir-view-toggle">
+                            <button type="button" class="view-toggle-btn active" id="kasir-view-table" onclick="switchKasirView('table')" title="Tampilan Tabel">
+                                <i class="fa-solid fa-table-list"></i>
+                            </button>
+                            <button type="button" class="view-toggle-btn" id="kasir-view-card" onclick="switchKasirView('card')" title="Tampilan Kartu per Kategori">
+                                <i class="fa-solid fa-grip"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -1140,7 +1164,8 @@
                     <!-- Rendered dynamically by JS -->
                 </div>
 
-                <div class="table-responsive">
+                <!-- Tampilan Tabel Kasir (default) -->
+                <div id="kasir-table-view" class="table-responsive">
                     <table class="data-table">
                         <thead>
                             <tr>
@@ -1157,6 +1182,12 @@
                             <!-- Rendered dynamically by JS -->
                         </tbody>
                     </table>
+                </div>
+                <!-- Tampilan Kartu per Kategori Kasir (lazy load horizontal) -->
+                <div id="kasir-card-view" style="display:none;">
+                    <div id="kasir-card-container">
+                        <!-- Rendered dynamically by JS -->
+                    </div>
                 </div>
             </div>
         </section>
@@ -1539,7 +1570,7 @@
             console.warn("Firebase initialization error, fallback to localStorage:", e);
         }
     </script>
-    <script src="script.js?v=25"></script>
+    <script src="script.js?v=26"></script>
 
     <!-- MODAL SCANNER BARCODE & QR CODE -->
     <div id="scanner-modal-overlay" class="scanner-modal-overlay">
@@ -2310,3 +2341,4 @@
     </div>
 </body>
 </html>
+
