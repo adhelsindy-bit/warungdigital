@@ -31,46 +31,59 @@ window.addEventListener('unhandledrejection', function (event) {
 
 // Katalog Foto Produk Warung Digital Terverifikasi (HTTP 200 OK & Sesuai Barang Asli)
 const PRODUCT_IMAGE_CATALOG = {
-    'BRG001': 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400&auto=format&fit=crop', // Beras Premium 5kg
-    'BRG002': 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&auto=format&fit=crop', // Minyak Goreng 1L
-    'BRG003': 'https://images.unsplash.com/photo-1581441363689-1f3c3c414635?w=400&auto=format&fit=crop', // Gula Pasir 1kg
-    'BRG004': 'https://images.unsplash.com/photo-1612927601601-6638404737ce?w=400&auto=format&fit=crop', // Mie Instan Goreng
-    'BRG005': 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=400&auto=format&fit=crop', // Kopi Kapal Api 165g
-    'BRG006': 'https://images.unsplash.com/photo-1516448620398-c5f44bf9f441?w=400&auto=format&fit=crop', // Telur Ayam 1kg
-    'BRG007': 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400&auto=format&fit=crop', // Susu Kental Manis 370g
-    'BRG008': 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&auto=format&fit=crop', // Tepung Terigu 1kg
-    'BRG009': 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?w=400&auto=format&fit=crop', // Kecap Manis 520ml
-    'BRG010': 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=400&auto=format&fit=crop', // Saus Sambal 335ml
-    'BRG011': 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=400&auto=format&fit=crop', // Teh Celup Isi 25
-    'BRG012': 'https://images.unsplash.com/photo-1523362628745-0c100150b504?w=400&auto=format&fit=crop', // Air Mineral Botol 600ml
-    'BRG013': 'https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?w=400&auto=format&fit=crop', // Sabun Mandi Batang
-    'BRG014': 'https://images.unsplash.com/photo-1585842378054-ee2e52f94ba2?w=400&auto=format&fit=crop', // Deterjen Bubuk 800g
-    'BRG015': 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=400&auto=format&fit=crop', // Gas LPG 3kg
-    'BRG016': 'https://images.unsplash.com/photo-1612927601601-6638404737ce?w=400&auto=format&fit=crop', // Mie Indomie Goreng
-    'BRG017': 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&auto=format&fit=crop', // Mie Indomie Kuah Soto
-    'BRG018': 'https://images.unsplash.com/photo-1555126634-323283e090fa?w=400&auto=format&fit=crop', // Mie Sedaap Goreng
-    'BRG019': 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=400&auto=format&fit=crop', // Kopi ABC Sachet
-    'BRG020': 'https://images.unsplash.com/photo-1509785307050-d4066910ec1e?w=400&auto=format&fit=crop', // Kopi White Koffie
-    'BRG021': 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=400&auto=format&fit=crop', // Teh Sariwangi Celup
-    'BRG022': 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=400&auto=format&fit=crop', // Teh Pucuk Harum 350ml
-    'BRG023': 'https://images.unsplash.com/photo-1523362628745-0c100150b504?w=400&auto=format&fit=crop', // Air Mineral Aqua 1500ml
-    'BRG024': 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400&auto=format&fit=crop', // Susu UHT Ultra Milk 1L
-    'BRG025': 'https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=400&auto=format&fit=crop', // Susu Bendera Kental Manis
-    'BRG026': 'https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=400&auto=format&fit=crop', // Chitato Sapi Panggang
-    'BRG027': 'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=400&auto=format&fit=crop', // Qtela Singkong Balado
-    'BRG028': 'https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=400&auto=format&fit=crop', // Taro Net Seaweed
-    'BRG029': 'https://images.unsplash.com/photo-1582058091505-f87a2e55a40f?w=400&auto=format&fit=crop', // Permen Kopiko 78
-    'BRG030': 'https://images.unsplash.com/photo-1575224300306-1b8da36134ec?w=400&auto=format&fit=crop', // Permen Relaxa
-    'BRG031': 'https://images.unsplash.com/photo-1508736793122-f516e3ba5569?w=400&auto=format&fit=crop', // Garam Dapur Refina
-    'BRG032': 'https://images.unsplash.com/photo-1606923829579-0cb981a83e2e?w=400&auto=format&fit=crop', // Kaldu Masako Ayam
-    'BRG033': 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&auto=format&fit=crop', // Lada Bubuk Koepoe
-    'BRG034': 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=400&auto=format&fit=crop', // Saus Sambal ABC
-    'BRG035': 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?w=400&auto=format&fit=crop', // Kecap Manis ABC
-    'BRG036': 'https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?w=400&auto=format&fit=crop', // Margarin Blue Band
-    'BRG037': 'https://images.unsplash.com/photo-1549931319-a545dcf3bc73?w=400&auto=format&fit=crop', // Roti Tawar Sari Roti
-    'BRG038': 'https://images.unsplash.com/photo-1516448620398-c5f44bf9f441?w=400&auto=format&fit=crop', // Telur Ayam Butir
-    'BRG039': 'https://images.unsplash.com/photo-1584727638096-042c45049ebe?w=400&auto=format&fit=crop', // Sarden ABC Tomat
-    'BRG040': 'https://images.unsplash.com/photo-1585751119414-ef2636f8aede?w=400&auto=format&fit=crop'  // Shampo Pantene
+    // === SEMBAKO ===
+    'BRG001': 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400&q=80&auto=format&fit=crop', // Beras Premium 5kg
+    'BRG002': 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&q=80&auto=format&fit=crop', // Minyak Goreng 1L
+    'BRG003': 'https://images.unsplash.com/photo-1587049352851-8d4e89133924?w=400&q=80&auto=format&fit=crop', // Gula Pasir 1kg
+    'BRG031': 'https://images.unsplash.com/photo-1626200419199-391ae4be7a41?w=400&q=80&auto=format&fit=crop', // Garam Dapur Refina
+    'BRG006': 'https://images.unsplash.com/photo-1587486913049-53fc88980cfc?w=400&q=80&auto=format&fit=crop', // Telur Ayam 1kg
+    'BRG038': 'https://images.unsplash.com/photo-1587486913049-53fc88980cfc?w=400&q=80&auto=format&fit=crop', // Telur Ayam Butir
+    'BRG008': 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&q=80&auto=format&fit=crop', // Tepung Terigu 1kg
+    'BRG015': 'https://images.unsplash.com/photo-1587049352851-8d4e89133924?w=400&q=80&auto=format&fit=crop', // Gas LPG 3kg
+
+    // === MIE & MAKANAN INSTAN ===
+    'BRG004': 'https://images.unsplash.com/photo-1612927601601-6638404737ce?w=400&q=80&auto=format&fit=crop', // Mie Instan Goreng
+    'BRG016': 'https://images.unsplash.com/photo-1612927601601-6638404737ce?w=400&q=80&auto=format&fit=crop', // Mie Indomie Goreng
+    'BRG017': 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&q=80&auto=format&fit=crop', // Mie Indomie Kuah Soto
+    'BRG018': 'https://images.unsplash.com/photo-1555126634-323283e090fa?w=400&q=80&auto=format&fit=crop', // Mie Sedaap Goreng
+
+    // === KOPI & TEH ===
+    'BRG005': 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=400&q=80&auto=format&fit=crop', // Kopi Kapal Api 165g
+    'BRG019': 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=400&q=80&auto=format&fit=crop', // Kopi ABC Sachet
+    'BRG020': 'https://images.unsplash.com/photo-1509785307050-d4066910ec1e?w=400&q=80&auto=format&fit=crop', // Kopi White Koffie
+    'BRG011': 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=400&q=80&auto=format&fit=crop', // Teh Celup Isi 25
+    'BRG021': 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=400&q=80&auto=format&fit=crop', // Teh Sariwangi Celup
+    'BRG022': 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=400&q=80&auto=format&fit=crop', // Teh Pucuk Harum 350ml
+
+    // === SUSU & MINUMAN ===
+    'BRG007': 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400&q=80&auto=format&fit=crop', // Susu Kental Manis 370g
+    'BRG024': 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400&q=80&auto=format&fit=crop', // Susu UHT Ultra Milk 1L
+    'BRG025': 'https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=400&q=80&auto=format&fit=crop', // Susu Bendera Kental Manis
+    'BRG012': 'https://images.unsplash.com/photo-1523362628745-0c100150b504?w=400&q=80&auto=format&fit=crop', // Air Mineral Botol 600ml
+    'BRG023': 'https://images.unsplash.com/photo-1523362628745-0c100150b504?w=400&q=80&auto=format&fit=crop', // Air Mineral Aqua 1500ml
+
+    // === BUMBU DAPUR ===
+    'BRG009': 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?w=400&q=80&auto=format&fit=crop', // Kecap Manis 520ml
+    'BRG035': 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?w=400&q=80&auto=format&fit=crop', // Kecap Manis ABC
+    'BRG010': 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=400&q=80&auto=format&fit=crop', // Saus Sambal 335ml
+    'BRG034': 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=400&q=80&auto=format&fit=crop', // Saus Sambal ABC
+    'BRG032': 'https://images.unsplash.com/photo-1606923829579-0cb981a83e2e?w=400&q=80&auto=format&fit=crop', // Kaldu Masako Ayam
+    'BRG033': 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&q=80&auto=format&fit=crop', // Lada Bubuk Koepoe
+    'BRG036': 'https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?w=400&q=80&auto=format&fit=crop', // Margarin Blue Band
+
+    // === SNACK & CAMILAN ===
+    'BRG026': 'https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=400&q=80&auto=format&fit=crop', // Chitato Sapi Panggang
+    'BRG027': 'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=400&q=80&auto=format&fit=crop', // Qtela Singkong Balado
+    'BRG028': 'https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=400&q=80&auto=format&fit=crop', // Taro Net Seaweed
+    'BRG029': 'https://images.unsplash.com/photo-1582058091505-f87a2e55a40f?w=400&q=80&auto=format&fit=crop', // Permen Kopiko 78
+    'BRG030': 'https://images.unsplash.com/photo-1575224300306-1b8da36134ec?w=400&q=80&auto=format&fit=crop', // Permen Relaxa
+    'BRG037': 'https://images.unsplash.com/photo-1549931319-a545dcf3bc73?w=400&q=80&auto=format&fit=crop', // Roti Tawar Sari Roti
+    'BRG039': 'https://images.unsplash.com/photo-1584727638096-042c45049ebe?w=400&q=80&auto=format&fit=crop', // Sarden ABC Tomat
+
+    // === PERAWATAN ===
+    'BRG013': 'https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?w=400&q=80&auto=format&fit=crop', // Sabun Mandi Batang
+    'BRG014': 'https://images.unsplash.com/photo-1585842378054-ee2e52f94ba2?w=400&q=80&auto=format&fit=crop', // Deterjen Bubuk 800g
+    'BRG040': 'https://images.unsplash.com/photo-1585751119414-ef2636f8aede?w=400&q=80&auto=format&fit=crop'  // Shampo Pantene
 };
 
 // Dapatkan foto produk otomatis berdasarkan kode atau nama barang
