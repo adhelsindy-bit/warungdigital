@@ -4928,26 +4928,91 @@ function escapeHtml(str) {
               .replace(/'/g, "&#039;");
 }
 
-function showToast(message, type = 'info') {
+// --- Web Audio: sound pendek tanpa file eksternal ---
+function _playToastSound(type) {
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        if (type === 'success') {
+            // Dua nada naik (ding-ding)
+            osc.frequency.setValueAtTime(880, ctx.currentTime);
+            osc.frequency.setValueAtTime(1100, ctx.currentTime + 0.1);
+        } else if (type === 'danger') {
+            // Nada rendah-turun (boop)
+            osc.frequency.setValueAtTime(400, ctx.currentTime);
+            osc.frequency.setValueAtTime(280, ctx.currentTime + 0.12);
+        } else if (type === 'warning') {
+            // Nada menengah (beep)
+            osc.frequency.setValueAtTime(660, ctx.currentTime);
+        } else {
+            // Info: klik tipis
+            osc.frequency.setValueAtTime(800, ctx.currentTime);
+        }
+
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(0.08, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.25);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.25);
+    } catch(e) { /* Audio tidak tersedia — abaikan */ }
+}
+
+function showToast(message, type = 'info', duration = 3500) {
     const container = document.getElementById('toast-container');
     if (!container) return;
 
+    // Label per tipe
+    const labels   = { success: 'Berhasil', danger: 'Gagal', warning: 'Perhatian', info: 'Info' };
+    const icons     = { success: 'fa-circle-check', danger: 'fa-circle-xmark', warning: 'fa-triangle-exclamation', info: 'fa-circle-info' };
+    const iconClass = icons[type] || 'fa-circle-info';
+    const label     = labels[type] || 'Info';
+
+    // Buat elemen toast
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
-    
-    let iconClass = 'fa-info-circle';
-    if (type === 'success') iconClass = 'fa-circle-check';
-    if (type === 'danger') iconClass = 'fa-circle-xmark';
-    if (type === 'warning') iconClass = 'fa-triangle-exclamation';
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'polite');
 
-    toast.innerHTML = `<i class="fa-solid ${iconClass}"></i> <span>${escapeHtml(message)}</span>`;
+    toast.innerHTML = `
+        <div class="toast-body">
+            <div class="toast-icon-wrap">
+                <i class="fa-solid ${iconClass}"></i>
+            </div>
+            <div class="toast-text-wrap">
+                <div class="toast-title">${label}</div>
+                <div class="toast-message">${escapeHtml(message)}</div>
+            </div>
+            <button class="toast-close-btn" aria-label="Tutup" onclick="_closeToast(this.closest('.toast'))">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="toast-progress" style="animation-duration: ${duration}ms;"></div>
+    `;
+
     container.appendChild(toast);
+    _playToastSound(type);
 
+    // Auto-dismiss
+    const timer = setTimeout(() => _closeToast(toast), duration);
+    toast._closeTimer = timer;
+}
+
+function _closeToast(toast) {
+    if (!toast || toast._closing) return;
+    toast._closing = true;
+    if (toast._closeTimer) clearTimeout(toast._closeTimer);
+    toast.classList.add('toast-hiding');
+    toast.addEventListener('animationend', () => {
+        if (toast.parentNode) toast.parentNode.removeChild(toast);
+    }, { once: true });
+    // Fallback jika animasi tidak trigger
     setTimeout(() => {
-        if (toast.parentNode) {
-            toast.parentNode.removeChild(toast);
-        }
-    }, 3000);
+        if (toast.parentNode) toast.parentNode.removeChild(toast);
+    }, 350);
 }
 
 
